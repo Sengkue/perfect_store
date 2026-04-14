@@ -1,0 +1,913 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Perfect Database Schema - Online & In-Shop Sales</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, 'Roboto', sans-serif;
+            background: #F5F7FA;
+            padding: 20px;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px 30px;
+            border-radius: 12px;
+            margin-bottom: 25px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        }
+
+        .header h1 {
+            font-size: 24px;
+            margin-bottom: 8px;
+        }
+
+        .header p {
+            opacity: 0.9;
+            font-size: 14px;
+        }
+
+        .badge-container {
+            display: flex;
+            gap: 12px;
+            margin-top: 12px;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            background: rgba(255,255,255,0.2);
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+        }
+
+        .container {
+            display: flex;
+            gap: 20px;
+            flex-wrap: wrap;
+        }
+
+        .schema-panel {
+            flex: 2;
+            min-width: 300px;
+        }
+
+        .sql-panel {
+            flex: 1;
+            min-width: 350px;
+        }
+
+        .card {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+            margin-bottom: 20px;
+            overflow: hidden;
+        }
+
+        .card-header {
+            background: #2D3748;
+            color: white;
+            padding: 12px 20px;
+            font-weight: 600;
+            font-size: 14px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .card-header i {
+            font-size: 18px;
+        }
+
+        .card-body {
+            padding: 20px;
+        }
+
+        .table-group {
+            margin-bottom: 25px;
+            border-left: 3px solid;
+            padding-left: 15px;
+        }
+
+        .table-group.config { border-left-color: #0F6E56; }
+        .table-group.geo { border-left-color: #3B6D11; }
+        .table-group.people { border-left-color: #185FA5; }
+        .table-group.product { border-left-color: #534AB7; }
+        .table-group.sales { border-left-color: #993C1D; }
+        .table-group.import { border-left-color: #854F0B; }
+
+        .group-title {
+            font-weight: 700;
+            font-size: 16px;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 20px;
+            font-size: 12px;
+        }
+
+        table th {
+            background: #F7FAFC;
+            padding: 8px 10px;
+            text-align: left;
+            font-weight: 600;
+            border-bottom: 2px solid #E2E8F0;
+        }
+
+        table td {
+            padding: 6px 10px;
+            border-bottom: 1px solid #EDF2F7;
+        }
+
+        .pk { color: #D69E2E; font-weight: 600; }
+        .fk { color: #3182CE; }
+        .uq { color: #38A169; }
+        .nn { color: #E53E3E; }
+
+        .sql-code {
+            background: #1E293B;
+            color: #E2E8F0;
+            padding: 15px;
+            border-radius: 8px;
+            font-family: 'Courier New', monospace;
+            font-size: 11px;
+            overflow-x: auto;
+            white-space: pre-wrap;
+            word-break: break-word;
+        }
+
+        .note {
+            background: #FEF5E7;
+            border-left: 3px solid #F59E0B;
+            padding: 12px;
+            border-radius: 6px;
+            font-size: 12px;
+            margin-top: 15px;
+        }
+
+        button {
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 12px;
+            margin-top: 10px;
+        }
+
+        button:hover {
+            background: #5a67d8;
+        }
+
+        @media (max-width: 768px) {
+            body { padding: 10px; }
+            .container { flex-direction: column; }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>🎯 Perfect Database Schema</h1>
+        <p>Complete e-commerce database with Online + In-Shop sales support</p>
+        <div class="badge-container">
+            <span class="badge">✅ Normalized to 3NF</span>
+            <span class="badge">✅ ACID Compliant</span>
+            <span class="badge">✅ Index Optimized</span>
+            <span class="badge">✅ Audit Ready</span>
+        </div>
+    </div>
+
+    <div class="container">
+        <div class="schema-panel">
+            <!-- CONFIG & SETTINGS -->
+            <div class="table-group config">
+                <div class="group-title">⚙️ System Configuration</div>
+                <table>
+                    <tr><th colspan="2">shop_settings</th></tr>
+                    <tr><td><span class="pk">id PK</span></td><td>INT</td></tr>
+                    <tr><td>shop_name</td><td>VARCHAR(100) <span class="nn">NOT NULL</span></td></tr>
+                    <tr><td>phone</td><td>VARCHAR(20)</td></tr>
+                    <tr><td>email</td><td>VARCHAR(100)</td></tr>
+                    <tr><td>logo_url</td><td>TEXT</td></tr>
+                    <tr><td>address</td><td>TEXT</td></tr>
+                    <tr><td>tax_number</td><td>VARCHAR(50)</td></tr>
+                    <tr><td>created_at</td><td>TIMESTAMP</td></tr>
+                </table>
+            </div>
+
+            <!-- GEOGRAPHY -->
+            <div class="table-group geo">
+                <div class="group-title">🌍 Geography</div>
+                <table>
+                    <tr><th colspan="2">provinces</th></tr>
+                    <tr><td><span class="pk">id PK</span></td><td>INT</td></tr>
+                    <tr><td>province_name</td><td>VARCHAR(100) <span class="nn">NOT NULL</span></td></tr>
+                    <tr><td>province_code</td><td>VARCHAR(10)</td></tr>
+                </table>
+                <table>
+                    <tr><th colspan="2">districts</th></tr>
+                    <tr><td><span class="pk">id PK</span></td><td>INT</td></tr>
+                    <tr><td><span class="fk">province_id FK</span></td><td>INT → provinces(id)</td></tr>
+                    <tr><td>district_name</td><td>VARCHAR(100) <span class="nn">NOT NULL</span></td></tr>
+                    <tr><td>postal_code</td><td>VARCHAR(10)</td></tr>
+                </table>
+            </div>
+
+            <!-- PEOPLE -->
+            <div class="table-group people">
+                <div class="group-title">👥 People Management</div>
+                <table>
+                    <tr><th colspan="2">employees</th></tr>
+                    <tr><td><span class="pk">id PK</span></td><td>INT</td></tr>
+                    <tr><td>first_name</td><td>VARCHAR(50) <span class="nn">NOT NULL</span></td></tr>
+                    <tr><td>last_name</td><td>VARCHAR(50) <span class="nn">NOT NULL</span></td></tr>
+                    <tr><td><span class="uq">phone UQ</span></td><td>VARCHAR(20)</td></tr>
+                    <tr><td>email</td><td>VARCHAR(100)</td></tr>
+                    <tr><td><span class="fk">province_id FK</span></td><td>INT → provinces(id)</td></tr>
+                    <tr><td><span class="fk">district_id FK</span></td><td>INT → districts(id)</td></tr>
+                    <tr><td>address</td><td>TEXT</td></tr>
+                    <tr><td>hire_date</td><td>DATE</td></tr>
+                    <tr><td>salary</td><td>DECIMAL(10,2)</td></tr>
+                </table>
+                <table>
+                    <tr><th colspan="2">users (Login Accounts)</th></tr>
+                    <tr><td><span class="pk">id PK</span></td><td>INT</td></tr>
+                    <tr><td><span class="fk">employee_id FK</span></td><td>INT → employees(id)</td></tr>
+                    <tr><td>username</td><td>VARCHAR(50) <span class="uq">UNIQUE</span></td></tr>
+                    <tr><td>password_hash</td><td>VARCHAR(255) <span class="nn">NOT NULL</span></td></tr>
+                    <tr><td>role</td><td>ENUM('admin','staff','manager')</td></tr>
+                    <tr><td>last_login</td><td>TIMESTAMP</td></tr>
+                    <tr><td>is_active</td><td>BOOLEAN DEFAULT TRUE</td></tr>
+                </table>
+                <table>
+                    <tr><th colspan="2">customers</th></tr>
+                    <tr><td><span class="pk">id PK</span></td><td>INT</td></tr>
+                    <tr><td>first_name</td><td>VARCHAR(50) <span class="nn">NOT NULL</span></td></tr>
+                    <tr><td>last_name</td><td>VARCHAR(50) <span class="nn">NOT NULL</span></td></tr>
+                    <tr><td><span class="uq">phone UQ</span></td><td>VARCHAR(20)</td></tr>
+                    <tr><td>email</td><td>VARCHAR(100) <span class="uq">UNIQUE</span></td></tr>
+                    <tr><td>password_hash</td><td>VARCHAR(255)</td></tr>
+                    <tr><td>total_spent</td><td>DECIMAL(12,2) DEFAULT 0</td></tr>
+                    <tr><td>loyalty_points</td><td>INT DEFAULT 0</td></tr>
+                    <tr><td>customer_tier</td><td>ENUM('bronze','silver','gold','platinum')</td></tr>
+                    <tr><td>created_at</td><td>TIMESTAMP</td></tr>
+                    <tr><td>is_verified</td><td>BOOLEAN DEFAULT FALSE</td></tr>
+                </table>
+                <table>
+                    <tr><th colspan="2">customer_addresses</th></tr>
+                    <tr><td><span class="pk">id PK</span></td><td>INT</td></tr>
+                    <tr><td><span class="fk">customer_id FK</span></td><td>INT → customers(id) ON DELETE CASCADE</td></tr>
+                    <tr><td>recipient_name</td><td>VARCHAR(100) <span class="nn">NOT NULL</span></td></tr>
+                    <tr><td>recipient_phone</td><td>VARCHAR(20)</td></tr>
+                    <tr><td><span class="fk">province_id FK</span></td><td>INT → provinces(id)</td></tr>
+                    <tr><td><span class="fk">district_id FK</span></td><td>INT → districts(id)</td></tr>
+                    <tr><td>detailed_address</td><td>TEXT</td></tr>
+                    <tr><td>is_default</td><td>BOOLEAN DEFAULT FALSE</td></tr>
+                    <tr><td>address_type</td><td>ENUM('home','work','other')</td></tr>
+                </table>
+            </div>
+
+            <!-- PRODUCTS -->
+            <div class="table-group product">
+                <div class="group-title">📦 Products & Inventory</div>
+                <table>
+                    <tr><th colspan="2">suppliers</th></tr>
+                    <tr><td><span class="pk">id PK</span></td><td>INT</td></tr>
+                    <tr><td>name</td><td>VARCHAR(100) <span class="nn">NOT NULL</span></td></tr>
+                    <tr><td>contact_person</td><td>VARCHAR(100)</td></tr>
+                    <tr><td>phone</td><td>VARCHAR(20)</td></tr>
+                    <tr><td>email</td><td>VARCHAR(100)</td></tr>
+                    <tr><td><span class="fk">province_id FK</span></td><td>INT → provinces(id)</td></tr>
+                    <tr><td><span class="fk">district_id FK</span></td><td>INT → districts(id)</td></tr>
+                </table>
+                <table>
+                    <tr><th colspan="2">categories</th></tr>
+                    <tr><td><span class="pk">id PK</span></td><td>INT</td></tr>
+                    <tr><td><span class="fk">parent_id FK</span></td><td>INT → categories(id) NULL</td></tr>
+                    <tr><td>category_name</td><td>VARCHAR(100) <span class="nn">NOT NULL</span></td></tr>
+                    <tr><td>slug</td><td>VARCHAR(100) <span class="uq">UNIQUE</span></td></tr>
+                    <tr><td>description</td><td>TEXT</td></tr>
+                </table>
+                <table>
+                    <tr><th colspan="2">products</th></tr>
+                    <tr><td><span class="pk">id PK</span></td><td>INT</td></tr>
+                    <tr><td><span class="fk">category_id FK</span></td><td>INT → categories(id)</td></tr>
+                    <tr><td><span class="fk">supplier_id FK</span></td><td>INT → suppliers(id)</td></tr>
+                    <tr><td>name</td><td>VARCHAR(200) <span class="nn">NOT NULL</span></td></tr>
+                    <tr><td><span class="uq">barcode UQ</span></td><td>VARCHAR(50)</td></tr>
+                    <tr><td>sku</td><td>VARCHAR(50) <span class="uq">UNIQUE</span></td></tr>
+                    <tr><td>description</td><td>TEXT</td></tr>
+                    <tr><td>cost_price</td><td>DECIMAL(10,2)</td></tr>
+                    <tr><td>selling_price</td><td>DECIMAL(10,2) <span class="nn">NOT NULL</span></td></tr>
+                    <tr><td>weight</td><td>DECIMAL(8,2)</td></tr>
+                    <tr><td>is_active</td><td>BOOLEAN DEFAULT TRUE</td></tr>
+                    <tr><td>created_at</td><td>TIMESTAMP</td></tr>
+                </table>
+                <table>
+                    <tr><th colspan="2">product_variants (Color/Size)</th></tr>
+                    <tr><td><span class="pk">id PK</span></td><td>INT</td></tr>
+                    <tr><td><span class="fk">product_id FK</span></td><td>INT → products(id) ON DELETE CASCADE</td></tr>
+                    <tr><td>color</td><td>VARCHAR(50)</td></tr>
+                    <tr><td>size</td><td>VARCHAR(20)</td></tr>
+                    <tr><td>variant_sku</td><td>VARCHAR(50) <span class="uq">UNIQUE</span></td></tr>
+                    <tr><td>quantity_in_stock</td><td>INT DEFAULT 0</td></tr>
+                    <tr><td>reorder_level</td><td>INT DEFAULT 5</td></tr>
+                    <tr><td>additional_price</td><td>DECIMAL(10,2) DEFAULT 0</td></tr>
+                </table>
+                <table>
+                    <tr><th colspan="2">product_images</th></tr>
+                    <tr><td><span class="pk">id PK</span></td><td>INT</td></tr>
+                    <tr><td><span class="fk">product_id FK</span></td><td>INT → products(id) ON DELETE CASCADE</td></tr>
+                    <tr><td>image_url</td><td>TEXT <span class="nn">NOT NULL</span></td></tr>
+                    <tr><td>is_primary</td><td>BOOLEAN DEFAULT FALSE</td></tr>
+                    <tr><td>sort_order</td><td>INT DEFAULT 0</td></tr>
+                </table>
+            </div>
+
+            <!-- IMPORTS / PURCHASING -->
+            <div class="table-group import">
+                <div class="group-title">📥 Purchasing & Imports</div>
+                <table>
+                    <tr><th colspan="2">imports</th></tr>
+                    <tr><td><span class="pk">id PK</span></td><td>INT</td></tr>
+                    <tr><td><span class="fk">employee_id FK</span></td><td>INT → employees(id)</td></tr>
+                    <tr><td><span class="fk">supplier_id FK</span></td><td>INT → suppliers(id)</td></tr>
+                    <tr><td>invoice_number</td><td>VARCHAR(50) <span class="uq">UNIQUE</span></td></tr>
+                    <tr><td>receive_date</td><td>DATE</td></tr>
+                    <tr><td>total_amount</td><td>DECIMAL(12,2)</td></tr>
+                    <tr><td>payment_status</td><td>ENUM('pending','partial','paid')</td></tr>
+                    <tr><td>status</td><td>ENUM('draft','received','completed','cancelled')</td></tr>
+                </table>
+                <table>
+                    <tr><th colspan="2">import_details</th></tr>
+                    <tr><td><span class="pk">id PK</span></td><td>INT</td></tr>
+                    <tr><td><span class="fk">import_id FK</span></td><td>INT → imports(id) ON DELETE CASCADE</td></tr>
+                    <tr><td><span class="fk">product_id FK</span></td><td>INT → products(id)</td></tr>
+                    <tr><td><span class="fk">variant_id FK</span></td><td>INT → product_variants(id) NULL</td></tr>
+                    <tr><td>quantity</td><td>INT <span class="nn">NOT NULL</span></td></tr>
+                    <tr><td>unit_cost</td><td>DECIMAL(10,2)</td></tr>
+                    <tr><td>subtotal</td><td>DECIMAL(12,2)</td></tr>
+                </table>
+            </div>
+
+            <!-- SALES (UNIFIED - Both Online & In-Shop) -->
+            <div class="table-group sales">
+                <div class="group-title">💰 Sales (Unified: Online + In-Shop)</div>
+                <table>
+                    <tr><th colspan="2">sales (Master Sales Table)</th></tr>
+                    <tr><td><span class="pk">id PK</span></td><td>INT</td></tr>
+                    <tr><td>sale_type</td><td>ENUM('in_shop','online') <span class="nn">NOT NULL</span></td></tr>
+                    <tr><td>sale_number</td><td>VARCHAR(50) <span class="uq">UNIQUE</span></td></tr>
+                    <tr><td><span class="fk">customer_id FK</span></td><td>INT → customers(id) NULL (NULL for walk-in guests)</td></tr>
+                    <tr><td><span class="fk">employee_id FK</span></td><td>INT → employees(id) (cashier/sales person)</td></tr>
+                    <tr><td><span class="fk">promotion_id FK</span></td><td>INT → promotions(id) NULL</td></tr>
+                    <tr><td><span class="fk">address_id FK</span></td><td>INT → customer_addresses(id) NULL (for delivery)</td></tr>
+                    <tr><td>sale_date</td><td>TIMESTAMP DEFAULT CURRENT_TIMESTAMP</td></tr>
+                    <tr><td>subtotal</td><td>DECIMAL(12,2)</td></tr>
+                    <tr><td>discount_amount</td><td>DECIMAL(10,2) DEFAULT 0</td></tr>
+                    <tr><td>tax_amount</td><td>DECIMAL(10,2) DEFAULT 0</td></tr>
+                    <tr><td>shipping_fee</td><td>DECIMAL(10,2) DEFAULT 0</td></tr>
+                    <tr><td>total_amount</td><td>DECIMAL(12,2) <span class="nn">NOT NULL</span></td></tr>
+                    <tr><td>payment_method</td><td>ENUM('cash','credit_card','bank_transfer','cod','qr_payment')</td></tr>
+                    <tr><td>payment_status</td><td>ENUM('pending','paid','failed','refunded','partial')</td></tr>
+                    <tr><td>sale_status</td><td>ENUM('pending','processing','completed','cancelled','returned')</td></tr>
+                    
+                    <!-- Online specific fields (NULL for in-shop) -->
+                    <tr><td>tracking_code</td><td>VARCHAR(100) <span class="uq">UNIQUE</span> NULL</td></tr>
+                    <tr><td>delivery_status</td><td>ENUM('pending','packed','shipped','delivered','returned') NULL</td></tr>
+                    <tr><td>courier_name</td><td>VARCHAR(100) NULL</td></tr>
+                    <tr><td>estimated_delivery</td><td>DATE NULL</td></tr>
+                    <tr><td>actual_delivery</td><td>DATE NULL</td></tr>
+                    
+                    <!-- Audit fields -->
+                    <tr><td>notes</td><td>TEXT NULL</td></tr>
+                    <tr><td>created_at</td><td>TIMESTAMP DEFAULT CURRENT_TIMESTAMP</td></tr>
+                    <tr><td>updated_at</td><td>TIMESTAMP ON UPDATE CURRENT_TIMESTAMP</td></tr>
+                </table>
+                <table>
+                    <tr><th colspan="2">sale_details (Line Items)</th></tr>
+                    <tr><td><span class="pk">id PK</span></td><td>INT</td></tr>
+                    <tr><td><span class="fk">sale_id FK</span></td><td>INT → sales(id) ON DELETE CASCADE</td></tr>
+                    <tr><td><span class="fk">product_id FK</span></td><td>INT → products(id)</td></tr>
+                    <tr><td><span class="fk">variant_id FK</span></td><td>INT → product_variants(id) NULL</td></tr>
+                    <tr><td>quantity</td><td>INT <span class="nn">NOT NULL</span></td></tr>
+                    <tr><td>unit_price</td><td>DECIMAL(10,2) <span class="nn">NOT NULL</span></td></tr>
+                    <tr><td>discount_per_item</td><td>DECIMAL(10,2) DEFAULT 0</td></tr>
+                    <tr><td>subtotal</td><td>DECIMAL(12,2)</td></tr>
+                </table>
+                <table>
+                    <tr><th colspan="2">promotions</th></tr>
+                    <tr><td><span class="pk">id PK</span></td><td>INT</td></tr>
+                    <tr><td>promo_code</td><td>VARCHAR(50) <span class="uq">UNIQUE</span></td></tr>
+                    <tr><td>name</td><td>VARCHAR(100)</td></tr>
+                    <tr><td>discount_type</td><td>ENUM('percentage','fixed_amount','buy_x_get_y')</td></tr>
+                    <tr><td>discount_value</td><td>DECIMAL(10,2)</td></tr>
+                    <tr><td>min_purchase</td><td>DECIMAL(10,2) DEFAULT 0</td></tr>
+                    <tr><td>start_date</td><td>DATETIME</td></tr>
+                    <tr><td>end_date</td><td>DATETIME</td></tr>
+                    <tr><td>usage_limit</td><td>INT DEFAULT NULL</td></tr>
+                    <tr><td>used_count</td><td>INT DEFAULT 0</td></tr>
+                    <tr><td>is_active</td><td>BOOLEAN DEFAULT TRUE</td></tr>
+                </table>
+                <table>
+                    <tr><th colspan="2">returns & refunds</th></tr>
+                    <tr><td><span class="pk">id PK</span></td><td>INT</td></tr>
+                    <tr><td><span class="fk">sale_id FK</span></td><td>INT → sales(id)</td></tr>
+                    <tr><td><span class="fk">employee_id FK</span></td><td>INT → employees(id)</td></tr>
+                    <tr><td>return_date</td><td>TIMESTAMP DEFAULT CURRENT_TIMESTAMP</td></tr>
+                    <tr><td>refund_amount</td><td>DECIMAL(10,2)</td></tr>
+                    <tr><td>reason</td><td>TEXT</td></tr>
+                    <tr><td>return_status</td><td>ENUM('pending','approved','rejected','completed')</td></tr>
+                </table>
+                <table>
+                    <tr><th colspan="2">return_details</th></tr>
+                    <tr><td><span class="pk">id PK</span></td><td>INT</td></tr>
+                    <tr><td><span class="fk">return_id FK</span></td><td>INT → returns(id) ON DELETE CASCADE</td></tr>
+                    <tr><td><span class="fk">sale_detail_id FK</span></td><td>INT → sale_details(id)</td></tr>
+                    <tr><td>quantity_returned</td><td>INT</td></tr>
+                    <tr><td>refund_amount</td><td>DECIMAL(10,2)</td></tr>
+                </table>
+                <table>
+                    <tr><th colspan="2">payments (For installment/partial payments)</th></tr>
+                    <tr><td><span class="pk">id PK</span></td><td>INT</td></tr>
+                    <tr><td><span class="fk">sale_id FK</span></td><td>INT → sales(id)</td></tr>
+                    <tr><td>payment_date</td><td>TIMESTAMP DEFAULT CURRENT_TIMESTAMP</td></tr>
+                    <tr><td>amount</td><td>DECIMAL(10,2)</td></tr>
+                    <tr><td>payment_method</td><td>VARCHAR(50)</td></tr>
+                    <tr><td>transaction_id</td><td>VARCHAR(100)</td></tr>
+                    <tr><td>payment_reference</td><td>VARCHAR(100)</td></tr>
+                </table>
+            </div>
+        </div>
+
+        <div class="sql-panel">
+            <div class="card">
+                <div class="card-header">
+                    <span>📝</span> Complete SQL Creation Script
+                </div>
+                <div class="card-body">
+                    <div class="sql-code" id="sqlScript">
+-- ============================================
+-- PERFECT DATABASE SCHEMA
+-- Online + In-Shop Sales
+-- ============================================
+
+CREATE DATABASE perfect_store;
+USE perfect_store;
+
+-- 1. SYSTEM CONFIG
+CREATE TABLE shop_settings (
+    id INT PRIMARY KEY AUTO_INCREMENT,
+    shop_name VARCHAR(100) NOT NULL,
+    phone VARCHAR(20),
+    email VARCHAR(100),
+    logo_url TEXT,
+    address TEXT,
+    tax_number VARCHAR(50),
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- 2. GEOGRAPHY
+CREATE TABLE provinces (
+    id INT PRIMARY KEY AUTO_INCREMENT,
+    province_name VARCHAR(100) NOT NULL,
+    province_code VARCHAR(10)
+);
+
+CREATE TABLE districts (
+    id INT PRIMARY KEY AUTO_INCREMENT,
+    province_id INT NOT NULL,
+    district_name VARCHAR(100) NOT NULL,
+    postal_code VARCHAR(10),
+    FOREIGN KEY (province_id) REFERENCES provinces(id)
+);
+
+-- 3. PEOPLE
+CREATE TABLE employees (
+    id INT PRIMARY KEY AUTO_INCREMENT,
+    first_name VARCHAR(50) NOT NULL,
+    last_name VARCHAR(50) NOT NULL,
+    phone VARCHAR(20) UNIQUE,
+    email VARCHAR(100),
+    province_id INT,
+    district_id INT,
+    address TEXT,
+    hire_date DATE,
+    salary DECIMAL(10,2),
+    FOREIGN KEY (province_id) REFERENCES provinces(id),
+    FOREIGN KEY (district_id) REFERENCES districts(id)
+);
+
+CREATE TABLE users (
+    id INT PRIMARY KEY AUTO_INCREMENT,
+    employee_id INT,
+    username VARCHAR(50) UNIQUE,
+    password_hash VARCHAR(255) NOT NULL,
+    role ENUM('admin','staff','manager'),
+    last_login TIMESTAMP,
+    is_active BOOLEAN DEFAULT TRUE,
+    FOREIGN KEY (employee_id) REFERENCES employees(id)
+);
+
+CREATE TABLE customers (
+    id INT PRIMARY KEY AUTO_INCREMENT,
+    first_name VARCHAR(50) NOT NULL,
+    last_name VARCHAR(50) NOT NULL,
+    phone VARCHAR(20) UNIQUE,
+    email VARCHAR(100) UNIQUE,
+    password_hash VARCHAR(255),
+    total_spent DECIMAL(12,2) DEFAULT 0,
+    loyalty_points INT DEFAULT 0,
+    customer_tier ENUM('bronze','silver','gold','platinum') DEFAULT 'bronze',
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    is_verified BOOLEAN DEFAULT FALSE
+);
+
+CREATE TABLE customer_addresses (
+    id INT PRIMARY KEY AUTO_INCREMENT,
+    customer_id INT NOT NULL,
+    recipient_name VARCHAR(100) NOT NULL,
+    recipient_phone VARCHAR(20),
+    province_id INT,
+    district_id INT,
+    detailed_address TEXT,
+    is_default BOOLEAN DEFAULT FALSE,
+    address_type ENUM('home','work','other'),
+    FOREIGN KEY (customer_id) REFERENCES customers(id) ON DELETE CASCADE,
+    FOREIGN KEY (province_id) REFERENCES provinces(id),
+    FOREIGN KEY (district_id) REFERENCES districts(id)
+);
+
+-- 4. PRODUCTS
+CREATE TABLE suppliers (
+    id INT PRIMARY KEY AUTO_INCREMENT,
+    name VARCHAR(100) NOT NULL,
+    contact_person VARCHAR(100),
+    phone VARCHAR(20),
+    email VARCHAR(100),
+    province_id INT,
+    district_id INT,
+    FOREIGN KEY (province_id) REFERENCES provinces(id),
+    FOREIGN KEY (district_id) REFERENCES districts(id)
+);
+
+CREATE TABLE categories (
+    id INT PRIMARY KEY AUTO_INCREMENT,
+    parent_id INT NULL,
+    category_name VARCHAR(100) NOT NULL,
+    slug VARCHAR(100) UNIQUE,
+    description TEXT,
+    FOREIGN KEY (parent_id) REFERENCES categories(id)
+);
+
+CREATE TABLE products (
+    id INT PRIMARY KEY AUTO_INCREMENT,
+    category_id INT,
+    supplier_id INT,
+    name VARCHAR(200) NOT NULL,
+    barcode VARCHAR(50) UNIQUE,
+    sku VARCHAR(50) UNIQUE,
+    description TEXT,
+    cost_price DECIMAL(10,2),
+    selling_price DECIMAL(10,2) NOT NULL,
+    weight DECIMAL(8,2),
+    is_active BOOLEAN DEFAULT TRUE,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (category_id) REFERENCES categories(id),
+    FOREIGN KEY (supplier_id) REFERENCES suppliers(id)
+);
+
+CREATE TABLE product_variants (
+    id INT PRIMARY KEY AUTO_INCREMENT,
+    product_id INT NOT NULL,
+    color VARCHAR(50),
+    size VARCHAR(20),
+    variant_sku VARCHAR(50) UNIQUE,
+    quantity_in_stock INT DEFAULT 0,
+    reorder_level INT DEFAULT 5,
+    additional_price DECIMAL(10,2) DEFAULT 0,
+    FOREIGN KEY (product_id) REFERENCES products(id) ON DELETE CASCADE
+);
+
+CREATE TABLE product_images (
+    id INT PRIMARY KEY AUTO_INCREMENT,
+    product_id INT NOT NULL,
+    image_url TEXT NOT NULL,
+    is_primary BOOLEAN DEFAULT FALSE,
+    sort_order INT DEFAULT 0,
+    FOREIGN KEY (product_id) REFERENCES products(id) ON DELETE CASCADE
+);
+
+-- 5. IMPORTS
+CREATE TABLE imports (
+    id INT PRIMARY KEY AUTO_INCREMENT,
+    employee_id INT,
+    supplier_id INT,
+    invoice_number VARCHAR(50) UNIQUE,
+    receive_date DATE,
+    total_amount DECIMAL(12,2),
+    payment_status ENUM('pending','partial','paid') DEFAULT 'pending',
+    status ENUM('draft','received','completed','cancelled') DEFAULT 'draft',
+    FOREIGN KEY (employee_id) REFERENCES employees(id),
+    FOREIGN KEY (supplier_id) REFERENCES suppliers(id)
+);
+
+CREATE TABLE import_details (
+    id INT PRIMARY KEY AUTO_INCREMENT,
+    import_id INT NOT NULL,
+    product_id INT NOT NULL,
+    variant_id INT NULL,
+    quantity INT NOT NULL,
+    unit_cost DECIMAL(10,2),
+    subtotal DECIMAL(12,2),
+    FOREIGN KEY (import_id) REFERENCES imports(id) ON DELETE CASCADE,
+    FOREIGN KEY (product_id) REFERENCES products(id),
+    FOREIGN KEY (variant_id) REFERENCES product_variants(id)
+);
+
+-- 6. PROMOTIONS
+CREATE TABLE promotions (
+    id INT PRIMARY KEY AUTO_INCREMENT,
+    promo_code VARCHAR(50) UNIQUE,
+    name VARCHAR(100),
+    discount_type ENUM('percentage','fixed_amount','buy_x_get_y'),
+    discount_value DECIMAL(10,2),
+    min_purchase DECIMAL(10,2) DEFAULT 0,
+    start_date DATETIME,
+    end_date DATETIME,
+    usage_limit INT DEFAULT NULL,
+    used_count INT DEFAULT 0,
+    is_active BOOLEAN DEFAULT TRUE
+);
+
+-- 7. SALES (UNIFIED)
+CREATE TABLE sales (
+    id INT PRIMARY KEY AUTO_INCREMENT,
+    sale_type ENUM('in_shop','online') NOT NULL,
+    sale_number VARCHAR(50) UNIQUE,
+    customer_id INT NULL,
+    employee_id INT,
+    promotion_id INT NULL,
+    address_id INT NULL,
+    sale_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    subtotal DECIMAL(12,2),
+    discount_amount DECIMAL(10,2) DEFAULT 0,
+    tax_amount DECIMAL(10,2) DEFAULT 0,
+    shipping_fee DECIMAL(10,2) DEFAULT 0,
+    total_amount DECIMAL(12,2) NOT NULL,
+    payment_method ENUM('cash','credit_card','bank_transfer','cod','qr_payment'),
+    payment_status ENUM('pending','paid','failed','refunded','partial') DEFAULT 'pending',
+    sale_status ENUM('pending','processing','completed','cancelled','returned') DEFAULT 'pending',
+    tracking_code VARCHAR(100) UNIQUE NULL,
+    delivery_status ENUM('pending','packed','shipped','delivered','returned') NULL,
+    courier_name VARCHAR(100) NULL,
+    estimated_delivery DATE NULL,
+    actual_delivery DATE NULL,
+    notes TEXT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    FOREIGN KEY (customer_id) REFERENCES customers(id),
+    FOREIGN KEY (employee_id) REFERENCES employees(id),
+    FOREIGN KEY (promotion_id) REFERENCES promotions(id),
+    FOREIGN KEY (address_id) REFERENCES customer_addresses(id)
+);
+
+CREATE TABLE sale_details (
+    id INT PRIMARY KEY AUTO_INCREMENT,
+    sale_id INT NOT NULL,
+    product_id INT NOT NULL,
+    variant_id INT NULL,
+    quantity INT NOT NULL,
+    unit_price DECIMAL(10,2) NOT NULL,
+    discount_per_item DECIMAL(10,2) DEFAULT 0,
+    subtotal DECIMAL(12,2),
+    FOREIGN KEY (sale_id) REFERENCES sales(id) ON DELETE CASCADE,
+    FOREIGN KEY (product_id) REFERENCES products(id),
+    FOREIGN KEY (variant_id) REFERENCES product_variants(id)
+);
+
+CREATE TABLE returns (
+    id INT PRIMARY KEY AUTO_INCREMENT,
+    sale_id INT NOT NULL,
+    employee_id INT,
+    return_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    refund_amount DECIMAL(10,2),
+    reason TEXT,
+    return_status ENUM('pending','approved','rejected','completed') DEFAULT 'pending',
+    FOREIGN KEY (sale_id) REFERENCES sales(id),
+    FOREIGN KEY (employee_id) REFERENCES employees(id)
+);
+
+CREATE TABLE return_details (
+    id INT PRIMARY KEY AUTO_INCREMENT,
+    return_id INT NOT NULL,
+    sale_detail_id INT NOT NULL,
+    quantity_returned INT,
+    refund_amount DECIMAL(10,2),
+    FOREIGN KEY (return_id) REFERENCES returns(id) ON DELETE CASCADE,
+    FOREIGN KEY (sale_detail_id) REFERENCES sale_details(id)
+);
+
+CREATE TABLE payments (
+    id INT PRIMARY KEY AUTO_INCREMENT,
+    sale_id INT NOT NULL,
+    payment_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    amount DECIMAL(10,2),
+    payment_method VARCHAR(50),
+    transaction_id VARCHAR(100),
+    payment_reference VARCHAR(100),
+    FOREIGN KEY (sale_id) REFERENCES sales(id)
+);
+
+-- ============================================
+-- INDEXES FOR PERFORMANCE
+-- ============================================
+
+CREATE INDEX idx_sales_customer ON sales(customer_id);
+CREATE INDEX idx_sales_date ON sales(sale_date);
+CREATE INDEX idx_sales_status ON sales(sale_status);
+CREATE INDEX idx_sales_tracking ON sales(tracking_code);
+CREATE INDEX idx_sale_details_sale ON sale_details(sale_id);
+CREATE INDEX idx_sale_details_product ON sale_details(product_id);
+CREATE INDEX idx_products_barcode ON products(barcode);
+CREATE INDEX idx_products_sku ON products(sku);
+CREATE INDEX idx_variants_product ON product_variants(product_id);
+CREATE INDEX idx_imports_date ON imports(receive_date);
+CREATE INDEX idx_promotions_code ON promotions(promo_code);
+CREATE INDEX idx_promotions_dates ON promotions(start_date, end_date);
+
+-- ============================================
+-- SAMPLE DATA INSERTION
+-- ============================================
+
+INSERT INTO shop_settings VALUES (1, 'Perfect Fashion Store', '02-123-4567', 'info@perfectstore.com', 'logo.png', '123 Main St', 'TAX001', NOW());
+
+INSERT INTO provinces VALUES (1, 'Bangkok', 'BKK'), (2, 'Chiang Mai', 'CNX');
+INSERT INTO districts VALUES (1, 1, 'Sukhumvit', '10110'), (2, 1, 'Silom', '10500');
+
+INSERT INTO customers VALUES (1, 'John', 'Doe', '0812345678', 'john@email.com', 'hash123', 5000.00, 100, 'gold', NOW(), TRUE);
+INSERT INTO customers VALUES (2, 'Jane', 'Smith', '0898765432', 'jane@email.com', 'hash456', 1200.00, 25, 'silver', NOW(), TRUE);
+
+-- In-shop sale example
+INSERT INTO sales (sale_type, sale_number, customer_id, employee_id, sale_date, subtotal, total_amount, payment_method, payment_status, sale_status)
+VALUES ('in_shop', 'SALE-2024-001', 1, 1, NOW(), 1500.00, 1500.00, 'cash', 'paid', 'completed');
+
+-- Online sale example
+INSERT INTO sales (sale_type, sale_number, customer_id, employee_id, address_id, subtotal, shipping_fee, total_amount, payment_method, payment_status, sale_status, tracking_code, delivery_status, courier_name)
+VALUES ('online', 'ONLINE-2024-001', 2, 1, 1, 2500.00, 50.00, 2550.00, 'bank_transfer', 'paid', 'processing', 'TRK123456789', 'shipped', 'Kerry Express');
+
+-- Sample promotion
+INSERT INTO promotions (promo_code, name, discount_type, discount_value, start_date, end_date, is_active)
+VALUES ('WELCOME10', 'Welcome 10% Off', 'percentage', 10.00, NOW(), DATE_ADD(NOW(), INTERVAL 30 DAY), TRUE);
+
+-- ============================================
+-- USEFUL VIEWS
+-- ============================================
+
+-- Daily sales report view
+CREATE VIEW daily_sales_report AS
+SELECT 
+    DATE(sale_date) as sale_day,
+    sale_type,
+    COUNT(*) as total_transactions,
+    SUM(total_amount) as total_revenue,
+    AVG(total_amount) as avg_order_value
+FROM sales
+WHERE sale_status = 'completed'
+GROUP BY DATE(sale_date), sale_type;
+
+-- Inventory status view
+CREATE VIEW inventory_status AS
+SELECT 
+    p.id as product_id,
+    p.name as product_name,
+    pv.color,
+    pv.size,
+    pv.quantity_in_stock,
+    pv.reorder_level,
+    CASE 
+        WHEN pv.quantity_in_stock <= pv.reorder_level THEN 'LOW STOCK'
+        WHEN pv.quantity_in_stock = 0 THEN 'OUT OF STOCK'
+        ELSE 'IN STOCK'
+    END as stock_status
+FROM products p
+JOIN product_variants pv ON p.id = pv.product_id;
+
+-- ============================================
+-- STORED PROCEDURE: Process Online Order
+-- ============================================
+
+DELIMITER //
+CREATE PROCEDURE process_online_order(
+    IN p_customer_id INT,
+    IN p_address_id INT,
+    IN p_courier_name VARCHAR(100)
+)
+BEGIN
+    DECLARE v_sale_number VARCHAR(50);
+    SET v_sale_number = CONCAT('ONLINE-', DATE_FORMAT(NOW(), '%Y%m%d-'), FLOOR(RAND()*10000));
+    
+    INSERT INTO sales (sale_type, sale_number, customer_id, address_id, courier_name, delivery_status, sale_status)
+    VALUES ('online', v_sale_number, p_customer_id, p_address_id, p_courier_name, 'pending', 'pending');
+    
+    SELECT LAST_INSERT_ID() as sale_id, v_sale_number as sale_number;
+END//
+DELIMITER ;
+
+-- ============================================
+-- TRIGGER: Update inventory after sale
+-- ============================================
+
+DELIMITER //
+CREATE TRIGGER update_inventory_after_sale
+AFTER INSERT ON sale_details
+FOR EACH ROW
+BEGIN
+    IF NEW.variant_id IS NOT NULL THEN
+        UPDATE product_variants 
+        SET quantity_in_stock = quantity_in_stock - NEW.quantity
+        WHERE id = NEW.variant_id;
+    END IF;
+END//
+DELIMITER ;
+
+-- ============================================
+-- QUERY: Compare Online vs In-Shop Sales
+-- ============================================
+
+SELECT 
+    sale_type,
+    COUNT(*) as order_count,
+    SUM(total_amount) as total_revenue,
+    AVG(total_amount) as avg_order_value,
+    SUM(CASE WHEN sale_status = 'completed' THEN 1 ELSE 0 END) as completed_orders,
+    SUM(CASE WHEN sale_status = 'cancelled' THEN 1 ELSE 0 END) as cancelled_orders
+FROM sales
+WHERE sale_date >= DATE_SUB(NOW(), INTERVAL 30 DAY)
+GROUP BY sale_type;
+                    </div>
+                    <button onclick="copySQL()">📋 Copy SQL Script</button>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-header">
+                    <span>💡</span> Key Features
+                </div>
+                <div class="card-body">
+                    <div class="note">
+                        <strong>✅ Unified Sales Table</strong><br>
+                        One table for both online and in-shop sales with nullable online-specific fields.
+                    </div>
+                    <div class="note">
+                        <strong>✅ Complete Payment Tracking</strong><br>
+                        Supports multiple payments, partial payments, and refunds.
+                    </div>
+                    <div class="note">
+                        <strong>✅ Inventory Management</strong><br>
+                        Tracks stock levels, reorder points, and variant management.
+                    </div>
+                    <div class="note">
+                        <strong>✅ Customer Loyalty</strong><br>
+                        Points system, customer tiers, and purchase history.
+                    </div>
+                    <div class="note">
+                        <strong>✅ Promotion Engine</strong><br>
+                        Flexible discount types (percentage, fixed, buy X get Y).
+                    </div>
+                    <div class="note">
+                        <strong>✅ Audit Ready</strong><br>
+                        Full timestamp tracking and user attribution.
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function copySQL() {
+            const sqlText = document.getElementById('sqlScript').innerText;
+            navigator.clipboard.writeText(sqlText).then(() => {
+                alert('✅ SQL script copied to clipboard!');
+            });
+        }
+    </script>
+</body>
+</html>
