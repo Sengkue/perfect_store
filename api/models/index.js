@@ -1,11 +1,12 @@
 import sequelize from '../config/database.js';
 
-// Import all models
+// Import all 23 models
 import ShopSetting from './shopSetting.model.js';
-import Province from './province.model.js';
-import District from './district.model.js';
-import Employee from './employee.model.js';
 import User from './user.model.js';
+import UserProfile from './userProfile.model.js';
+import Permission from './permission.model.js';
+import RolePermission from './rolePermission.model.js';
+import UserPermission from './userPermission.model.js';
 import Customer from './customer.model.js';
 import CustomerAddress from './customerAddress.model.js';
 import Supplier from './supplier.model.js';
@@ -13,6 +14,8 @@ import Category from './category.model.js';
 import Product from './product.model.js';
 import ProductVariant from './productVariant.model.js';
 import ProductImage from './productImage.model.js';
+import PurchaseOrder from './purchaseOrder.model.js';
+import PurchaseOrderDetail from './purchaseOrderDetail.model.js';
 import Import from './import.model.js';
 import ImportDetail from './importDetail.model.js';
 import Promotion from './promotion.model.js';
@@ -26,84 +29,112 @@ import Payment from './payment.model.js';
 // ASSOCIATIONS
 // ============================================
 
-// --- Geography ---
-Province.hasMany(District, { foreignKey: 'province_id', as: 'districts' });
-District.belongsTo(Province, { foreignKey: 'province_id', as: 'province' });
+// --- People ---
+User.hasOne(UserProfile, { foreignKey: 'user_id', as: 'profile', onDelete: 'CASCADE' });
+UserProfile.belongsTo(User, { foreignKey: 'user_id', as: 'user' });
 
-// --- Employee ---
-Employee.belongsTo(Province, { foreignKey: 'province_id', as: 'province' });
-Employee.belongsTo(District, { foreignKey: 'district_id', as: 'district' });
+// --- Access Control ---
+RolePermission.belongsTo(Permission, { foreignKey: 'permission_id', as: 'permission', onDelete: 'CASCADE' });
+Permission.hasMany(RolePermission, { foreignKey: 'permission_id', as: 'role_permissions' });
 
-// --- User → Employee ---
-User.belongsTo(Employee, { foreignKey: 'employee_id', as: 'employee' });
-Employee.hasOne(User, { foreignKey: 'employee_id', as: 'user' });
+UserPermission.belongsTo(User, { foreignKey: 'user_id', as: 'user', onDelete: 'CASCADE' });
+User.hasMany(UserPermission, { foreignKey: 'user_id', as: 'user_permissions' });
 
-// --- Customer → Addresses ---
+UserPermission.belongsTo(Permission, { foreignKey: 'permission_id', as: 'permission', onDelete: 'CASCADE' });
+Permission.hasMany(UserPermission, { foreignKey: 'permission_id', as: 'user_grants' });
+
+UserPermission.belongsTo(User, { foreignKey: 'granted_by', as: 'granter' });
+
+// --- Customer ---
 Customer.hasMany(CustomerAddress, { foreignKey: 'customer_id', as: 'addresses', onDelete: 'CASCADE' });
 CustomerAddress.belongsTo(Customer, { foreignKey: 'customer_id', as: 'customer' });
-CustomerAddress.belongsTo(Province, { foreignKey: 'province_id', as: 'province' });
-CustomerAddress.belongsTo(District, { foreignKey: 'district_id', as: 'district' });
 
-// --- Supplier ---
-Supplier.belongsTo(Province, { foreignKey: 'province_id', as: 'province' });
-Supplier.belongsTo(District, { foreignKey: 'district_id', as: 'district' });
-
-// --- Category (self-referencing) ---
-Category.belongsTo(Category, { foreignKey: 'parent_id', as: 'parent' });
+// --- Products & Inventory ---
 Category.hasMany(Category, { foreignKey: 'parent_id', as: 'children' });
+Category.belongsTo(Category, { foreignKey: 'parent_id', as: 'parent' });
 
-// --- Product ---
 Product.belongsTo(Category, { foreignKey: 'category_id', as: 'category' });
-Product.belongsTo(Supplier, { foreignKey: 'supplier_id', as: 'supplier' });
-Product.hasMany(ProductVariant, { foreignKey: 'product_id', as: 'variants', onDelete: 'CASCADE' });
-Product.hasMany(ProductImage, { foreignKey: 'product_id', as: 'images', onDelete: 'CASCADE' });
+Category.hasMany(Product, { foreignKey: 'category_id', as: 'products' });
 
+Product.belongsTo(Supplier, { foreignKey: 'supplier_id', as: 'supplier' });
+Supplier.hasMany(Product, { foreignKey: 'supplier_id', as: 'products' });
+
+Product.hasMany(ProductVariant, { foreignKey: 'product_id', as: 'variants', onDelete: 'CASCADE' });
 ProductVariant.belongsTo(Product, { foreignKey: 'product_id', as: 'product' });
+
+Product.hasMany(ProductImage, { foreignKey: 'product_id', as: 'images', onDelete: 'CASCADE' });
 ProductImage.belongsTo(Product, { foreignKey: 'product_id', as: 'product' });
 
-// --- Import ---
-Import.belongsTo(Employee, { foreignKey: 'employee_id', as: 'employee' });
-Import.belongsTo(Supplier, { foreignKey: 'supplier_id', as: 'supplier' });
-Import.hasMany(ImportDetail, { foreignKey: 'import_id', as: 'details', onDelete: 'CASCADE' });
+// --- Purchase Orders ---
+PurchaseOrder.belongsTo(User, { foreignKey: 'user_id', as: 'user' });
+User.hasMany(PurchaseOrder, { foreignKey: 'user_id', as: 'purchase_orders' });
 
+PurchaseOrder.belongsTo(Supplier, { foreignKey: 'supplier_id', as: 'supplier' });
+Supplier.hasMany(PurchaseOrder, { foreignKey: 'supplier_id', as: 'purchase_orders' });
+
+PurchaseOrder.hasMany(PurchaseOrderDetail, { foreignKey: 'po_id', as: 'details', onDelete: 'CASCADE' });
+PurchaseOrderDetail.belongsTo(PurchaseOrder, { foreignKey: 'po_id', as: 'purchase_order' });
+
+PurchaseOrderDetail.belongsTo(Product, { foreignKey: 'product_id', as: 'product' });
+PurchaseOrderDetail.belongsTo(ProductVariant, { foreignKey: 'variant_id', as: 'variant' });
+
+// --- Imports (Receiving) ---
+Import.belongsTo(PurchaseOrder, { foreignKey: 'purchase_order_id', as: 'purchase_order' });
+PurchaseOrder.hasMany(Import, { foreignKey: 'purchase_order_id', as: 'imports' });
+
+Import.belongsTo(User, { foreignKey: 'user_id', as: 'user' });
+User.hasMany(Import, { foreignKey: 'user_id', as: 'imports' });
+
+Import.belongsTo(Supplier, { foreignKey: 'supplier_id', as: 'supplier' });
+Supplier.hasMany(Import, { foreignKey: 'supplier_id', as: 'imports' });
+
+Import.hasMany(ImportDetail, { foreignKey: 'import_id', as: 'details', onDelete: 'CASCADE' });
 ImportDetail.belongsTo(Import, { foreignKey: 'import_id', as: 'import' });
+
 ImportDetail.belongsTo(Product, { foreignKey: 'product_id', as: 'product' });
 ImportDetail.belongsTo(ProductVariant, { foreignKey: 'variant_id', as: 'variant' });
 
-// --- Sale ---
+// --- Sales (Unified) ---
 Sale.belongsTo(Customer, { foreignKey: 'customer_id', as: 'customer' });
-Sale.belongsTo(Employee, { foreignKey: 'employee_id', as: 'employee' });
-Sale.belongsTo(Promotion, { foreignKey: 'promotion_id', as: 'promotion' });
-Sale.belongsTo(CustomerAddress, { foreignKey: 'address_id', as: 'address' });
-Sale.hasMany(SaleDetail, { foreignKey: 'sale_id', as: 'details', onDelete: 'CASCADE' });
-Sale.hasMany(Payment, { foreignKey: 'sale_id', as: 'payments' });
-Sale.hasMany(Return, { foreignKey: 'sale_id', as: 'returns' });
+Customer.hasMany(Sale, { foreignKey: 'customer_id', as: 'sales' });
 
+Sale.belongsTo(User, { foreignKey: 'user_id', as: 'user' });
+User.hasMany(Sale, { foreignKey: 'user_id', as: 'sales' });
+
+Sale.belongsTo(Promotion, { foreignKey: 'promotion_id', as: 'promotion' });
+Promotion.hasMany(Sale, { foreignKey: 'promotion_id', as: 'sales' });
+
+Sale.belongsTo(CustomerAddress, { foreignKey: 'address_id', as: 'address' });
+
+Sale.hasMany(SaleDetail, { foreignKey: 'sale_id', as: 'details', onDelete: 'CASCADE' });
 SaleDetail.belongsTo(Sale, { foreignKey: 'sale_id', as: 'sale' });
+
 SaleDetail.belongsTo(Product, { foreignKey: 'product_id', as: 'product' });
 SaleDetail.belongsTo(ProductVariant, { foreignKey: 'variant_id', as: 'variant' });
 
-// --- Return ---
-Return.belongsTo(Sale, { foreignKey: 'sale_id', as: 'sale' });
-Return.belongsTo(Employee, { foreignKey: 'employee_id', as: 'employee' });
-Return.hasMany(ReturnDetail, { foreignKey: 'return_id', as: 'details', onDelete: 'CASCADE' });
-
-ReturnDetail.belongsTo(Return, { foreignKey: 'return_id', as: 'return' });
-ReturnDetail.belongsTo(SaleDetail, { foreignKey: 'sale_detail_id', as: 'saleDetail' });
-
-// --- Payment ---
+Sale.hasMany(Payment, { foreignKey: 'sale_id', as: 'payments' });
 Payment.belongsTo(Sale, { foreignKey: 'sale_id', as: 'sale' });
 
-// --- Customer reverse ---
-Customer.hasMany(Sale, { foreignKey: 'customer_id', as: 'sales' });
+Sale.hasMany(Return, { foreignKey: 'sale_id', as: 'returns' });
+Return.belongsTo(Sale, { foreignKey: 'sale_id', as: 'sale' });
 
+// --- Returns ---
+Return.belongsTo(User, { foreignKey: 'user_id', as: 'user' });
+
+Return.hasMany(ReturnDetail, { foreignKey: 'return_id', as: 'details', onDelete: 'CASCADE' });
+ReturnDetail.belongsTo(Return, { foreignKey: 'return_id', as: 'return' });
+
+ReturnDetail.belongsTo(SaleDetail, { foreignKey: 'sale_detail_id', as: 'saleDetail' });
+
+// Export all models & sequelize instance
 export {
   sequelize,
   ShopSetting,
-  Province,
-  District,
-  Employee,
   User,
+  UserProfile,
+  Permission,
+  RolePermission,
+  UserPermission,
   Customer,
   CustomerAddress,
   Supplier,
@@ -111,6 +142,8 @@ export {
   Product,
   ProductVariant,
   ProductImage,
+  PurchaseOrder,
+  PurchaseOrderDetail,
   Import,
   ImportDetail,
   Promotion,

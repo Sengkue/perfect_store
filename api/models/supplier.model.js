@@ -22,14 +22,6 @@ const Supplier = sequelize.define('suppliers', {
   email: {
     type: DataTypes.STRING(100),
     allowNull: true
-  },
-  province_id: {
-    type: DataTypes.INTEGER,
-    allowNull: true
-  },
-  district_id: {
-    type: DataTypes.INTEGER,
-    allowNull: true
   }
 });
 

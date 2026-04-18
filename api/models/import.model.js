@@ -7,7 +7,11 @@ const Import = sequelize.define('imports', {
     primaryKey: true,
     autoIncrement: true
   },
-  employee_id: {
+  purchase_order_id: {
+    type: DataTypes.INTEGER,
+    allowNull: true
+  },
+  user_id: {
     type: DataTypes.INTEGER,
     allowNull: true
   },

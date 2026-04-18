@@ -1,6 +1,6 @@
 import {
-  Sale, SaleDetail, Customer, Employee, Promotion,
-  CustomerAddress, Product, ProductVariant, Province, District
+  Sale, SaleDetail, Customer, User, Promotion,
+  CustomerAddress, Product, ProductVariant, Payment
 } from '../models/index.js';
 import { getPagination, getPaginatedResponse, generateSaleNumber } from '../utils/helpers.js';
 import { Op } from 'sequelize';
@@ -42,7 +42,7 @@ export const getAll = async (req, res, next) => {
       order: [['id', 'DESC']],
       include: [
         { model: Customer, as: 'customer', attributes: ['id', 'first_name', 'last_name', 'phone'] },
-        { model: Employee, as: 'employee', attributes: ['id', 'first_name', 'last_name'] }
+        { model: User, as: 'user', attributes: ['id', 'username'] }
       ]
     });
 
@@ -65,15 +65,11 @@ export const getById = async (req, res, next) => {
           as: 'customer',
           attributes: { exclude: ['password_hash'] }
         },
-        { model: Employee, as: 'employee' },
+        { model: User, as: 'user' },
         { model: Promotion, as: 'promotion' },
         {
           model: CustomerAddress,
-          as: 'address',
-          include: [
-            { model: Province, as: 'province' },
-            { model: District, as: 'district' }
-          ]
+          as: 'address'
         },
         {
           model: SaleDetail,
@@ -106,25 +102,39 @@ export const create = async (req, res, next) => {
     // Generate sale number
     saleData.sale_number = generateSaleNumber(saleData.sale_type);
 
-    // Set employee from auth
-    if (req.user && req.user.employee) {
-      saleData.employee_id = req.user.employee.id;
+    // Set user from auth
+    if (req.user) {
+      saleData.user_id = req.user.id;
     }
 
-    // Calculate subtotal from items
+    // Calculate subtotal from items and resolve missing variant_ids
     let subtotal = 0;
-    const detailsData = items.map(item => {
+    const detailsData = [];
+    for (const item of items) {
       const itemSubtotal = (item.unit_price * item.quantity) - (item.discount_per_item || 0) * item.quantity;
       subtotal += itemSubtotal;
-      return {
+
+      let variantId = item.variant_id || null;
+      if (!variantId) {
+        // Find default/first variant for this product
+        const defaultVariant = await ProductVariant.findOne({ where: { product_id: item.product_id }, transaction: t });
+        if (defaultVariant) {
+          variantId = defaultVariant.id;
+        }
+      }
+
+      // Ensure item has variant_id for the stock update loop below
+      item.variant_id = variantId;
+
+      detailsData.push({
         product_id: item.product_id,
-        variant_id: item.variant_id || null,
+        variant_id: variantId,
         quantity: item.quantity,
         unit_price: item.unit_price,
         discount_per_item: item.discount_per_item || 0,
         subtotal: itemSubtotal
-      };
-    });
+      });
+    }
 
     saleData.subtotal = subtotal;
 
@@ -148,7 +158,31 @@ export const create = async (req, res, next) => {
     const shippingFee = parseFloat(saleData.shipping_fee) || 0;
     saleData.total_amount = subtotal - discountAmount + taxAmount + shippingFee;
 
+    const amountPaid = parseFloat(req.body.amount_paid) || 0;
+    if (amountPaid >= saleData.total_amount) {
+      saleData.payment_status = 'paid';
+    } else if (amountPaid > 0) {
+      saleData.payment_status = 'partial';
+    } else {
+      saleData.payment_status = 'pending';
+    }
+
+    // In-shop sales are completed instantly at the register.
+    // Online / other types stay 'pending' until fulfilled.
+    if (saleData.sale_type === 'in_shop') {
+      saleData.sale_status = 'completed';
+    }
+
     const sale = await Sale.create(saleData, { transaction: t });
+
+    // Create payment record if any amount paid
+    if (amountPaid > 0) {
+      await Payment.create({
+        sale_id: sale.id,
+        amount: amountPaid,
+        payment_method: saleData.payment_method
+      }, { transaction: t });
+    }
 
     // Create sale details
     const details = detailsData.map(d => ({ ...d, sale_id: sale.id }));

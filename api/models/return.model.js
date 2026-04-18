@@ -11,7 +11,7 @@ const Return = sequelize.define('returns', {
     type: DataTypes.INTEGER,
     allowNull: false
   },
-  employee_id: {
+  user_id: {
     type: DataTypes.INTEGER,
     allowNull: true
   },

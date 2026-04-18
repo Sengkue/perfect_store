@@ -1,5 +1,5 @@
 import jwt from 'jsonwebtoken';
-import { User, Employee } from '../models/index.js';
+import { User, UserProfile } from '../models/index.js';
 
 const auth = async (req, res, next) => {
   try {
@@ -16,7 +16,7 @@ const auth = async (req, res, next) => {
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
 
     const user = await User.findByPk(decoded.id, {
-      include: [{ model: Employee, as: 'employee' }]
+      include: [{ model: UserProfile, as: 'profile' }]
     });
 
     if (!user || !user.is_active) {

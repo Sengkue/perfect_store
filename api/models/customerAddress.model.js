@@ -19,14 +19,6 @@ const CustomerAddress = sequelize.define('customer_addresses', {
     type: DataTypes.STRING(20),
     allowNull: true
   },
-  province_id: {
-    type: DataTypes.INTEGER,
-    allowNull: true
-  },
-  district_id: {
-    type: DataTypes.INTEGER,
-    allowNull: true
-  },
   detailed_address: {
     type: DataTypes.TEXT,
     allowNull: true

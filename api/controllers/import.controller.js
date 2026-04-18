@@ -1,4 +1,4 @@
-import { Import, ImportDetail, Product, ProductVariant, Supplier, Employee } from '../models/index.js';
+import { Import, ImportDetail, Product, ProductVariant, Supplier, User, PurchaseOrder } from '../models/index.js';
 import { getPagination, getPaginatedResponse, generateInvoiceNumber } from '../utils/helpers.js';
 import { Op } from 'sequelize';
 import sequelize from '../config/database.js';
@@ -27,7 +27,7 @@ export const getAll = async (req, res, next) => {
       order: [['id', 'DESC']],
       include: [
         { model: Supplier, as: 'supplier', attributes: ['id', 'name'] },
-        { model: Employee, as: 'employee', attributes: ['id', 'first_name', 'last_name'] }
+        { model: User, as: 'user', attributes: ['id', 'username'] }
       ]
     });
 
@@ -46,7 +46,8 @@ export const getById = async (req, res, next) => {
     const importRecord = await Import.findByPk(req.params.id, {
       include: [
         { model: Supplier, as: 'supplier' },
-        { model: Employee, as: 'employee' },
+        { model: User, as: 'user', attributes: ['id', 'username'] },
+        { model: PurchaseOrder, as: 'purchase_order' },
         {
           model: ImportDetail,
           as: 'details',
@@ -80,9 +81,9 @@ export const create = async (req, res, next) => {
       importData.invoice_number = generateInvoiceNumber();
     }
 
-    // Set employee from authenticated user
-    if (req.user && req.user.employee) {
-      importData.employee_id = req.user.employee.id;
+    // Set user from authenticated user
+    if (req.user) {
+      importData.user_id = req.user.id;
     }
 
     // Calculate total

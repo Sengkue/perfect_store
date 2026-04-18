@@ -1,5 +1,5 @@
 import bcrypt from 'bcryptjs';
-import { Customer, CustomerAddress, Province, District } from '../models/index.js';
+import { Customer, CustomerAddress } from '../models/index.js';
 import { getPagination, getPaginatedResponse } from '../utils/helpers.js';
 import { Op } from 'sequelize';
 
@@ -46,11 +46,8 @@ export const getById = async (req, res, next) => {
       attributes: { exclude: ['password_hash'] },
       include: [{
         model: CustomerAddress,
-        as: 'addresses',
-        include: [
-          { model: Province, as: 'province' },
-          { model: District, as: 'district' }
-        ]
+        model: CustomerAddress,
+        as: 'addresses'
       }]
     });
 
@@ -138,11 +135,7 @@ export const remove = async (req, res, next) => {
 export const getAddresses = async (req, res, next) => {
   try {
     const addresses = await CustomerAddress.findAll({
-      where: { customer_id: req.params.id },
-      include: [
-        { model: Province, as: 'province' },
-        { model: District, as: 'district' }
-      ]
+      where: { customer_id: req.params.id }
     });
 
     res.json({ success: true, data: addresses });

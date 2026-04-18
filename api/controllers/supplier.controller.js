@@ -1,4 +1,4 @@
-import { Supplier, Province, District } from '../models/index.js';
+import { Supplier } from '../models/index.js';
 import { getPagination, getPaginatedResponse } from '../utils/helpers.js';
 import { Op } from 'sequelize';
 
@@ -20,11 +20,7 @@ export const getAll = async (req, res, next) => {
       where,
       limit,
       offset,
-      order: [['name', 'ASC']],
-      include: [
-        { model: Province, as: 'province' },
-        { model: District, as: 'district' }
-      ]
+      order: [['name', 'ASC']]
     });
 
     res.json({
@@ -39,12 +35,7 @@ export const getAll = async (req, res, next) => {
 // GET /api/suppliers/:id
 export const getById = async (req, res, next) => {
   try {
-    const supplier = await Supplier.findByPk(req.params.id, {
-      include: [
-        { model: Province, as: 'province' },
-        { model: District, as: 'district' }
-      ]
-    });
+    const supplier = await Supplier.findByPk(req.params.id);
 
     if (!supplier) {
       return res.status(404).json({ success: false, message: 'Supplier not found' });

@@ -1,4 +1,4 @@
-import { Return, ReturnDetail, Sale, SaleDetail, Product, ProductVariant, Employee } from '../models/index.js';
+import { Return, ReturnDetail, Sale, SaleDetail, Product, ProductVariant, User } from '../models/index.js';
 import { getPagination, getPaginatedResponse } from '../utils/helpers.js';
 import { Op } from 'sequelize';
 import sequelize from '../config/database.js';
@@ -24,9 +24,9 @@ export const getAll = async (req, res, next) => {
           attributes: ['id', 'sale_number', 'sale_type', 'total_amount']
         },
         {
-          model: Employee,
-          as: 'employee',
-          attributes: ['id', 'first_name', 'last_name']
+          model: User,
+          as: 'user',
+          attributes: ['id', 'username']
         }
       ]
     });
@@ -46,7 +46,7 @@ export const getById = async (req, res, next) => {
     const returnRecord = await Return.findByPk(req.params.id, {
       include: [
         { model: Sale, as: 'sale' },
-        { model: Employee, as: 'employee' },
+        { model: User, as: 'user' },
         {
           model: ReturnDetail,
           as: 'details',
@@ -86,9 +86,9 @@ export const create = async (req, res, next) => {
       return res.status(404).json({ success: false, message: 'Sale not found' });
     }
 
-    // Set employee from auth
-    if (req.user && req.user.employee) {
-      returnData.employee_id = req.user.employee.id;
+    // Set user from auth
+    if (req.user) {
+      returnData.user_id = req.user.id;
     }
 
     // Calculate total refund

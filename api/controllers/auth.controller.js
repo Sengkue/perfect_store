@@ -1,6 +1,6 @@
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
-import { User, Employee } from '../models/index.js';
+import { User, UserProfile } from '../models/index.js';
 
 // POST /api/auth/login
 export const login = async (req, res, next) => {
@@ -9,7 +9,7 @@ export const login = async (req, res, next) => {
 
     const user = await User.findOne({
       where: { username },
-      include: [{ model: Employee, as: 'employee' }]
+      include: [{ model: UserProfile, as: 'profile' }]
     });
 
     if (!user) {
@@ -52,7 +52,7 @@ export const login = async (req, res, next) => {
           id: user.id,
           username: user.username,
           role: user.role,
-          employee: user.employee,
+          profile: user.profile,
           last_login: user.last_login
         }
       }
@@ -65,7 +65,7 @@ export const login = async (req, res, next) => {
 // POST /api/auth/register
 export const register = async (req, res, next) => {
   try {
-    const { username, password, role, employee_id } = req.body;
+    const { username, password, role } = req.body;
 
     const existing = await User.findOne({ where: { username } });
     if (existing) {
@@ -75,25 +75,13 @@ export const register = async (req, res, next) => {
       });
     }
 
-    // Validate employee_id if provided
-    if (employee_id) {
-      const employee = await Employee.findByPk(employee_id);
-      if (!employee) {
-        return res.status(404).json({
-          success: false,
-          message: 'Employee not found.'
-        });
-      }
-    }
-
     const salt = await bcrypt.genSalt(10);
     const password_hash = await bcrypt.hash(password, salt);
 
     const user = await User.create({
       username,
       password_hash,
-      role: role || 'staff',
-      employee_id: employee_id || null
+      role: role || 'staff'
     });
 
     const token = jwt.sign(
@@ -124,7 +112,7 @@ export const getProfile = async (req, res, next) => {
   try {
     const user = await User.findByPk(req.user.id, {
       attributes: { exclude: ['password_hash'] },
-      include: [{ model: Employee, as: 'employee' }]
+      include: [{ model: UserProfile, as: 'profile' }]
     });
 
     res.json({

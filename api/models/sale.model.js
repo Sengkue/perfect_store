@@ -20,7 +20,7 @@ const Sale = sequelize.define('sales', {
     type: DataTypes.INTEGER,
     allowNull: true
   },
-  employee_id: {
+  user_id: {
     type: DataTypes.INTEGER,
     allowNull: true
   },

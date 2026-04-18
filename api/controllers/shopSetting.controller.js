@@ -9,7 +9,8 @@ export const getSettings = async (req, res, next) => {
       settings = await ShopSetting.create({
         shop_name: 'My Store',
         phone: '',
-        email: ''
+        email: '',
+        tax_rate: 10.00
       });
     }
 
@@ -25,17 +26,17 @@ export const getSettings = async (req, res, next) => {
 // PUT /api/shop-settings
 export const updateSettings = async (req, res, next) => {
   try {
-    const { shop_name, phone, email, logo_url, address, tax_number } = req.body;
+    const { shop_name, phone, email, logo_url, address, tax_number, tax_rate } = req.body;
 
     let settings = await ShopSetting.findOne();
 
     if (!settings) {
       settings = await ShopSetting.create({
-        shop_name, phone, email, logo_url, address, tax_number
+        shop_name, phone, email, logo_url, address, tax_number, tax_rate
       });
     } else {
       await settings.update({
-        shop_name, phone, email, logo_url, address, tax_number
+        shop_name, phone, email, logo_url, address, tax_number, tax_rate
       });
     }
 

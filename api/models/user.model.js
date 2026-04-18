@@ -7,10 +7,6 @@ const User = sequelize.define('users', {
     primaryKey: true,
     autoIncrement: true
   },
-  employee_id: {
-    type: DataTypes.INTEGER,
-    allowNull: true
-  },
   username: {
     type: DataTypes.STRING(50),
     allowNull: false,

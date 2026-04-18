@@ -37,6 +37,7 @@ export const getAll = async (req, res, next) => {
       include: [
         { model: Category, as: 'category', attributes: ['id', 'category_name'] },
         { model: Supplier, as: 'supplier', attributes: ['id', 'name'] },
+        { model: ProductVariant, as: 'variants' },
         { model: ProductImage, as: 'images', where: { is_primary: true }, required: false }
       ]
     });

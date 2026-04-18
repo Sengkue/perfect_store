@@ -31,6 +31,11 @@ const ShopSetting = sequelize.define('shop_settings', {
     type: DataTypes.STRING(50),
     allowNull: true
   },
+  tax_rate: {
+    type: DataTypes.DECIMAL(5, 2),
+    defaultValue: 10.00,
+    allowNull: false
+  },
   created_at: {
     type: DataTypes.DATE,
     defaultValue: DataTypes.NOW
