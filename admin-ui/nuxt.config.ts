@@ -1,10 +1,16 @@
 // https://nuxt.com/docs/api/configuration/nuxt-config
+const originalWarn = console.warn;
+console.warn = (...args) => {
+  if (args[0] && typeof args[0] === 'string' && args[0].includes('Duplicated imports "useAppConfig"')) {
+    return;
+  }
+  originalWarn(...args);
+};
+
 export default defineNuxtConfig({
-  compatibilityDate: '2024-04-03',
+  compatibilityDate: '2024-11-01',
+  future: { compatibilityVersion: 4 },
   devtools: { enabled: true },
-  future: {
-    compatibilityVersion: 4,
-  },
   modules: [
     'vuetify-nuxt-module'
   ],
@@ -36,6 +42,14 @@ export default defineNuxtConfig({
           }
         }
       }
+    }
+  },
+  vite: {
+    optimizeDeps: {
+      include: [
+        'xlsx',
+        'file-saver'
+      ]
     }
   }
 })

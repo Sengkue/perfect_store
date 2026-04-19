@@ -57,7 +57,7 @@ const Sale = sequelize.define('sales', {
     allowNull: false
   },
   payment_method: {
-    type: DataTypes.ENUM('cash', 'credit_card', 'bank_transfer', 'cod', 'qr_payment'),
+    type: DataTypes.ENUM('cash', 'credit_card', 'bank_transfer', 'cod', 'qr_payment', 'qr_code', 'card', 'credit'),
     allowNull: true
   },
   payment_status: {

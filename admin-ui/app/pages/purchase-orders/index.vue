@@ -146,6 +146,9 @@
                           {{ product.category?.name || '—' }}
                         </v-chip>
                       </div>
+                      <div class="text-caption text-medium-emphasis mt-1">
+                        Qty: {{ getProductStock(product) }}
+                      </div>
                     </v-card-text>
                   </v-card>
                 </v-col>
@@ -844,6 +847,13 @@ const loadCategories = async () => {
   } catch (e) { console.error(e) }
 }
 
+const getProductStock = (product) => {
+  if (product.variants?.length) {
+    return product.variants.reduce((sum, v) => sum + (v.quantity_in_stock || 0), 0);
+  }
+  return product.quantity_in_stock || 0;
+};
+
 // ══ SUPPLIERS ═════════════════════════════════════════════════════
 const suppliers       = ref([])
 const selectedSupplier = ref(null)
@@ -886,6 +896,7 @@ const removeItem = (idx) => { cart.value.splice(idx, 1) }
 const clearCart  = () => { cart.value = [] }
 
 const syncVariantLabel = (item, variantId) => {
+  // existing code unchanged
   const v = item.product.variants?.find(v => v.id === variantId)
   item.variantLabel = v ? `${v.variant_type}: ${v.variant_value}` : null
   if (v?.price) item.unit_cost = Number(v.price)

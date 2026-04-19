@@ -463,6 +463,16 @@
                 <v-icon>mdi-eye-outline</v-icon>
                 <v-tooltip activator="parent">ເບິ່ງລາຍລະອຽດ</v-tooltip>
               </v-btn>
+              <!-- ✅ Confirm Payment button — shown when payment is still pending/partial -->
+              <v-btn
+                v-if="['pending','partial'].includes(item.payment_status)"
+                icon="mdi-cash-check" variant="text" size="small" color="green"
+                :loading="confirmingPayment === item.id"
+                @click="confirmPayment(item)"
+              >
+                <v-icon>mdi-cash-check</v-icon>
+                <v-tooltip activator="parent">ຢືນຢັນຮັບເງິນໂອນ</v-tooltip>
+              </v-btn>
               <v-btn
                 v-if="item.sale_status === 'pending'"
                 icon="mdi-check" variant="text" size="small" color="success"
@@ -585,6 +595,43 @@
               <div class="detail-value font-weight-bold text-h6 text-primary">{{ formatCurrency(detailOrder.total_amount) }}</div>
             </v-col>
           </v-row>
+
+          <!-- ── Payment Confirmation Banner ── -->
+          <v-alert
+            v-if="['pending','partial'].includes(detailOrder.payment_status)"
+            type="warning"
+            variant="tonal"
+            rounded="lg"
+            class="mt-3"
+            icon="mdi-bank-transfer-in"
+          >
+            <div class="d-flex align-center justify-space-between flex-wrap gap-2">
+              <div>
+                <div class="text-body-2 font-weight-bold">ລໍຖ້າຢືນຢັນການຊຳລະ</div>
+                <div class="text-caption">ກວດສອບການໂອນເງິນຈາກລູກຄ້າ, ຫຼັງຈາກຮັບເງິນສຳເລັດໃຫ້ກົດຢືນຢັນ</div>
+              </div>
+              <v-btn
+                color="green"
+                variant="flat"
+                size="small"
+                prepend-icon="mdi-cash-check"
+                :loading="confirmingPayment === detailOrder.id"
+                @click="confirmPayment(detailOrder)"
+              >
+                ຢືນຢັນຮັບເງິນໂອນ
+              </v-btn>
+            </div>
+          </v-alert>
+
+          <v-alert
+            v-else-if="detailOrder.payment_status === 'paid'"
+            type="success"
+            variant="tonal"
+            rounded="lg"
+            class="mt-3"
+            icon="mdi-check-circle"
+            text="ຮັບເງິນສຳເລັດແລ້ວ"
+          />
 
           <!-- Change status -->
           <v-divider class="my-3" />
@@ -777,7 +824,7 @@ const loadTaxRate = async () => {
 // ── Totals ────────────────────────────────────────────────────────
 const totalItems  = computed(() => cart.value.reduce((s, c) => s + c.quantity, 0))
 const subtotal    = computed(() => cart.value.reduce((s, c) => s + c.price * c.quantity, 0))
-const taxAmount   = computed(() => (subtotal.value * taxRate.value) / 100)
+const taxAmount   = computed(() => Math.round((subtotal.value * taxRate.value) / 100 * 100) / 100)
 const totalAmount = computed(() => subtotal.value + taxAmount.value - (discountAmount.value || 0))
 
 // ── Submit ────────────────────────────────────────────────────────
@@ -794,8 +841,11 @@ const submitOrder = async () => {
       sale_type:       orderType.value,
       payment_method:  paymentMethod.value,
       discount_amount: discountAmount.value || 0,
-      delivery_address: deliveryAddress.value || null,
-      notes:           orderNote.value || null,
+      tax_amount:      taxAmount.value,
+      notes:           [
+        orderNote.value || '',
+        deliveryAddress.value ? `ທີ່ຢູ່ຈັດສົ່ງ: ${deliveryAddress.value}` : ''
+      ].filter(Boolean).join('\n') || null,
       items: cart.value.map(c => ({
         product_id:  c.product.id,
         variant_id:  c.variantId || null,
@@ -833,9 +883,10 @@ const orders           = ref([])
 const loadingOrders    = ref(false)
 const orderSearch      = ref('')
 const orderStatusFilter = ref(null)
-const detailDialog     = ref(false)
-const detailOrder      = ref(null)
-const updatingStatus   = ref(null)
+const detailDialog       = ref(false)
+const detailOrder        = ref(null)
+const updatingStatus     = ref(null)
+const confirmingPayment  = ref(null)  // tracks which order id is being confirmed
 
 const orderStatusOptions = ['pending', 'processing', 'completed', 'cancelled', 'refunded']
 
@@ -893,7 +944,7 @@ const allowedStatusTransitions = (order) => {
 const updateOrderStatus = async (order, newStatus) => {
   updatingStatus.value = newStatus
   try {
-    const res = await api(`/sales/${order.id}/status`, { method: 'PUT', body: { status: newStatus } })
+    const res = await api(`/sales/${order.id}/status`, { method: 'PUT', body: { sale_status: newStatus } })
     if (res.success) {
       notify('ອັບເດດສະຖານະສໍາເລັດ', 'success')
       order.sale_status = newStatus
@@ -906,6 +957,30 @@ const updateOrderStatus = async (order, newStatus) => {
     notify('ເກີດຂໍ້ຜິດພາດ', 'error')
   } finally {
     updatingStatus.value = null
+  }
+}
+
+// ── Confirm Payment (bank transfer received) ──────────────────────
+const confirmPayment = async (order) => {
+  confirmingPayment.value = order.id
+  try {
+    const res = await api(`/sales/${order.id}/status`, {
+      method: 'PUT',
+      body: { payment_status: 'paid' }
+    })
+    if (res.success) {
+      notify('ຢືນຢັນຮັບເງິນສຳເລັດ ✓', 'success')
+      // Update local state instantly (no full reload needed)
+      order.payment_status = 'paid'
+      if (detailOrder.value?.id === order.id) detailOrder.value.payment_status = 'paid'
+    } else {
+      notify(res.message || 'ຢືນຢັນບໍ່ສຳເລັດ', 'error')
+    }
+  } catch (e) {
+    console.error(e)
+    notify('ເກີດຂໍ້ຜິດພາດ', 'error')
+  } finally {
+    confirmingPayment.value = null
   }
 }
 

@@ -78,9 +78,10 @@ export const saleValidator = [
   body('sale_type')
     .notEmpty().withMessage('Sale type is required')
     .isIn(['in_shop', 'online']).withMessage('Sale type must be in_shop or online'),
+  // total_amount is computed server-side from items — no need to send it from the client
   body('total_amount')
-    .notEmpty().withMessage('Total amount is required')
-    .isDecimal().withMessage('Total amount must be a decimal'),
+    .optional()
+    .isNumeric().withMessage('Total amount must be a number'),
   body('items')
     .isArray({ min: 1 }).withMessage('At least one sale item is required'),
   body('items.*.product_id')
@@ -91,7 +92,7 @@ export const saleValidator = [
     .isInt({ min: 1 }).withMessage('Quantity must be at least 1'),
   body('items.*.unit_price')
     .notEmpty().withMessage('Unit price is required for each item')
-    .isDecimal().withMessage('Unit price must be a decimal'),
+    .isNumeric().withMessage('Unit price must be a number'),
   validate
 ];
 

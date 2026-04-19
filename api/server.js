@@ -41,16 +41,28 @@ app.use(cors({
   allowedHeaders: ['Content-Type', 'Authorization']
 }));
 
-// Rate limiting
+// Rate limiting - general API limiter
 const limiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 100, // 100 requests per windowMs
+  max: 1000, // 1000 requests per window (relaxed for development)
+  skip: () => process.env.NODE_ENV !== 'production', // skip entirely in development
   message: {
     success: false,
     message: 'Too many requests, please try again later.'
   }
 });
 app.use('/api/', limiter);
+
+// Stricter rate limit only for auth routes (applies in all environments)
+const authLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 50, // 50 login attempts per 15 minutes
+  message: {
+    success: false,
+    message: 'Too many login attempts, please try again later.'
+  }
+});
+app.use('/api/auth/', authLimiter);
 
 // Logging
 if (process.env.NODE_ENV !== 'production') {

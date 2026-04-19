@@ -75,8 +75,11 @@
           </v-avatar>
           <div>
             <div class="font-weight-medium">{{ item.username }}</div>
-            <div class="text-caption text-medium-emphasis" v-if="item.employee">
-              {{ item.employee.first_name }} {{ item.employee.last_name }}
+            <div class="text-caption text-medium-emphasis" v-if="item.profile">
+              {{ item.profile.first_name }} {{ item.profile.last_name }}
+            </div>
+            <div class="text-caption text-medium-emphasis text-grey" v-else>
+              No profile set
             </div>
           </div>
         </div>
@@ -99,6 +102,15 @@
         >
           {{ item.is_active ? 'Active' : 'Inactive' }}
         </v-chip>
+      </template>
+
+      <!-- Profile info -->
+      <template #item.profile="{ item }">
+        <div v-if="item.profile">
+          <div class="text-caption">{{ item.profile.email || '—' }}</div>
+          <div class="text-caption text-medium-emphasis">{{ item.profile.phone || '—' }}</div>
+        </div>
+        <span v-else class="text-caption text-grey">—</span>
       </template>
 
       <!-- Last login -->
@@ -150,7 +162,7 @@
     </v-data-table>
 
     <!-- ══════════════ ADD / EDIT DIALOG ══════════════ -->
-    <v-dialog v-model="formDialog" max-width="520" persistent>
+    <v-dialog v-model="formDialog" max-width="560" persistent>
       <v-card rounded="lg">
         <v-card-title class="d-flex align-center pa-4">
           <v-icon :icon="isEditing ? 'mdi-account-edit' : 'mdi-account-plus'" class="me-2" color="primary" />
@@ -160,9 +172,13 @@
 
         <v-card-text class="pa-4">
           <v-form ref="formRef">
+            <!-- ── Account Credentials ── -->
+            <div class="text-subtitle-2 text-medium-emphasis mb-3 text-uppercase tracking-wide">
+              Account Credentials
+            </div>
             <v-row dense>
               <!-- Username -->
-              <v-col cols="12">
+              <v-col cols="12" sm="7">
                 <v-text-field
                   v-model="form.username"
                   label="Username *"
@@ -173,6 +189,21 @@
                   :disabled="isEditing"
                   hint="Cannot be changed after creation"
                   :persistent-hint="isEditing"
+                />
+              </v-col>
+
+              <!-- Role -->
+              <v-col cols="12" sm="5">
+                <v-select
+                  v-model="form.role"
+                  :items="roleOptions"
+                  item-title="label"
+                  item-value="value"
+                  label="Role *"
+                  prepend-inner-icon="mdi-shield-outline"
+                  variant="outlined"
+                  density="comfortable"
+                  :rules="[v => !!v || 'Role is required']"
                 />
               </v-col>
 
@@ -191,39 +222,6 @@
                 />
               </v-col>
 
-              <!-- Role -->
-              <v-col cols="12" sm="6">
-                <v-select
-                  v-model="form.role"
-                  :items="roleOptions"
-                  item-title="label"
-                  item-value="value"
-                  label="Role *"
-                  prepend-inner-icon="mdi-shield-outline"
-                  variant="outlined"
-                  density="comfortable"
-                  :rules="[v => !!v || 'Role is required']"
-                />
-              </v-col>
-
-              <!-- Link to employee -->
-              <v-col cols="12" sm="6">
-                <v-autocomplete
-                  v-model="form.employee_id"
-                  :items="employees"
-                  :item-title="e => `${e.first_name} ${e.last_name}`"
-                  item-value="id"
-                  label="Linked Employee"
-                  prepend-inner-icon="mdi-badge-account-outline"
-                  variant="outlined"
-                  density="comfortable"
-                  clearable
-                  :loading="loadingEmployees"
-                  hint="Optional"
-                  persistent-hint
-                />
-              </v-col>
-
               <!-- Active toggle (edit only) -->
               <v-col cols="12" v-if="isEditing">
                 <v-switch
@@ -232,6 +230,72 @@
                   color="success"
                   hide-details
                   inset
+                />
+              </v-col>
+            </v-row>
+
+            <!-- ── Profile Info (optional) ── -->
+            <v-divider class="my-4" />
+            <div class="text-subtitle-2 text-medium-emphasis mb-3 text-uppercase">
+              Profile Info <span class="text-caption font-weight-regular">(optional)</span>
+            </div>
+            <v-row dense>
+              <v-col cols="12" sm="6">
+                <v-text-field
+                  v-model="form.first_name"
+                  label="First Name"
+                  prepend-inner-icon="mdi-badge-account-outline"
+                  variant="outlined"
+                  density="comfortable"
+                />
+              </v-col>
+              <v-col cols="12" sm="6">
+                <v-text-field
+                  v-model="form.last_name"
+                  label="Last Name"
+                  prepend-inner-icon="mdi-badge-account-outline"
+                  variant="outlined"
+                  density="comfortable"
+                />
+              </v-col>
+              <v-col cols="12" sm="6">
+                <v-text-field
+                  v-model="form.phone"
+                  label="Phone"
+                  prepend-inner-icon="mdi-phone-outline"
+                  variant="outlined"
+                  density="comfortable"
+                />
+              </v-col>
+              <v-col cols="12" sm="6">
+                <v-text-field
+                  v-model="form.email"
+                  label="Email"
+                  prepend-inner-icon="mdi-email-outline"
+                  variant="outlined"
+                  density="comfortable"
+                  type="email"
+                />
+              </v-col>
+              <v-col cols="12" sm="6">
+                <v-text-field
+                  v-model="form.hire_date"
+                  label="Hire Date"
+                  prepend-inner-icon="mdi-calendar-outline"
+                  variant="outlined"
+                  density="comfortable"
+                  type="date"
+                />
+              </v-col>
+              <v-col cols="12" sm="6">
+                <v-text-field
+                  v-model.number="form.salary"
+                  label="Salary"
+                  prepend-inner-icon="mdi-cash-outline"
+                  variant="outlined"
+                  density="comfortable"
+                  type="number"
+                  suffix="LAK"
                 />
               </v-col>
             </v-row>
@@ -371,17 +435,14 @@ const selectedUser = ref(null)
 // Snackbar
 const snackbar = ref({ show: false, message: '', color: 'success' })
 
-// Employees list for autocomplete
-const employees        = ref([])
-const loadingEmployees = ref(false)
-
 // ── Table headers ──────────────────────────────────────
 const headers = [
-  { title: 'User',       key: 'username',   minWidth: 180 },
+  { title: 'User',       key: 'username',   minWidth: 200 },
   { title: 'Role',       key: 'role',       sortable: false },
   { title: 'Status',     key: 'is_active',  sortable: false },
+  { title: 'Profile',    key: 'profile',    sortable: false },
   { title: 'Last Login', key: 'last_login' },
-  { title: 'Actions',    key: 'actions',    sortable: false, align: 'end' }
+  { title: 'Actions',   key: 'actions',    sortable: false, align: 'end' }
 ]
 
 // ── Form options ───────────────────────────────────────
@@ -409,7 +470,10 @@ const stats = computed(() => [
 
 // ── Helpers ────────────────────────────────────────────
 function emptyForm () {
-  return { username: '', password: '', role: 'staff', employee_id: null, is_active: true }
+  return {
+    username: '', password: '', role: 'staff', is_active: true,
+    first_name: '', last_name: '', phone: '', email: '', hire_date: '', salary: null
+  }
 }
 
 const notify = (message, color = 'success') => {
@@ -452,14 +516,6 @@ const loadUsers = async () => {
   }
 }
 
-const loadEmployees = async () => {
-  loadingEmployees.value = true
-  try {
-    const res = await api('/employees?pageSize=500')
-    if (res.success) employees.value = res.data
-  } catch (e) { console.error(e) } finally { loadingEmployees.value = false }
-}
-
 // ── Add / Edit ─────────────────────────────────────────
 const openAddDialog = () => {
   form.value   = emptyForm()
@@ -471,11 +527,16 @@ const openAddDialog = () => {
 
 const openEditDialog = (item) => {
   form.value = {
-    username:    item.username,
-    password:    '',
-    role:        item.role,
-    employee_id: item.employee_id ?? null,
-    is_active:   item.is_active
+    username:   item.username,
+    password:   '',
+    role:       item.role,
+    is_active:  item.is_active,
+    first_name: item.profile?.first_name ?? '',
+    last_name:  item.profile?.last_name  ?? '',
+    phone:      item.profile?.phone      ?? '',
+    email:      item.profile?.email      ?? '',
+    hire_date:  item.profile?.hire_date  ?? '',
+    salary:     item.profile?.salary     ?? null
   }
   isEditing.value  = true
   editingId.value  = item.id
@@ -496,24 +557,56 @@ const submitForm = async () => {
   try {
     let res
     if (isEditing.value) {
+      // Update account fields
       res = await api(`/users/${editingId.value}`, {
         method: 'PUT',
         body: {
-          role:        form.value.role,
-          is_active:   form.value.is_active,
-          employee_id: form.value.employee_id || null
+          role:       form.value.role,
+          is_active:  form.value.is_active
         }
       })
+
+      // Also save profile (upsert via PUT /users/:id/profile)
+      const hasProfileData = form.value.first_name || form.value.last_name || form.value.phone || form.value.email
+      if (res.success && hasProfileData) {
+        await api(`/users/${editingId.value}/profile`, {
+          method: 'PUT',
+          body: {
+            first_name: form.value.first_name || undefined,
+            last_name:  form.value.last_name  || undefined,
+            phone:      form.value.phone      || undefined,
+            email:      form.value.email      || undefined,
+            hire_date:  form.value.hire_date  || undefined,
+            salary:     form.value.salary     || undefined
+          }
+        }).catch(() => {}) // best-effort
+      }
     } else {
+      // Create account
       res = await api('/users', {
         method: 'POST',
         body: {
-          username:    form.value.username,
-          password:    form.value.password,
-          role:        form.value.role,
-          employee_id: form.value.employee_id || null
+          username: form.value.username,
+          password: form.value.password,
+          role:     form.value.role
         }
       })
+
+      // Create profile if name is provided
+      if (res.success && (form.value.first_name || form.value.last_name)) {
+        const newUserId = res.data.id
+        await api(`/users/${newUserId}/profile`, {
+          method: 'PUT',
+          body: {
+            first_name: form.value.first_name || undefined,
+            last_name:  form.value.last_name  || undefined,
+            phone:      form.value.phone      || undefined,
+            email:      form.value.email      || undefined,
+            hire_date:  form.value.hire_date  || undefined,
+            salary:     form.value.salary     || undefined
+          }
+        }).catch(() => {})
+      }
     }
 
     if (res.success) {
@@ -611,6 +704,5 @@ const confirmDelete = async () => {
 // ── Init ───────────────────────────────────────────────
 onMounted(() => {
   loadUsers()
-  loadEmployees()
 })
 </script>
