@@ -1,4 +1,4 @@
-import { Product, ProductVariant, ProductImage, Category, Supplier } from '../models/index.js';
+import { Product, ProductVariant, ProductImage, Category, Supplier, ProductSupplier } from '../models/index.js';
 import { getPagination, getPaginatedResponse } from '../utils/helpers.js';
 import { Op } from 'sequelize';
 
@@ -19,7 +19,7 @@ export const getAll = async (req, res, next) => {
 
     // Filters
     if (req.query.category_id) where.category_id = req.query.category_id;
-    if (req.query.supplier_id) where.supplier_id = req.query.supplier_id;
+    if (req.query.supplier_id) where.primary_supplier_id = req.query.supplier_id;
     if (req.query.is_active !== undefined) where.is_active = req.query.is_active === 'true';
 
     // Price range
@@ -36,7 +36,8 @@ export const getAll = async (req, res, next) => {
       order: [['id', 'DESC']],
       include: [
         { model: Category, as: 'category', attributes: ['id', 'category_name'] },
-        { model: Supplier, as: 'supplier', attributes: ['id', 'name'] },
+        { model: Supplier, as: 'primary_supplier', attributes: ['id', 'name'] },
+        { model: Supplier, as: 'suppliers', attributes: ['id', 'name'], through: { attributes: ['supplier_cost_price', 'supplier_sku', 'is_primary'] } },
         { model: ProductVariant, as: 'variants' },
         { model: ProductImage, as: 'images', where: { is_primary: true }, required: false }
       ]
@@ -57,7 +58,8 @@ export const getById = async (req, res, next) => {
     const product = await Product.findByPk(req.params.id, {
       include: [
         { model: Category, as: 'category' },
-        { model: Supplier, as: 'supplier' },
+        { model: Supplier, as: 'primary_supplier' },
+        { model: Supplier, as: 'suppliers', through: { attributes: ['supplier_cost_price', 'supplier_sku', 'is_primary'] } },
         { model: ProductVariant, as: 'variants' },
         { model: ProductImage, as: 'images', order: [['sort_order', 'ASC']] }
       ]
@@ -76,9 +78,18 @@ export const getById = async (req, res, next) => {
 // POST /api/products
 export const create = async (req, res, next) => {
   try {
-    const { variants, images, ...productData } = req.body;
+    const { variants, images, suppliers, ...productData } = req.body;
 
     const product = await Product.create(productData);
+
+    // Create supplier associations if provided
+    if (suppliers && Array.isArray(suppliers)) {
+      const supplierData = suppliers.map(s => ({
+        ...s,
+        product_id: product.id
+      }));
+      await ProductSupplier.bulkCreate(supplierData);
+    }
 
     // Create variants if provided
     if (variants && Array.isArray(variants)) {
@@ -99,6 +110,8 @@ export const create = async (req, res, next) => {
     // Reload with associations
     const result = await Product.findByPk(product.id, {
       include: [
+        { model: Supplier, as: 'primary_supplier' },
+        { model: Supplier, as: 'suppliers' },
         { model: ProductVariant, as: 'variants' },
         { model: ProductImage, as: 'images' }
       ]
@@ -122,13 +135,26 @@ export const update = async (req, res, next) => {
       return res.status(404).json({ success: false, message: 'Product not found' });
     }
 
-    const { variants, images, ...productData } = req.body;
+    const { variants, images, suppliers, ...productData } = req.body;
     await product.update(productData);
+
+    // Update supplier associations if provided
+    if (suppliers && Array.isArray(suppliers)) {
+      // For simplicity, we replace all associations. 
+      // In a production app, you might want more complex sync logic.
+      await ProductSupplier.destroy({ where: { product_id: product.id } });
+      const supplierData = suppliers.map(s => ({
+        ...s,
+        product_id: product.id
+      }));
+      await ProductSupplier.bulkCreate(supplierData);
+    }
 
     const result = await Product.findByPk(product.id, {
       include: [
         { model: Category, as: 'category' },
-        { model: Supplier, as: 'supplier' },
+        { model: Supplier, as: 'primary_supplier' },
+        { model: Supplier, as: 'suppliers' },
         { model: ProductVariant, as: 'variants' },
         { model: ProductImage, as: 'images' }
       ]

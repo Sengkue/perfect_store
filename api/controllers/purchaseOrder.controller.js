@@ -56,41 +56,105 @@ export const getById = async (req, res, next) => {
 export const create = async (req, res, next) => {
   const t = await PurchaseOrder.sequelize.transaction();
   try {
-    const { supplier_id, order_date, expected_date, notes, details } = req.body;
+    const { supplier_id, order_date, expected_date, notes, items } = req.body;
+
+    let total_amount = 0;
+    const detailRecords = (items || []).map(d => {
+      const subtotal = Number(d.quantity || 0) * Number(d.unit_cost || 0);
+      total_amount += subtotal;
+      return {
+        product_id: d.product_id,
+        variant_id: d.variant_id || null,
+        quantity_ordered: d.quantity,
+        unit_cost: d.unit_cost,
+        subtotal
+      };
+    });
 
     const po_number = `PO-${Date.now()}`;
-    let total_amount = 0;
-
     const po = await PurchaseOrder.create({
       po_number,
       user_id: req.user ? req.user.id : null,
       supplier_id,
-      order_date,
+      order_date: order_date || new Date().toISOString().split('T')[0],
       expected_date,
       notes,
+      total_amount,
       status: 'draft'
     }, { transaction: t });
 
-    if (details && details.length > 0) {
-      const detailRecords = details.map(d => {
-        const subtotal = d.quantity_ordered * (d.unit_cost || 0);
+    if (detailRecords.length > 0) {
+      const detailsWithPoId = detailRecords.map(d => ({ ...d, po_id: po.id }));
+      await PurchaseOrderDetail.bulkCreate(detailsWithPoId, { transaction: t });
+    }
+
+    await t.commit();
+
+    // Reload with associations
+    const result = await PurchaseOrder.findByPk(po.id, {
+      include: [
+        { model: Supplier, as: 'supplier' },
+        { model: PurchaseOrderDetail, as: 'details', include: [{ model: Product, as: 'product' }] }
+      ]
+    });
+
+    res.status(201).json({ success: true, message: 'Purchase Order created', data: result });
+  } catch (error) {
+    await t.rollback();
+    next(error);
+  }
+};
+
+export const update = async (req, res, next) => {
+  const t = await PurchaseOrder.sequelize.transaction();
+  try {
+    const po = await PurchaseOrder.findByPk(req.params.id);
+    if (!po) {
+      await t.rollback();
+      return res.status(404).json({ success: false, message: 'Purchase Order not found' });
+    }
+
+    const { status, supplier_id, order_date, expected_date, notes, items } = req.body;
+    const updates = {};
+    if (status) updates.status = status;
+    if (supplier_id) updates.supplier_id = supplier_id;
+    if (order_date) updates.order_date = order_date;
+    if (expected_date) updates.expected_date = expected_date;
+    if (notes !== undefined) updates.notes = notes;
+
+    if (items && Array.isArray(items)) {
+      // Re-calculate total
+      let total_amount = 0;
+      // Simple approach: delete and recreate details if they are sent
+      await PurchaseOrderDetail.destroy({ where: { po_id: po.id }, transaction: t });
+      
+      const detailRecords = items.map(d => {
+        const subtotal = d.quantity * (d.unit_cost || 0);
         total_amount += subtotal;
         return {
           po_id: po.id,
           product_id: d.product_id,
           variant_id: d.variant_id || null,
-          quantity_ordered: d.quantity_ordered,
+          quantity_ordered: d.quantity,
           unit_cost: d.unit_cost,
           subtotal
         };
       });
       await PurchaseOrderDetail.bulkCreate(detailRecords, { transaction: t });
+      updates.total_amount = total_amount;
     }
 
-    await po.update({ total_amount }, { transaction: t });
+    await po.update(updates, { transaction: t });
     await t.commit();
 
-    res.status(201).json({ success: true, message: 'Purchase Order created', data: po });
+    const result = await PurchaseOrder.findByPk(po.id, {
+      include: [
+        { model: Supplier, as: 'supplier' },
+        { model: PurchaseOrderDetail, as: 'details', include: [{ model: Product, as: 'product' }] }
+      ]
+    });
+
+    res.json({ success: true, message: 'Purchase Order updated', data: result });
   } catch (error) {
     await t.rollback();
     next(error);
@@ -98,12 +162,20 @@ export const create = async (req, res, next) => {
 };
 
 export const updateStatus = async (req, res, next) => {
+  return update(req, res, next);
+};
+
+export const remove = async (req, res, next) => {
   try {
     const po = await PurchaseOrder.findByPk(req.params.id);
     if (!po) return res.status(404).json({ success: false, message: 'Purchase Order not found' });
 
-    await po.update({ status: req.body.status });
-    res.json({ success: true, message: 'Purchase Order status updated', data: po });
+    if (['received'].includes(po.status)) {
+      return res.status(400).json({ success: false, message: 'Cannot delete a received order' });
+    }
+
+    await po.destroy();
+    res.json({ success: true, message: 'Purchase Order deleted' });
   } catch (error) {
     next(error);
   }

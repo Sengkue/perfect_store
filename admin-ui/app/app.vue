@@ -30,7 +30,6 @@ onMounted(() => {
 <style>
 body {
   margin: 0;
-  font-family: 'Inter', system-ui, -apple-system, sans-serif;
 }
 
 .loading-container {

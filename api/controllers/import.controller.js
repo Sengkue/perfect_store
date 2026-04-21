@@ -12,6 +12,7 @@ export const getAll = async (req, res, next) => {
     if (req.query.status) where.status = req.query.status;
     if (req.query.payment_status) where.payment_status = req.query.payment_status;
     if (req.query.supplier_id) where.supplier_id = req.query.supplier_id;
+    if (req.query.purchase_order_id) where.purchase_order_id = req.query.purchase_order_id;
 
     // Date range
     if (req.query.from_date || req.query.to_date) {
@@ -102,7 +103,21 @@ export const create = async (req, res, next) => {
 
     importData.total_amount = totalAmount;
 
-    const importRecord = await Import.create(importData, { transaction: t });
+    const importRecord = await Import.create({
+      ...importData,
+      purchase_order_id: importData.purchase_order_id || null
+    }, { transaction: t });
+
+    // Update Purchase Order status to completed if this import is linked to one
+    if (importData.purchase_order_id) {
+      await PurchaseOrder.update(
+        { status: 'received' },
+        { 
+          where: { id: importData.purchase_order_id }, 
+          transaction: t 
+        }
+      );
+    }
 
     // Create details
     const details = detailsData.map(d => ({ ...d, import_id: importRecord.id }));
@@ -128,8 +143,8 @@ export const create = async (req, res, next) => {
   }
 };
 
-// PUT /api/imports/:id/status
-export const updateStatus = async (req, res, next) => {
+// PUT /api/imports/:id
+export const update = async (req, res, next) => {
   const t = await sequelize.transaction();
 
   try {
@@ -142,32 +157,65 @@ export const updateStatus = async (req, res, next) => {
       return res.status(404).json({ success: false, message: 'Import not found' });
     }
 
-    const { status } = req.body;
+    const { status, payment_status, receive_date, invoice_number, notes } = req.body;
+    const updates = {};
+    if (status) updates.status = status;
+    if (payment_status) updates.payment_status = payment_status;
+    if (receive_date) updates.receive_date = receive_date;
+    if (invoice_number) updates.invoice_number = invoice_number;
+    if (notes !== undefined) updates.notes = notes;
 
     // If completing import, update stock levels
     if (status === 'completed' && importRecord.status !== 'completed') {
       for (const detail of importRecord.details) {
-        if (detail.variant_id) {
+        let variantId = detail.variant_id;
+
+        // If no variant specified, try to find or create a default one
+        if (!variantId) {
+          let [variant] = await ProductVariant.findOrCreate({
+            where: { product_id: detail.product_id },
+            defaults: { product_id: detail.product_id, color: 'Default', size: '' },
+            transaction: t
+          });
+          variantId = variant.id;
+        }
+
+        if (variantId) {
           await ProductVariant.increment(
             'quantity_in_stock',
-            { by: detail.quantity, where: { id: detail.variant_id }, transaction: t }
+            { by: detail.quantity, where: { id: variantId }, transaction: t }
           );
         }
       }
     }
 
-    await importRecord.update({ status }, { transaction: t });
+    await importRecord.update(updates, { transaction: t });
     await t.commit();
+
+    // Reload with details
+    const result = await Import.findByPk(importRecord.id, {
+      include: [
+        { model: Supplier, as: 'supplier' },
+        { model: ImportDetail, as: 'details', include: [{ model: Product, as: 'product' }] }
+      ]
+    });
 
     res.json({
       success: true,
-      message: `Import status updated to ${status}`,
-      data: importRecord
+      message: 'Import updated successfully',
+      data: result
     });
   } catch (error) {
     await t.rollback();
     next(error);
   }
+};
+
+// PUT /api/imports/:id/status
+export const updateStatus = async (req, res, next) => {
+  // Keeping this for backward compatibility with frontend code
+  // but logic is now in update.
+  return update(req, res, next);
 };
 
 // DELETE /api/imports/:id

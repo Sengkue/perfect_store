@@ -29,7 +29,7 @@ const Import = sequelize.define('imports', {
     allowNull: true
   },
   total_amount: {
-    type: DataTypes.DECIMAL(12, 2),
+    type: DataTypes.DECIMAL(15, 2),
     allowNull: true
   },
   payment_status: {

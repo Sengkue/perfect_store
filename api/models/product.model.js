@@ -11,7 +11,7 @@ const Product = sequelize.define('products', {
     type: DataTypes.INTEGER,
     allowNull: true
   },
-  supplier_id: {
+  primary_supplier_id: {
     type: DataTypes.INTEGER,
     allowNull: true
   },
@@ -34,11 +34,11 @@ const Product = sequelize.define('products', {
     allowNull: true
   },
   cost_price: {
-    type: DataTypes.DECIMAL(10, 2),
+    type: DataTypes.DECIMAL(15, 2),
     allowNull: true
   },
   selling_price: {
-    type: DataTypes.DECIMAL(10, 2),
+    type: DataTypes.DECIMAL(15, 2),
     allowNull: false
   },
   weight: {

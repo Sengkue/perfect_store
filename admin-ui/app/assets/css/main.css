@@ -1,0 +1,76 @@
+@font-face {
+  font-family: "Noto Sans Lao";
+  src: url("/fonts/NotoSansLao.ttf") format("truetype");
+  font-weight: 100 900;
+  font-stretch: 62.5% 100%;
+  font-style: normal;
+  font-display: swap;
+}
+
+/* Prevent FOUC (Flash of Unstyled Content) */
+[v-cloak] {
+  display: none !important;
+}
+
+* {
+  font-family: "Noto Sans Lao", sans-serif !important;
+}
+
+body {
+  font-family: "Noto Sans Lao", sans-serif !important;
+}
+
+.v-application {
+  font-family: "Noto Sans Lao", sans-serif !important;
+}
+
+/* Enhanced Card Styling */
+.v-card {
+  transition: all 0.3s ease;
+}
+
+.v-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1) !important;
+}
+
+/* Dashboard Card Colors Override */
+.dashboard-card {
+  background: linear-gradient(
+    135deg,
+    var(--v-theme-primary),
+    var(--v-theme-primary-darken-1)
+  );
+}
+
+/* Smooth Transitions */
+.v-btn,
+.v-list-item,
+.v-navigation-drawer {
+  transition: all 0.2s ease-in-out;
+}
+
+/* Data Table Enhancements */
+.v-data-table th {
+  font-weight: 600 !important;
+  background-color: rgba(0, 0, 0, 0.02) !important;
+}
+
+.v-data-table tbody tr:hover {
+  background-color: rgba(25, 118, 210, 0.05) !important;
+}
+
+/* Navigation Drawer Styling */
+.v-navigation-drawer {
+  box-shadow: 2px 0 8px rgba(0, 0, 0, 0.1) !important;
+}
+
+.v-list-item--active {
+  background: linear-gradient(
+    90deg,
+    rgba(25, 118, 210, 0.1),
+    transparent
+  ) !important;
+  border-left: 4px solid var(--v-theme-primary);
+  padding-left: calc(16px - 4px) !important;
+}

@@ -24,6 +24,7 @@ import SaleDetail from './saleDetail.model.js';
 import Return from './return.model.js';
 import ReturnDetail from './returnDetail.model.js';
 import Payment from './payment.model.js';
+import ProductSupplier from './productSupplier.model.js';
 
 // ============================================
 // ASSOCIATIONS
@@ -56,8 +57,28 @@ Category.belongsTo(Category, { foreignKey: 'parent_id', as: 'parent' });
 Product.belongsTo(Category, { foreignKey: 'category_id', as: 'category' });
 Category.hasMany(Product, { foreignKey: 'category_id', as: 'products' });
 
-Product.belongsTo(Supplier, { foreignKey: 'supplier_id', as: 'supplier' });
-Supplier.hasMany(Product, { foreignKey: 'supplier_id', as: 'products' });
+Product.belongsTo(Supplier, { foreignKey: 'primary_supplier_id', as: 'primary_supplier' });
+Supplier.hasMany(Product, { foreignKey: 'primary_supplier_id', as: 'primary_products' });
+
+// Many-to-Many Suppliers
+Product.belongsToMany(Supplier, { 
+  through: ProductSupplier, 
+  foreignKey: 'product_id', 
+  otherKey: 'supplier_id',
+  as: 'suppliers' 
+});
+Supplier.belongsToMany(Product, { 
+  through: ProductSupplier, 
+  foreignKey: 'supplier_id', 
+  otherKey: 'product_id',
+  as: 'products' 
+});
+
+Product.hasMany(ProductSupplier, { foreignKey: 'product_id', as: 'product_supplier_details' });
+ProductSupplier.belongsTo(Product, { foreignKey: 'product_id' });
+
+Supplier.hasMany(ProductSupplier, { foreignKey: 'supplier_id', as: 'supplier_product_details' });
+ProductSupplier.belongsTo(Supplier, { foreignKey: 'supplier_id' });
 
 Product.hasMany(ProductVariant, { foreignKey: 'product_id', as: 'variants', onDelete: 'CASCADE' });
 ProductVariant.belongsTo(Product, { foreignKey: 'product_id', as: 'product' });
@@ -151,5 +172,6 @@ export {
   SaleDetail,
   Return,
   ReturnDetail,
-  Payment
+  Payment,
+  ProductSupplier
 };

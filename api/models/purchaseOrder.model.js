@@ -9,23 +9,28 @@ const PurchaseOrder = sequelize.define('purchase_orders', {
   },
   po_number: {
     type: DataTypes.STRING(50),
-    unique: true
+    unique: true,
+    allowNull: false
   },
   user_id: {
-    type: DataTypes.INTEGER
+    type: DataTypes.INTEGER,
+    allowNull: false
   },
   supplier_id: {
-    type: DataTypes.INTEGER
+    type: DataTypes.INTEGER,
+    allowNull: true
   },
   order_date: {
     type: DataTypes.DATEONLY,
-    allowNull: false
+    allowNull: false,
+    defaultValue: DataTypes.NOW
   },
   expected_date: {
     type: DataTypes.DATEONLY
   },
   total_amount: {
-    type: DataTypes.DECIMAL(12, 2)
+    type: DataTypes.DECIMAL(15, 2),
+    defaultValue: 0.00
   },
   status: {
     type: DataTypes.ENUM('draft', 'sent', 'approved', 'received', 'cancelled'),
@@ -33,11 +38,15 @@ const PurchaseOrder = sequelize.define('purchase_orders', {
   },
   notes: {
     type: DataTypes.TEXT
+  },
+  updated_at: {
+    type: DataTypes.DATE,
+    allowNull: true
   }
 }, {
   timestamps: true,
   createdAt: 'created_at',
-  updatedAt: false
+  updatedAt: 'updated_at'
 });
 
 export default PurchaseOrder;

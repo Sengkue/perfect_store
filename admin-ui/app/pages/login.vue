@@ -170,15 +170,11 @@ const handleLogin = async () => {
 </script>
 
 <style scoped>
-@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap');
-
 .login-wrapper {
   background-color: rgb(var(--v-theme-surface));
-  font-family: 'Plus Jakarta Sans', sans-serif !important;
 }
 
 h1, h2, h3, .text-button {
-  font-family: 'Plus Jakarta Sans', sans-serif !important;
   letter-spacing: -0.5px;
 }
 

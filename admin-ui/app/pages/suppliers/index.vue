@@ -3,7 +3,7 @@
     <!-- ── Header ── -->
     <v-card-title class="d-flex align-center py-3 px-4 flex-wrap gap-2">
       <div class="d-flex align-center">
-        <v-icon icon="mdi-truck-supplier" color="primary" class="me-2" />
+        <v-icon icon="mdi-handshake" color="primary" class="me-2" />
         <span class="text-h6 font-weight-bold">Suppliers</span>
       </div>
       <v-spacer />
@@ -28,7 +28,7 @@
     <!-- ── Stats strip ── -->
     <div class="d-flex px-4 py-2 gap-6" style="background:rgba(var(--v-theme-surface-variant),.25)">
       <div class="d-flex align-center gap-2">
-        <v-icon icon="mdi-truck-supplier" color="primary" size="18" />
+        <v-icon icon="mdi-handshake" color="primary" size="18" />
         <span class="text-caption font-weight-medium">Total Suppliers:</span>
         <v-chip color="primary" size="x-small" variant="tonal">{{ pagination.total || suppliers.length }}</v-chip>
       </div>
@@ -91,7 +91,7 @@
       <!-- Empty state -->
       <template #no-data>
         <div class="text-center py-8">
-          <v-icon size="64" color="grey-lighten-2">mdi-truck-supplier</v-icon>
+          <v-icon size="64" color="grey-lighten-2">mdi-handshake</v-icon>
           <div class="text-h6 text-grey mt-3">No suppliers found</div>
           <div class="text-body-2 text-medium-emphasis mb-4">Add your first supplier to get started</div>
           <v-btn color="primary" prepend-icon="mdi-plus" @click="openAddDialog">Add Supplier</v-btn>

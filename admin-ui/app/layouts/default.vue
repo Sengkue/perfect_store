@@ -94,7 +94,7 @@ const menuGroups = [
     items: [
       { title: 'Categories', icon: 'mdi-format-list-bulleted', to: '/categories', roles: ['admin', 'manager'] },
       { title: 'Products', icon: 'mdi-package-variant-closed', to: '/products', roles: ['admin', 'manager'] },
-      { title: 'Suppliers', icon: 'mdi-truck-supplier', to: '/suppliers', roles: ['admin', 'manager'] },
+      { title: 'Suppliers', icon: 'mdi-handshake', to: '/suppliers', roles: ['admin', 'manager'] },
       { title: 'Purchase Orders', icon: 'mdi-truck-delivery-outline', to: '/purchase-orders', roles: ['admin', 'manager'] },
       { title: 'Stock Imports', icon: 'mdi-package-down', to: '/imports', roles: ['admin', 'manager'] },
     ]

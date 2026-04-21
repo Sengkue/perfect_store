@@ -1,230 +1,343 @@
 <template>
-  <v-card rounded="lg" elevation="2">
-    <!-- Header -->
-    <v-card-title class="d-flex align-center py-3 px-4 flex-wrap gap-2">
-      <div class="d-flex align-center">
-        <v-icon icon="mdi-package-down" color="primary" class="me-2" />
-        <span class="text-h6 font-weight-bold">Stock Imports</span>
-      </div>
-      <v-spacer />
-
-      <!-- Filters -->
-      <v-text-field
-        v-model="filters.search"
-        placeholder="Search invoice…"
-        prepend-inner-icon="mdi-magnify"
-        variant="outlined"
-        density="compact"
-        hide-details
-        clearable
-        style="max-width:200px"
-        @update:model-value="loadImports"
-      />
-      <v-select
-        v-model="filters.status"
-        :items="statusOptions"
-        label="Status"
-        variant="outlined"
-        density="compact"
-        hide-details
-        clearable
-        style="max-width:160px"
-        @update:model-value="loadImports"
-      />
-      <v-btn color="primary" prepend-icon="mdi-plus" to="/imports/create">
-        New Import
-      </v-btn>
-    </v-card-title>
-    <v-divider />
-
-    <!-- Table -->
-    <v-data-table
-      :headers="headers"
-      :items="imports"
-      :loading="loading"
-      hover
-      items-per-page="15"
-    >
-      <!-- Invoice number -->
-      <template #item.invoice_number="{ item }">
-        <span class="font-weight-medium text-primary" style="cursor:pointer" @click="openDetail(item)">
-          {{ item.invoice_number }}
-        </span>
-      </template>
-
-      <!-- Supplier -->
-      <template #item.supplier="{ item }">
-        {{ item.supplier?.name ?? '—' }}
-      </template>
-
-      <!-- Receive date -->
-      <template #item.receive_date="{ item }">
-        {{ item.receive_date ? new Date(item.receive_date).toLocaleDateString() : '—' }}
-      </template>
-
-      <!-- Total amount -->
-      <template #item.total_amount="{ item }">
-        <span class="font-weight-medium">{{ formatCurrency(item.total_amount) }}</span>
-      </template>
-
-      <!-- Payment status chip -->
-      <template #item.payment_status="{ item }">
-        <v-chip :color="paymentColor(item.payment_status)" size="small" variant="tonal">
-          {{ item.payment_status }}
-        </v-chip>
-      </template>
-
-      <!-- Status chip -->
-      <template #item.status="{ item }">
-        <v-chip :color="statusColor(item.status)" size="small" variant="tonal">
-          {{ item.status }}
-        </v-chip>
-      </template>
-
-      <!-- Created by -->
-      <template #item.employee="{ item }">
-        {{ item.employee ? `${item.employee.first_name} ${item.employee.last_name}` : '—' }}
-      </template>
-
-      <!-- Actions -->
-      <template #item.actions="{ item }">
-        <div class="d-flex align-center justify-end gap-1">
-          <v-btn icon="mdi-eye" variant="text" size="small" color="primary" @click="openDetail(item)" />
-          <v-menu v-if="item.status !== 'completed' && item.status !== 'cancelled'">
-            <template #activator="{ props }">
-              <v-btn icon="mdi-chevron-down" variant="text" size="small" v-bind="props" />
-            </template>
-            <v-list density="compact">
-              <v-list-item
-                v-for="opt in nextStatuses(item.status)"
-                :key="opt.value"
-                :prepend-icon="opt.icon"
-                :title="opt.label"
-                @click="changeStatus(item, opt.value)"
-              />
-            </v-list>
-          </v-menu>
-          <v-btn
-            v-if="item.status === 'draft'"
-            icon="mdi-delete"
-            variant="text"
-            size="small"
-            color="error"
-            @click="openDeleteDialog(item)"
-          />
+  <div class="imports-page">
+    
+    <!-- ══ HEADER ════════════════════════════════════════════════════ -->
+    <div class="header-section mb-6">
+      <div class="d-flex align-center gap-3 flex-wrap">
+        <div class="d-flex align-center gap-3">
+          <div class="icon-box">
+            <v-icon icon="mdi-file-check-outline" color="white" size="28" />
+          </div>
+          <div>
+            <h1 class="text-h5 font-weight-bold mb-0">ກວດສອບ ແລະ ນໍາສິນຄ້າເຂົ້າສາງ</h1>
+            <p class="text-caption text-medium-emphasis">Process Bills · ອັບເດດສະຖານະການຊຳລະ ແລະ ສັ່ງສິນຄ້າເຂົ້າສາງທັນທີ</p>
+          </div>
         </div>
-      </template>
-    </v-data-table>
-
-    <!-- ── Detail Dialog ── -->
-    <v-dialog v-model="detailDialog" max-width="760" scrollable>
-      <v-card rounded="lg" v-if="selectedImport">
-        <v-card-title class="d-flex align-center pa-4">
-          <v-icon icon="mdi-file-document-outline" color="primary" class="me-2" />
-          Import Detail — {{ selectedImport.invoice_number }}
-          <v-spacer />
-          <v-chip :color="statusColor(selectedImport.status)" size="small" variant="tonal">
-            {{ selectedImport.status }}
-          </v-chip>
-        </v-card-title>
-        <v-divider />
-        <v-card-text class="pa-4">
-          <!-- Meta info -->
-          <v-row class="mb-4" dense>
-            <v-col cols="6" sm="3">
-              <div class="text-caption text-medium-emphasis">Supplier</div>
-              <div class="font-weight-medium">{{ selectedImport.supplier?.name ?? '—' }}</div>
-            </v-col>
-            <v-col cols="6" sm="3">
-              <div class="text-caption text-medium-emphasis">Receive Date</div>
-              <div class="font-weight-medium">{{ selectedImport.receive_date ? new Date(selectedImport.receive_date).toLocaleDateString() : '—' }}</div>
-            </v-col>
-            <v-col cols="6" sm="3">
-              <div class="text-caption text-medium-emphasis">Payment</div>
-              <v-chip :color="paymentColor(selectedImport.payment_status)" size="x-small" variant="tonal">
-                {{ selectedImport.payment_status }}
-              </v-chip>
-            </v-col>
-            <v-col cols="6" sm="3">
-              <div class="text-caption text-medium-emphasis">Total Amount</div>
-              <div class="text-h6 font-weight-bold text-primary">{{ formatCurrency(selectedImport.total_amount) }}</div>
-            </v-col>
-          </v-row>
-
-          <!-- Line items -->
-          <v-table density="compact" class="rounded-lg">
-            <thead>
-              <tr>
-                <th>Product</th>
-                <th>Variant</th>
-                <th class="text-right">Qty</th>
-                <th class="text-right">Unit Cost</th>
-                <th class="text-right">Subtotal</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr v-for="d in selectedImport.details ?? []" :key="d.id">
-                <td>{{ d.product?.name ?? '—' }}</td>
-                <td>
-                  <span v-if="d.variant" class="text-caption text-medium-emphasis">
-                    {{ [d.variant.color, d.variant.size].filter(Boolean).join(' / ') }}
-                  </span>
-                  <span v-else>—</span>
-                </td>
-                <td class="text-right">{{ d.quantity }}</td>
-                <td class="text-right">{{ formatCurrency(d.unit_cost) }}</td>
-                <td class="text-right font-weight-medium">{{ formatCurrency(d.subtotal) }}</td>
-              </tr>
-            </tbody>
-          </v-table>
-        </v-card-text>
-        <v-divider />
-        <v-card-actions class="pa-4">
-          <v-spacer />
-          <v-btn variant="text" @click="detailDialog = false">Close</v-btn>
+        <v-spacer />
+        <v-btn-group variant="outlined" density="comfortable" divided rounded="lg" color="primary">
           <v-btn
-            v-for="opt in nextStatuses(selectedImport.status)"
-            :key="opt.value"
-            :color="opt.color"
-            variant="elevated"
-            :prepend-icon="opt.icon"
-            :loading="statusChanging"
-            @click="changeStatus(selectedImport, opt.value)"
-          >
-            {{ opt.label }}
-          </v-btn>
-        </v-card-actions>
-      </v-card>
-    </v-dialog>
+            :variant="activeTab === 'search' ? 'flat' : 'outlined'"
+            prepend-icon="mdi-magnify"
+            @click="activeTab = 'search'"
+          >ຄົ້ນຫາ & ນໍາເຂົ້າ</v-btn>
+          <v-btn
+            :variant="activeTab === 'history' ? 'flat' : 'outlined'"
+            prepend-icon="mdi-history"
+            @click="activeTab = 'history'; loadImports()"
+          >ປະຫວັດການນໍາເຂົ້າ</v-btn>
+        </v-btn-group>
+      </div>
+    </div>
 
-    <!-- ── Delete Dialog ── -->
-    <v-dialog v-model="deleteDialog" max-width="400" persistent>
-      <v-card rounded="lg">
-        <v-card-title class="d-flex align-center pa-4">
-          <v-icon icon="mdi-alert-circle-outline" color="error" class="me-2" />
-          Confirm Delete
-        </v-card-title>
-        <v-divider />
-        <v-card-text class="pa-4">
-          Delete import <strong>{{ selectedImport?.invoice_number }}</strong>? This action cannot be undone.
-        </v-card-text>
-        <v-divider />
-        <v-card-actions class="pa-4">
-          <v-spacer />
-          <v-btn variant="text" @click="deleteDialog = false" :disabled="deleting">Cancel</v-btn>
-          <v-btn color="error" variant="elevated" :loading="deleting" @click="confirmDelete">Delete</v-btn>
-        </v-card-actions>
-      </v-card>
-    </v-dialog>
+    <!-- ══ TAB 1: SEARCH & PROCESS AREA ══════════════════════════════ -->
+    <v-window v-model="activeTab">
+      <v-window-item value="search">
+        <v-row>
+          <v-col cols="12" md="5">
+            <v-card rounded="xl" elevation="3" class="search-card overflow-hidden">
+              <v-toolbar color="primary" flat>
+                <v-toolbar-title class="text-subtitle-1 font-weight-bold">ຄົ້ນຫາໃບບິນ / ເລກທີໃບສັ່ງຊື້</v-toolbar-title>
+              </v-toolbar>
+              <v-card-text class="pa-6">
+                <v-text-field
+                  v-model="searchQuery"
+                  label="ປ້ອນເລກທີໃບບິນ ຫຼື ເລກທີ PO..."
+                  placeholder="Ex: PO-1234..."
+                  prepend-inner-icon="mdi-magnify"
+                  variant="outlined"
+                  rounded="lg"
+                  class="mb-4"
+                  @keyup.enter="performSearch"
+                />
+                <v-btn
+                  block
+                  color="primary"
+                  size="large"
+                  rounded="lg"
+                  :loading="searching"
+                  prepend-icon="mdi-text-search"
+                  @click="performSearch"
+                >ຄົ້ນຫາ</v-btn>
+
+                <div v-if="recentBills.length" class="mt-6">
+                  <div class="text-caption text-medium-emphasis mb-2">ລາຍການທີ່ຫາຊອກໄວ້ບໍ່ດົນນີ້:</div>
+                  <v-list density="compact" rounded="lg" class="border">
+                    <v-list-item
+                      v-for="b in recentBills"
+                      :key="b.id"
+                      :title="b.invoice_number"
+                      :subtitle="b.supplier?.name"
+                      link
+                      @click="openDetail(b)"
+                    >
+                      <template #prepend>
+                        <v-icon icon="mdi-history" size="18" color="grey" />
+                      </template>
+                      <template #append>
+                        <v-chip size="x-small" :color="statusColor(b.status)" variant="tonal">
+                          {{ statusLabel(b.status) }}
+                        </v-chip>
+                      </template>
+                    </v-list-item>
+                  </v-list>
+                </div>
+              </v-card-text>
+            </v-card>
+          </v-col>
+
+          <v-col cols="12" md="7">
+            <!-- Default State -->
+            <div v-if="!selectedImport && !selectedPO && !searching" class="empty-state">
+              <v-icon icon="mdi-file-find-outline" size="80" color="grey-lighten-2" />
+              <div class="text-h6 text-medium-emphasis">ລໍຖ້າການຄົ້ນຫາ...</div>
+              <p class="text-caption text-disabled text-center">ກະລຸນາປ້ອນເລກທີໃບບິນຢູ່ດ້ານຊ້າຍເພື່ອເລີ່ມຕົ້ນການກວດສອບ</p>
+            </div>
+
+            <!-- Result State (Import) -->
+            <v-fade-transition>
+              <v-card v-if="selectedImport" rounded="xl" elevation="4" class="detail-card">
+                <v-card-title class="pa-4 pb-0 d-flex align-center">
+                  <div>
+                    <div class="text-caption text-medium-emphasis">ເລກທີໃບບິນ:</div>
+                    <div class="text-h6 font-weight-bold">{{ selectedImport.invoice_number }}</div>
+                  </div>
+                  <v-spacer />
+                  <v-chip :color="statusColor(selectedImport.status)" class="me-2">{{ statusLabel(selectedImport.status) }}</v-chip>
+                </v-card-title>
+                
+                <v-divider class="my-4 mx-4" />
+
+                <v-card-text class="pa-4 pt-0">
+                  <v-row dense>
+                    <v-col cols="6">
+                      <div class="text-caption text-medium-emphasis">ຜູ້ສະໜອງ:</div>
+                      <div class="text-body-1 font-weight-semibold">{{ selectedImport.supplier?.name || '—' }}</div>
+                    </v-col>
+                    <v-col cols="6" class="text-right">
+                      <div class="text-caption text-medium-emphasis">ວັນທີໄດ້ຮັບ:</div>
+                      <div class="text-body-1 font-weight-semibold">{{ formatDate(selectedImport.receive_date) }}</div>
+                    </v-col>
+                    <v-col cols="12" class="mt-4">
+                      <v-sheet rounded="lg" color="grey-lighten-4" class="pa-4 d-flex align-center">
+                        <div>
+                          <div class="text-caption text-medium-emphasis">ຍອດລວມທັງໝົດ:</div>
+                          <div class="text-h4 font-weight-bold text-success">{{ formatCurrency(selectedImport.total_amount) }}</div>
+                        </div>
+                        <v-spacer />
+                        <div class="text-right">
+                          <div class="text-caption text-medium-emphasis">ສະຖານະການຊຳລະ:</div>
+                          <v-chip :color="paymentColor(selectedImport.payment_status)" variant="flat">
+                            {{ paymentLabel(selectedImport.payment_status) }}
+                          </v-chip>
+                        </div>
+                      </v-sheet>
+                    </v-col>
+                  </v-row>
+
+                  <!-- Items Table -->
+                  <div class="mt-6">
+                    <div class="text-subtitle-2 font-weight-bold mb-2">ລາຍການສິນຄ້າ:</div>
+                    <v-table density="compact" class="border rounded-lg">
+                      <thead>
+                        <tr class="bg-grey-lighten-4">
+                          <th>ສິນຄ້າ</th>
+                          <th class="text-center">ຈໍານວນ</th>
+                          <th class="text-right">ລາຄາ/ຊ.ຕ</th>
+                          <th class="text-right">ລວມ</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        <tr v-for="d in selectedImport.details" :key="d.id">
+                          <td>
+                            <div class="text-body-2 font-weight-medium">{{ d.product?.name }}</div>
+                            <div class="text-caption text-medium-emphasis">
+                              {{ [d.variant?.color, d.variant?.size].filter(Boolean).join('/') || 'Default' }}
+                            </div>
+                          </td>
+                          <td class="text-center">{{ d.quantity }}</td>
+                          <td class="text-right">{{ formatCurrency(d.unit_cost) }}</td>
+                          <td class="text-right font-weight-bold">{{ formatCurrency(d.subtotal) }}</td>
+                        </tr>
+                      </tbody>
+                    </v-table>
+                  </div>
+                </v-card-text>
+
+                <v-divider />
+
+                <!-- Process Actions -->
+                <v-card-actions class="pa-6">
+                  <v-btn variant="outlined" rounded="lg" color="grey" @click="selectedImport = null">ປິດ</v-btn>
+                  <v-spacer />
+                  
+                  <template v-if="selectedImport.status !== 'completed' && selectedImport.status !== 'cancelled'">
+                    <v-btn
+                      color="success"
+                      size="large"
+                      rounded="lg"
+                      variant="flat"
+                      prepend-icon="mdi-check-all"
+                      :loading="statusChanging"
+                      @click="finalizeBill"
+                    >
+                      ຢືນຢັນຊຳລະ ແລະ ສັ່ງເຂົ້າສາງ
+                    </v-btn>
+                  </template>
+                  <div v-else class="text-caption text-success font-weight-bold">
+                    <v-icon icon="mdi-information-outline" size="16" class="me-1" />
+                    ລາຍການນີ້ຖືກຈັດການສໍາເລັດແລ້ວ
+                  </div>
+                </v-card-actions>
+              </v-card>
+            </v-fade-transition>
+
+            <!-- Result State (Purchase Order Found) -->
+            <v-fade-transition>
+              <v-card v-if="selectedPO" rounded="xl" elevation="4" class="detail-card po-detail">
+                <v-toolbar density="compact" color="orange-darken-1">
+                  <v-toolbar-title class="text-subtitle-2 font-weight-bold">ພົບໃບສັ່ງຊື້ (PO): {{ selectedPO.po_number }}</v-toolbar-title>
+                </v-toolbar>
+                
+                <v-card-text class="pa-4">
+                  <v-row dense>
+                    <v-col cols="6">
+                      <div class="text-caption text-medium-emphasis">ຜູ້ສະໜອງ:</div>
+                      <div class="text-body-1 font-weight-semibold">{{ selectedPO.supplier?.name }}</div>
+                    </v-col>
+                    <v-col cols="6" class="text-right">
+                      <div class="text-caption text-medium-emphasis">ວັນທີສັ່ງຊື້:</div>
+                      <div class="text-body-1 font-weight-semibold">{{ formatDate(selectedPO.order_date) }}</div>
+                    </v-col>
+                    <v-col cols="12">
+                      <v-alert
+                        type="info"
+                        variant="tonal"
+                        density="compact"
+                        class="mt-3 text-caption"
+                        icon="mdi-information"
+                      >
+                        ໃບບິນນີ້ຍັງບໍ່ໄດ້ຖືກນໍາເຂົ້າສາງ. ທ່ານສາມາດຢືນຢັນເພື່ອ "ນໍາເຂົ້າສິນຄ້າ" ໄດ້ທັນທີ.
+                      </v-alert>
+                    </v-col>
+                  </v-row>
+
+                  <div class="mt-4">
+                    <div class="text-subtitle-2 font-weight-bold mb-2">ລາຍການທີ່ຈະນໍາເຂົ້າ ({{ selectedPO.details?.length }} ລາຍການ):</div>
+                    <v-table density="compact" class="border rounded-lg">
+                      <thead>
+                        <tr class="bg-grey-lighten-4">
+                          <th>ສິນຄ້າ</th>
+                          <th class="text-center" width="15%">ຈໍານວນ (PO)</th>
+                          <th class="text-center" width="20%">ຈໍານວນຮັບແທ້</th>
+                          <th class="text-right" width="20%">ລວມ</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        <tr v-for="d in selectedPO.details" :key="d.id">
+                          <td>
+                            <div class="text-body-2 font-weight-medium">{{ d.product?.name }}</div>
+                            <div class="text-caption text-medium-emphasis">
+                              {{ [d.variant?.color, d.variant?.size].filter(Boolean).join('/') || 'Default' }}
+                            </div>
+                          </td>
+                          <td class="text-center">{{ d.quantity_ordered }}</td>
+                          <td>
+                            <v-text-field
+                              v-model.number="d.quantity_received"
+                              type="number"
+                              min="1"
+                              variant="outlined"
+                              density="compact"
+                              hide-details
+                              style="min-width: 80px"
+                            />
+                          </td>
+                          <td class="text-right font-weight-bold">{{ formatCurrency((d.quantity_received || 0) * d.unit_cost) }}</td>
+                        </tr>
+                      </tbody>
+                      <tfoot>
+                        <tr class="font-weight-bold bg-orange-lighten-5">
+                          <td colspan="3" class="text-right">ຍອດລວມທັງໝົດ (ຮັບແທ້):</td>
+                          <td class="text-right text-orange-darken-2">
+                            {{ formatCurrency(selectedPO.details.reduce((sum, d) => sum + ((d.quantity_received || 0) * d.unit_cost), 0)) }}
+                          </td>
+                        </tr>
+                      </tfoot>
+                    </v-table>
+                  </div>
+                </v-card-text>
+
+                <v-divider />
+
+                <v-card-actions class="pa-6">
+                  <v-btn variant="text" color="grey" @click="selectedPO = null">ຍົກເລີກ</v-btn>
+                  <v-spacer />
+                  <v-btn
+                    color="orange-darken-1"
+                    size="large"
+                    rounded="lg"
+                    variant="elevated"
+                    prepend-icon="mdi-arrow-right-bold-box-outline"
+                    :loading="statusChanging"
+                    @click="importFromPO"
+                  >
+                    ຢືນຢັນນໍາເຂົ້າສິນຄ້າ
+                  </v-btn>
+                </v-card-actions>
+              </v-card>
+            </v-fade-transition>
+          </v-col>
+        </v-row>
+      </v-window-item>
+
+      <!-- ══ TAB 2: RECENT HISTORY TABLE ════════════════════════════════ -->
+      <v-window-item value="history">
+        <v-card rounded="xl" elevation="2">
+          <v-toolbar color="white" flat>
+            <v-toolbar-title class="text-subtitle-1 font-weight-bold">ປະຫວັດການນໍາເຂົ້າສິນຄ້າ</v-toolbar-title>
+            <v-spacer />
+            <v-btn icon="mdi-refresh" variant="text" @click="loadImports" />
+          </v-toolbar>
+          <v-data-table
+            :headers="headers"
+            :items="imports"
+            :loading="loading"
+            hover
+            items-per-page="15"
+          >
+            <template #item.invoice_number="{ item }">
+              <span class="font-weight-medium text-primary cursor-pointer" @click="activeTab = 'search'; openDetail(item)">
+                {{ item.invoice_number }}
+              </span>
+            </template>
+            <template #item.supplier="{ item }"> {{ item.supplier?.name || '—' }} </template>
+            <template #item.receive_date="{ item }"> {{ formatDate(item.receive_date) }} </template>
+            <template #item.total_amount="{ item }">
+              <span class="font-weight-bold text-success">{{ formatCurrency(item.total_amount) }}</span>
+            </template>
+            <template #item.payment_status="{ item }">
+              <v-chip :color="paymentColor(item.payment_status)" size="x-small" variant="tonal">
+                {{ paymentLabel(item.payment_status) }}
+              </v-chip>
+            </template>
+            <template #item.status="{ item }">
+              <v-chip :color="statusColor(item.status)" size="x-small" variant="tonal">
+                {{ statusLabel(item.status) }}
+              </v-chip>
+            </template>
+            <template #item.actions="{ item }">
+              <v-btn icon="mdi-eye-outline" variant="text" size="small" color="primary" @click="activeTab = 'search'; openDetail(item)" />
+            </template>
+          </v-data-table>
+        </v-card>
+      </v-window-item>
+    </v-window>
 
     <!-- Snackbar -->
-    <v-snackbar v-model="snackbar.show" :color="snackbar.color" timeout="3000" location="bottom right">
+    <v-snackbar v-model="snackbar.show" :color="snackbar.color" timeout="3000">
       {{ snackbar.message }}
-      <template #actions>
-        <v-btn variant="text" icon="mdi-close" @click="snackbar.show = false" />
-      </template>
     </v-snackbar>
-  </v-card>
+  </div>
 </template>
 
 <script setup>
@@ -232,135 +345,254 @@ import { ref, onMounted } from 'vue'
 
 const api = useApi()
 
-// ── State ──────────────────────────────────────────
+// ── STATE ──────────────────────────────────────────
+const activeTab = ref('search')
 const imports   = ref([])
 const loading   = ref(false)
-const filters   = ref({ search: '', status: null })
-
-const detailDialog  = ref(false)
-const deleteDialog  = ref(false)
+const searchQuery = ref('')
+const searching   = ref(false)
 const selectedImport = ref(null)
+const selectedPO     = ref(null)
 const statusChanging = ref(false)
-const deleting       = ref(false)
+const recentBills   = ref([])
 
 const snackbar = ref({ show: false, message: '', color: 'success' })
 
-// ── Table headers ──────────────────────────────────
 const headers = [
-  { title: 'Invoice #',       key: 'invoice_number' },
-  { title: 'Supplier',        key: 'supplier',        sortable: false },
-  { title: 'Receive Date',    key: 'receive_date' },
-  { title: 'Total',           key: 'total_amount' },
-  { title: 'Payment',         key: 'payment_status',  sortable: false },
-  { title: 'Status',          key: 'status',          sortable: false },
-  { title: 'Created By',      key: 'employee',        sortable: false },
-  { title: 'Actions',         key: 'actions',         sortable: false, align: 'end' }
+  { title: 'ເລກທີໃບບິນ',   key: 'invoice_number' },
+  { title: 'ຜູ້ສະໜອງ',     key: 'supplier',        sortable: false },
+  { title: 'ວັນທີໄດ້ຮັບ',   key: 'receive_date' },
+  { title: 'ຍອດລວມ',       key: 'total_amount' },
+  { title: 'ຊຳລະ',         key: 'payment_status',  sortable: false },
+  { title: 'ສະຖານະ',       key: 'status',          sortable: false },
+  { title: 'ຈັດການ',       key: 'actions',         sortable: false, align: 'end' }
 ]
 
-const statusOptions = ['draft', 'received', 'completed', 'cancelled']
-
-// ── Helpers ────────────────────────────────────────
-const notify = (message, color = 'success') => {
-  snackbar.value = { show: true, message, color }
-}
-
-const formatCurrency = (v) =>
-  v != null ? `$${Number(v).toFixed(2)}` : '—'
-
-const statusColor = (s) =>
-  ({ draft: 'grey', received: 'blue', completed: 'success', cancelled: 'error' }[s] ?? 'grey')
-
-const paymentColor = (s) =>
-  ({ pending: 'warning', partial: 'orange', paid: 'success' }[s] ?? 'grey')
-
-const nextStatuses = (current) => {
-  const map = {
-    draft:    [{ value: 'received',  label: 'Mark Received',  icon: 'mdi-truck-check',    color: 'blue'    },
-               { value: 'cancelled', label: 'Cancel Import',  icon: 'mdi-cancel',         color: 'error'   }],
-    received: [{ value: 'completed', label: 'Complete & Add to Stock', icon: 'mdi-check-circle', color: 'success' },
-               { value: 'cancelled', label: 'Cancel Import',  icon: 'mdi-cancel',         color: 'error'   }],
-  }
-  return map[current] ?? []
-}
-
-// ── Data loading ───────────────────────────────────
-const loadImports = async () => {
-  loading.value = true
+// ── SEARCH ─────────────────────────────────────────
+const performSearch = async () => {
+  if (!searchQuery.value.trim()) return
+  searching.value = true
+  selectedImport.value = null
+  selectedPO.value = null
   try {
-    const params = new URLSearchParams({ pageSize: 200 })
-    if (filters.value.status) params.set('status', filters.value.status)
-    const res = await api(`/imports?${params}`)
-    if (res.success) imports.value = res.data
+    // 1. Search in purchase orders first
+    const poRes = await api(`/purchase-orders?search=${searchQuery.value}`)
+    if (poRes.success && poRes.data.length > 0) {
+      const po = poRes.data[0]
+      
+      // Check if already received or completed
+      if (po.status === 'received' || po.status === 'completed') {
+        notify('ໃບສັ່ງຊື້ນີ້ ໄດ້ຖືກນໍາເຂົ້າສາງຮຽບຮ້ອຍແລ້ວ (Already Imported)', 'success')
+        
+        // Find and show the linked import record
+        const impRes = await api(`/imports?purchase_order_id=${po.id}`)
+        if (impRes.success && impRes.data.length > 0) {
+          await openDetail(impRes.data[0])
+          return
+        }
+      }
+      
+      if (po.status === 'cancelled') {
+        notify('ລາຍການນີ້ຖືກຍົກເລີກແລ້ວ', 'error')
+        return
+      } 
+      
+      if (po.status === 'draft') {
+        notify('ໃບສັ່ງຊື້ນີ້ຍັງຢູ່ໃນສະຖານະ "ຮ່າງ", ກະລຸນາຢືນຢັນການສັ່ງຊື້ກ່ອນ', 'warning')
+        return
+      }
+
+      // If status is 'sent' or other available states, allow importing
+      await openPODetail(po)
+      return
+    }
+
+    // 2. Fallback to search existing imports
+    const res = await api(`/imports?search=${searchQuery.value}`)
+    if (res.success && res.data.length > 0) {
+      await openDetail(res.data[0])
+      return
+    }
+
+    notify('ບໍ່ພົບຂໍ້ມູນໃບບິນ ຫຼື PO ນີ້', 'error')
   } catch (err) {
-    console.error(err)
-    notify('Failed to load imports', 'error')
+    notify('ເກີດຂໍ້ຜິດພາດໃນການຄົ້ນຫາ', 'error')
   } finally {
-    loading.value = false
+    searching.value = false
   }
 }
 
-// ── Detail ─────────────────────────────────────────
 const openDetail = async (item) => {
+  selectedPO.value = null
   try {
     const res = await api(`/imports/${item.id}`)
     if (res.success) {
       selectedImport.value = res.data
-      detailDialog.value = true
+      updateRecent(res.data)
     }
   } catch (err) {
-    console.error(err)
-    notify('Failed to load import details', 'error')
+    notify('ບໍ່ສາມາດໂຫຼດລາຍລະອຽດໄດ້', 'error')
   }
 }
 
-// ── Status change ──────────────────────────────────
-const changeStatus = async (item, newStatus) => {
-  statusChanging.value = true
+const openPODetail = async (item) => {
+  selectedImport.value = null
   try {
-    const res = await api(`/imports/${item.id}/status`, {
-      method: 'PUT',
-      body: { status: newStatus }
-    })
+    const res = await api(`/purchase-orders/${item.id}`)
     if (res.success) {
-      notify(`Import ${newStatus === 'completed' ? 'completed — stock updated!' : 'status updated'}`, 'success')
-      detailDialog.value = false
-      loadImports()
-    } else {
-      notify(res.message || 'Update failed', 'error')
+      const data = res.data
+      // Add quantity_received so users can input actual received count
+      if (data.details) {
+        data.details = data.details.map(d => ({
+          ...d,
+          quantity_received: d.quantity_ordered
+        }))
+      }
+      selectedPO.value = data
     }
   } catch (err) {
-    console.error(err)
-    notify('An error occurred', 'error')
+    notify('ບໍ່ສາມາດໂຫຼດລາຍລະອຽດ PO ໄດ້', 'error')
+  }
+}
+
+const updateRecent = (item) => {
+  recentBills.value = [item, ...recentBills.value.filter(b => b.id !== item.id)].slice(0, 5)
+}
+
+// ── ACTIONS ────────────────────────────────────────
+const finalizeBill = async () => {
+  if (!selectedImport.value) return
+  statusChanging.value = true
+  try {
+    const res = await api(`/imports/${selectedImport.value.id}`, {
+      method: 'PUT',
+      body: { 
+        status: 'completed',
+        payment_status: 'paid'
+      }
+    })
+    if (res.success) {
+      notify('ສໍາເລັດສິ້ນ! ອັບເດດສະຕ໋ອກສິນຄ້າແລ້ວ', 'success')
+      selectedImport.value = res.data
+      loadImports()
+    } else {
+      notify(res.message || 'ບໍ່ສາມາດອັບເດດໄດ້', 'error')
+    }
+  } catch (err) {
+    notify('ເກີດຂໍ້ຜິດພາດ', 'error')
   } finally {
     statusChanging.value = false
   }
 }
 
-// ── Delete ─────────────────────────────────────────
-const openDeleteDialog = (item) => {
-  selectedImport.value = item
-  deleteDialog.value = true
-}
-
-const confirmDelete = async () => {
-  deleting.value = true
+const importFromPO = async () => {
+  if (!selectedPO.value) return
+  statusChanging.value = true
   try {
-    const res = await api(`/imports/${selectedImport.value.id}`, { method: 'DELETE' })
+    const payload = {
+      purchase_order_id: selectedPO.value.id,
+      supplier_id: selectedPO.value.supplier_id,
+      invoice_number: selectedPO.value.po_number, // Default to PO number
+      receive_date: new Date().toISOString().split('T')[0],
+      payment_status: 'pending',
+      items: selectedPO.value.details.map(d => ({
+        product_id: d.product_id,
+        variant_id: d.variant_id,
+        quantity: d.quantity_received || d.quantity_ordered,
+        unit_cost: d.unit_cost
+      }))
+    }
+
+    const res = await api('/imports', {
+      method: 'POST',
+      body: payload
+    })
+
     if (res.success) {
-      notify('Import deleted')
-      deleteDialog.value = false
+      notify('ນໍາເຂົ້າສິນຄ້າສໍາເລັດ! ກະລຸນາກວດສອບ ແລະ ຢືນຢັນຂັ້ນຕອນສຸດທ້າຍ', 'success')
+      selectedPO.value = null
+      await openDetail(res.data)
       loadImports()
     } else {
-      notify(res.message || 'Delete failed', 'error')
+      notify(res.message || 'ບໍ່ສາມາດນໍາເຂົ້າໄດ້', 'error')
     }
   } catch (err) {
-    console.error(err)
-    notify('An error occurred', 'error')
+    notify('ເກີດຂໍ້ຜິດພາດໃນການນໍາເຂົ້າ', 'error')
   } finally {
-    deleting.value = false
+    statusChanging.value = false
   }
 }
 
-// ── Init ───────────────────────────────────────────
-onMounted(loadImports)
+// ── HELPERS ────────────────────────────────────────
+const notify = (message, color = 'success') => {
+  snackbar.value = { show: true, message, color }
+}
+
+const formatCurrency = (v) =>
+  v != null ? new Intl.NumberFormat('lo-LA', { style: 'currency', currency: 'LAK' }).format(v) : '—'
+
+const formatDate = (v) =>
+  v ? new Date(v).toLocaleDateString('lo-LA', { day: '2-digit', month: 'short', year: 'numeric' }) : '—'
+
+const statusColor = (s) => ({ draft: 'grey', received: 'blue', completed: 'success', cancelled: 'error' }[s] ?? 'grey')
+const statusLabel = (s) => ({ draft: 'ຮ່າງ', received: 'ໄດ້ຮັບແລ້ວ', completed: 'ສໍາເລັດ', cancelled: 'ຍົກເລີກ' }[s] ?? s)
+const paymentColor = (s) => ({ pending: 'warning', partial: 'orange', paid: 'success' }[s] ?? 'grey')
+const paymentLabel = (s) => ({ pending: 'ລໍຖ້າຊຳລະ', partial: 'ຊຳລະບາງສ່ວນ', paid: 'ຊຳລະຄົບ' }[s] ?? s)
+
+const loadImports = async () => {
+  loading.value = true
+  try {
+    const res = await api('/imports?pageSize=100')
+    if (res.success) imports.value = res.data
+  } catch (err) {
+    console.error(err)
+  } finally {
+    loading.value = false
+  }
+}
+
+onMounted(() => {
+  loadImports()
+  
+  // Auto-search if redirected from other pages with ?search=...
+  const route = useRoute()
+  if (route.query.search) {
+    searchQuery.value = String(route.query.search)
+    performSearch()
+  }
+})
 </script>
+
+<style scoped>
+.imports-page { width: 100%; }
+
+.icon-box {
+  width: 48px;
+  height: 48px;
+  background: linear-gradient(135deg, #43a047, #66bb6a);
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.search-card {
+  min-height: 380px;
+}
+
+.empty-state {
+  height: 380px;
+  display: flex;
+  flex-column: column;
+  align-items: center;
+  justify-content: center;
+  border: 2px dashed rgba(var(--v-border-color), 0.3);
+  border-radius: 24px;
+}
+
+.detail-card {
+  min-height: 380px;
+}
+
+.cursor-pointer { cursor: pointer; }
+</style>
