@@ -7,7 +7,7 @@
           <v-icon color="primary" icon="mdi-store" size="28"></v-icon>
         </div>
         <div>
-          <div class="text-overline text-primary font-weight-black mb-n1" style="letter-spacing: 2px !important;">ລະບົບຈັດການ</div>
+          <div class="text-overline text-primary font-weight-black mb-n1" style="letter-spacing: 2px !important;">ADMIN PORTAL</div>
           <div class="text-h6 font-weight-black text-grey-darken-4" style="line-height: 1;">PERFECT STORE</div>
         </div>
         <v-spacer></v-spacer>
@@ -39,7 +39,7 @@
       <template v-slot:append>
         <div class="pa-4">
           <v-btn block color="error" variant="tonal" prepend-icon="mdi-logout" @click="logout" class="rounded-lg font-weight-bold">
-            ອອກຈາກລະບົບ
+            Sign Out
           </v-btn>
         </div>
       </template>
@@ -49,7 +49,7 @@
       <v-app-bar-nav-icon @click.stop="drawer = !drawer"></v-app-bar-nav-icon>
       <v-app-bar-title>
         <v-icon icon="mdi-store" class="me-2" size="24"></v-icon>
-        ຜູ້ດູແລ Perfect Store
+        Perfect Store Admin
       </v-app-bar-title>
       <v-spacer></v-spacer>
       <v-chip class="me-3" color="white" variant="tonal" size="small" prepend-icon="mdi-shield-account">
@@ -60,10 +60,11 @@
       </v-btn>
     </v-app-bar>
 
-    <v-main class="bg-background">
-      <v-container fluid class="pa-4 fill-height align-start">
+    <v-main class="bg-background overflow-hidden">
+      <!-- No container padding for POS -->
+      <div class="fill-height">
         <slot />
-      </v-container>
+      </div>
     </v-main>
   </v-app>
 </template>
@@ -86,43 +87,42 @@ const hasAccess = (rolesAllowed) => {
 const menuGroups = [
   {
     items: [
-      { title: 'ໜ້າຫຼັກ', icon: 'mdi-view-dashboard', to: '/', exact: true, roles: ['admin', 'manager', 'staff'] },
-      { title: 'ລາຍການຂາຍ', icon: 'mdi-cash-register', to: '/pos', roles: ['admin', 'manager', 'staff'] },
+      { title: 'Dashboard', icon: 'mdi-view-dashboard', to: '/', exact: true, roles: ['admin', 'manager', 'staff'] },
+      { title: 'POS Terminal', icon: 'mdi-cash-register', to: '/pos', roles: ['admin', 'manager', 'staff'] },
     ]
   },
   {
-    title: 'ສາງສິນຄ້າ',
+    title: 'INVENTORY',
     roles: ['admin', 'manager'],
     items: [
-      { title: 'ໝວດໝູ່ສິນຄ້າ', icon: 'mdi-format-list-bulleted', to: '/categories', roles: ['admin', 'manager'] },
-      { title: 'ລາຍການສິນຄ້າ', icon: 'mdi-package-variant-closed', to: '/products', roles: ['admin', 'manager'] },
-      { title: 'ຜູ້ສະໜອງ', icon: 'mdi-handshake', to: '/suppliers', roles: ['admin', 'manager'] },
-      { title: 'ໃບສັ່ງຊື້', icon: 'mdi-truck-delivery-outline', to: '/purchase-orders', roles: ['admin', 'manager'] },
-      { title: 'ນຳເຂົ້າສິນຄ້າ', icon: 'mdi-package-down', to: '/imports', roles: ['admin', 'manager'] },
+      { title: 'Categories', icon: 'mdi-format-list-bulleted', to: '/categories', roles: ['admin', 'manager'] },
+      { title: 'Products', icon: 'mdi-package-variant-closed', to: '/products', roles: ['admin', 'manager'] },
+      { title: 'Suppliers', icon: 'mdi-handshake', to: '/suppliers', roles: ['admin', 'manager'] },
+      { title: 'Purchase Orders', icon: 'mdi-truck-delivery-outline', to: '/purchase-orders', roles: ['admin', 'manager'] },
+      { title: 'Stock Imports', icon: 'mdi-package-down', to: '/imports', roles: ['admin', 'manager'] },
     ]
   },
   {
-    title: 'ການຂາຍ',
+    title: 'SALES',
     roles: ['admin', 'manager', 'staff'],
     items: [
-      { title: 'ລາຍງານການຂາຍ', icon: 'mdi-cart-outline', to: '/sales', roles: ['admin', 'manager', 'staff'] },
-      { title: 'ອໍເດີອອນລາຍ', icon: 'mdi-clipboard-list-outline', to: '/orders', roles: ['admin', 'manager', 'staff'] },
-      { title: 'ລູກຄ້າ', icon: 'mdi-account-group', to: '/customers', roles: ['admin', 'manager', 'staff'] },
+      { title: 'Sales', icon: 'mdi-cart-outline', to: '/sales', roles: ['admin', 'manager', 'staff'] },
+      { title: 'Online Orders', icon: 'mdi-clipboard-list-outline', to: '/orders', roles: ['admin', 'manager', 'staff'] },
+      { title: 'Customers', icon: 'mdi-account-group', to: '/customers', roles: ['admin', 'manager', 'staff'] },
     ]
   },
   {
-    title: 'ຜູ້ດູແລລະບົບ',
+    title: 'ADMIN',
     roles: ['admin'],
     items: [
-      { title: 'ຂໍ້ມູນພະນັກງານ', icon: 'mdi-account-details', to: '/employees', roles: ['admin'] },
-      { title: 'ບັນຊີຜູ້ໃຊ້', icon: 'mdi-shield-account', to: '/users', roles: ['admin'] },
-      { title: 'ສິດທິການໃຊ້', icon: 'mdi-shield-lock', to: '/permissions', roles: ['admin'] },
-      { title: 'ຕັ້ງຄ່າ', icon: 'mdi-cog', to: '/settings', roles: ['admin'] },
+      { title: 'Staff Profiles', icon: 'mdi-account-details', to: '/employees', roles: ['admin'] },
+      { title: 'Users', icon: 'mdi-shield-account', to: '/users', roles: ['admin'] },
+      { title: 'Permissions', icon: 'mdi-shield-lock', to: '/permissions', roles: ['admin'] },
+      { title: 'Settings', icon: 'mdi-cog', to: '/settings', roles: ['admin'] },
     ]
   }
 ]
 
-// ── User Info ─────────────────────────────────────────
 const currentUser = ref(null)
 
 const userDisplayName = computed(() => {
@@ -148,9 +148,7 @@ onMounted(async () => {
   try {
     const res = await api('/auth/me')
     if (res.success) currentUser.value = res.data
-  } catch (e) {
-    // silent fail – token may not be valid yet
-  }
+  } catch (e) {}
 })
 
 const logout = () => {
@@ -161,7 +159,8 @@ const logout = () => {
 
 <style scoped>
 .fill-height {
-  height: calc(100vh - 64px); /* Subtract app bar height */
+  height: calc(100vh - 64px);
+  overflow: hidden;
 }
 
 /* Premium Sidebar Styles */

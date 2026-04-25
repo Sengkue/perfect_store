@@ -67,7 +67,7 @@
             <v-btn color="primary" prepend-icon="mdi-cash-register" to="/pos" variant="elevated" rounded="lg">
               Open POS
             </v-btn>
-            <v-btn color="success" prepend-icon="mdi-package-down" to="/imports/create" variant="tonal" rounded="lg">
+            <v-btn color="success" prepend-icon="mdi-package-down" to="/imports" variant="tonal" rounded="lg">
               Record Import
             </v-btn>
             <v-btn color="warning" prepend-icon="mdi-truck-delivery-outline" to="/purchase-orders" variant="tonal" rounded="lg">

@@ -10,7 +10,7 @@
           </div>
           <div>
             <h1 class="text-h5 font-weight-bold mb-0">ໃບສັ່ງຊື້ຈາກຜູ້ສະໜອງ</h1>
-            <p class="text-caption text-medium-emphasis mb-0">Purchase Order · ສ້າງ ແລະ ຈັດການການສັ່ງຊື້ເຂົ້າສະຕ໋ອກ</p>
+            <p class="text-caption text-medium-emphasis mb-0">ໃບສັ່ງຊື້ · ສ້າງ ແລະ ຈັດການການສັ່ງຊື້ເຂົ້າສະຕ໋ອກ</p>
           </div>
         </div>
         <v-spacer />
@@ -112,14 +112,14 @@
                   >
                     <!-- thumbnail -->
                     <v-img
-                      :src="product.images?.[0]?.image_url"
+                      :src="product.images?.[0]?.image_url || '/images/product-placeholder.png'"
                       height="95"
                       cover
                       class="rounded-t-lg bg-grey-lighten-4"
                     >
                       <template #error>
                         <div class="d-flex align-center justify-center h-100">
-                          <v-icon icon="mdi-image-off-outline" color="grey-lighten-1" size="30" />
+                          <v-img src="/images/product-placeholder.png" cover />
                         </div>
                       </template>
                       <!-- qty badge if already in cart -->
@@ -145,7 +145,7 @@
                         </v-chip>
                       </div>
                       <div class="text-caption text-medium-emphasis mt-1">
-                        Qty: {{ getProductStock(product) }}
+                        ຈໍານວນ: {{ getProductStock(product) }}
                       </div>
                     </v-card-text>
                   </v-card>
@@ -315,12 +315,12 @@
                     <div class="d-flex align-start gap-2">
                       <v-avatar rounded="lg" size="40" class="flex-shrink-0">
                         <v-img
-                          :src="item.product.images?.[0]?.image_url"
+                          :src="item.product.images?.[0]?.image_url || '/images/product-placeholder.png'"
                           cover
                         >
                           <template #error>
                             <div class="d-flex align-center justify-center h-100 bg-grey-lighten-3">
-                              <v-icon icon="mdi-image-off-outline" color="grey" size="16" />
+                              <v-img src="/images/product-placeholder.png" cover />
                             </div>
                           </template>
                         </v-img>
@@ -379,7 +379,7 @@
                       <!-- Unit cost -->
                       <v-text-field
                         v-model.number="item.unit_cost"
-                        label="ລາຄາ/ຊ.ຕ (LAK)"
+                        label="ລາຄາ/ຊ.ຕ (ກີບ)"
                         variant="outlined"
                         density="compact"
                         type="number"
@@ -405,7 +405,7 @@
                         :items="item.product.variants"
                         :item-title="(v) => `${[v.color, v.size].filter(Boolean).join('/') || 'Default'} (Stock: ${v.quantity_in_stock})`"
                         item-value="id"
-                        label="ເລືອກ Variant"
+                        label="ເລືອກ ລຸ້ນສິນຄ້າ"
                         variant="outlined"
                         density="compact"
                         hide-details
@@ -779,7 +779,7 @@
         </v-card-text>
         <v-card-actions class="pa-4 pt-0 d-flex flex-column gap-2">
           <v-btn block variant="flat" color="info" size="large" @click="printPO(createdPO?.id)">
-            <v-icon start>mdi-printer</v-icon>ພິມບິນ (Print Bill)
+            <v-icon start>mdi-printer</v-icon>ພິມບິນ (ພິມບິນ)
           </v-btn>
           <div class="d-flex gap-2 w-100">
             <v-btn flex="1 1 auto" variant="tonal" color="primary" @click="successDialog = false; activeTab = 'list'; loadPOs()">

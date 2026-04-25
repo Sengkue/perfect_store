@@ -8,7 +8,7 @@
             <v-text-field
                 v-model="searchQuery"
                 prepend-inner-icon="mdi-barcode-scan"
-                label="Scan Barcode or Search Products..."
+                label="ສະແກນບາໂຄ້ດ ຫຼື ຄົ້ນຫາສິນຄ້າ..."
                 variant="solo"
                 density="comfortable"
                 hide-details
@@ -26,19 +26,19 @@
                 prepend-icon="mdi-pause-circle-outline"
                 @click="showHeldOrders = true"
             >
-                Held Orders ({{ heldOrders.length }})
+                ລາຍການທີ່ພັກໄວ້ ({{ heldOrders.length }})
             </v-btn>
         </div>
 
         <PosCategoryTabs v-model="activeCategory" :categories="categories.map(c => c.category_name)" class="mb-2" />
         
         <v-row dense class="flex-grow-1 overflow-y-auto w-100 ma-0 mt-2 align-content-start">
-          <v-col v-for="product in filteredProducts" :key="product.id" cols="12" sm="6" md="4" lg="3">
+          <v-col v-for="product in filteredProducts" :key="product.id" class="pos-product-col px-1 mb-2">
             <PosProductCard :product="product" @add-to-cart="addToCart" />
           </v-col>
           <v-col cols="12" v-if="filteredProducts.length === 0" class="text-center mt-10">
               <v-icon size="64" color="grey-lighten-1">mdi-package-variant</v-icon>
-              <h3 class="text-h6 text-grey mt-4">No products found.</h3>
+              <h3 class="text-h6 text-grey mt-4">ບໍ່ພົບສິນຄ້າ.</h3>
           </v-col>
         </v-row>
       </v-col>
@@ -69,16 +69,16 @@
     <!-- Quick Add Customer Dialog inside POS -->
     <v-dialog v-model="showAddCustomer" max-width="400">
       <v-card>
-        <v-card-title>Add New Customer</v-card-title>
+        <v-card-title>ເພີ່ມລູກຄ້າໃໝ່</v-card-title>
         <v-card-text class="pt-4">
-          <v-text-field v-model="newCustomer.first_name" label="First Name" variant="outlined" density="compact" class="mb-2"></v-text-field>
-          <v-text-field v-model="newCustomer.last_name" label="Last Name" variant="outlined" density="compact" class="mb-2"></v-text-field>
-          <v-text-field v-model="newCustomer.phone" label="Phone" variant="outlined" density="compact" class="mb-2"></v-text-field>
+          <v-text-field v-model="newCustomer.first_name" label="ຊື່" variant="outlined" density="compact" class="mb-2"></v-text-field>
+          <v-text-field v-model="newCustomer.last_name" label="ນາມສະກຸນ" variant="outlined" density="compact" class="mb-2"></v-text-field>
+          <v-text-field v-model="newCustomer.phone" label="ເບີໂທລະສັບ" variant="outlined" density="compact" class="mb-2"></v-text-field>
         </v-card-text>
         <v-card-actions>
           <v-spacer></v-spacer>
-          <v-btn @click="showAddCustomer = false">Cancel</v-btn>
-          <v-btn color="primary" @click="saveNewCustomer">Save</v-btn>
+          <v-btn @click="showAddCustomer = false">ຍົກເລີກ</v-btn>
+          <v-btn color="primary" @click="saveNewCustomer">ບັນທຶກ</v-btn>
         </v-card-actions>
       </v-card>
     </v-dialog>
@@ -86,14 +86,14 @@
     <!-- Held Orders Dialog -->
     <v-dialog v-model="showHeldOrders" max-width="500">
         <v-card>
-            <v-card-title>Held Orders</v-card-title>
+            <v-card-title>ລາຍການທີ່ພັກໄວ້</v-card-title>
             <v-list lines="two">
                 <v-list-item v-for="(order, index) in heldOrders" :key="index" border>
                     <template v-slot:title>
-                        <strong class="text-primary">Order #{{ index + 1 }}</strong> - {{ order.items.length }} items
+                        <strong class="text-primary">ລາຍການທີ #{{ index + 1 }}</strong> - {{ order.items.length }} ລາຍການ
                     </template>
                     <template v-slot:subtitle>
-                        Held on {{ new Date(order.time).toLocaleTimeString() }}
+                        ພັກໄວ້ເມື່ອ {{ new Date(order.time).toLocaleTimeString() }}
                     </template>
                     <template v-slot:append>
                         <v-btn icon="mdi-restore" color="success" variant="text" @click="restoreOrder(index)"></v-btn>
@@ -103,7 +103,7 @@
             </v-list>
             <v-card-actions>
                 <v-spacer></v-spacer>
-                <v-btn @click="showHeldOrders = false">Close</v-btn>
+                <v-btn @click="showHeldOrders = false">ປິດ</v-btn>
             </v-card-actions>
         </v-card>
     </v-dialog>
@@ -112,6 +112,14 @@
 
 <script setup>
 import { ref, computed, onMounted, watch } from 'vue'
+import { formatKip } from '~/utils/format'
+
+definePageMeta({
+  layout: 'pos-layout'
+})
+
+// Audio
+const successSound = typeof Audio !== 'undefined' ? new Audio('/sounds/success.mp3') : null
 
 const api = useApi()
 
@@ -147,14 +155,14 @@ const saveNewCustomer = async () => {
             body: payload
         })
         if (res.success && res.data) {
-            showToast('Customer added successfully!', 'success')
+            showToast('ເພີ່ມລູກຄ້າສຳເລັດ!', 'success')
             showAddCustomer.value = false
             newCustomer.value = { first_name: '', last_name: '', phone: '' }
         } else {
-            showToast(res.message || 'Failed to add customer. Phone number might already exist.', 'error')
+            showToast(res.message || 'ບໍ່ສາມາດເພີ່ມລູກຄ້າໄດ້. ເບີໂທລະສັບອາດມີໃນລະບົບແລ້ວ.', 'error')
         }
     } catch(err) {
-        showToast('Failed to save customer. Server error.', 'error')
+        showToast('ບໍ່ສາມາດບັນທຶກລູກຄ້າໄດ້. ຂໍ້ຜິດພາດຂອງເຊີເວີ.', 'error')
         console.error(err)
     }
 }
@@ -177,7 +185,7 @@ onMounted(async () => {
   try {
     const catRes = await api('/categories')
     if (catRes.success) {
-      categories.value = [{ id: 0, category_name: 'All' }, ...catRes.data]
+      categories.value = [{ id: 0, category_name: 'ທັງໝົດ' }, ...catRes.data]
     }
 
     // Load Products
@@ -189,7 +197,7 @@ onMounted(async () => {
           ...p,
           stockQty,
           price: Number(p.selling_price),
-          image: p.images?.length > 0 ? p.images[0].image_url : `https://placehold.co/150x150/e2e8f0/1e293b?text=${encodeURIComponent(p.name)}`
+          image: p.images?.length > 0 ? p.images[0].image_url : null
         };
       })
     }
@@ -252,7 +260,15 @@ const addToCart = (product) => {
       return showToast('Product is out of stock!', 'error');
     }
     cart.value.push({ ...product, quantity: 1, discountPercent: 0 })
+    playSuccessSound();
   }
+}
+
+const playSuccessSound = () => {
+    if (successSound) {
+        successSound.currentTime = 0;
+        successSound.play().catch(e => console.warn('Audio play failed:', e));
+    }
 }
 
 const updateCartQty = (id, newQty) => {
@@ -281,7 +297,7 @@ const holdOrder = () => {
 
 const restoreOrder = (index) => {
     if (cart.value.length > 0) {
-        if (!confirm('Current cart is not empty. Overwrite it?')) return;
+        if (!confirm('ມີສິນຄ້າຢູ່ໃນກະຕ່າແລ້ວ. ຕ້ອງການຂຽນທັບ ຫຼື ບໍ່?')) return;
     }
     cart.value = heldOrders.value[index].items
     heldOrders.value.splice(index, 1)
@@ -342,7 +358,7 @@ const executeCheckout = async (checkoutData) => {
         });
 
         if (res.success) {
-            showToast('Sale completed successfully!', 'success');
+            playSuccessSound();
             if (res.data) {
                 printReceipt(res.data);
             }
@@ -363,8 +379,8 @@ const printReceipt = (sale) => {
         <tr>
             <td style="text-align: left; padding: 4px 0;">${d.product?.name || 'Item'}</td>
             <td style="text-align: center; padding: 4px 0;">${d.quantity}</td>
-            <td style="text-align: right; padding: 4px 0;">$${Number(d.unit_price).toFixed(2)}</td>
-            <td style="text-align: right; padding: 4px 0;">$${Number(d.subtotal).toFixed(2)}</td>
+            <td style="text-align: right; padding: 4px 0;">${formatKip(Number(d.unit_price))}</td>
+            <td style="text-align: right; padding: 4px 0;">${formatKip(Number(d.subtotal))}</td>
         </tr>
     `).join('');
 
@@ -415,32 +431,32 @@ const printReceipt = (sale) => {
                 <table class="totals">
                     <tr>
                         <td>Subtotal:</td>
-                        <td class="text-right">$${Number(sale.subtotal).toFixed(2)}</td>
+                        <td class="text-right">${formatKip(Number(sale.subtotal))}</td>
                     </tr>
                     <tr>
                         <td>Tax:</td>
-                        <td class="text-right">$${Number(sale.tax_amount).toFixed(2)}</td>
+                        <td class="text-right">${formatKip(Number(sale.tax_amount))}</td>
                     </tr>
                     <tr>
                         <td>Discount:</td>
-                        <td class="text-right">-$${Number(sale.discount_amount || 0).toFixed(2)}</td>
+                        <td class="text-right">-${formatKip(Number(sale.discount_amount || 0))}</td>
                     </tr>
                     <tr class="bold">
                         <td>Total:</td>
-                        <td class="text-right">$${Number(sale.total_amount).toFixed(2)}</td>
+                        <td class="text-right">${formatKip(Number(sale.total_amount))}</td>
                     </tr>
                     <tr>
                         <td>Amount Paid:</td>
-                        <td class="text-right">$${Number(sale.amount_paid || sale.total_amount).toFixed(2)}</td>
+                        <td class="text-right">${formatKip(Number(sale.amount_paid || sale.total_amount))}</td>
                     </tr>
                     <tr>
                         <td>Change:</td>
-                        <td class="text-right">$${Math.max(0, Number(sale.amount_paid || sale.total_amount) - Number(sale.total_amount)).toFixed(2)}</td>
+                        <td class="text-right">${formatKip(Math.max(0, Number(sale.amount_paid || sale.total_amount) - Number(sale.total_amount)))}</td>
                     </tr>
                 </table>
                 <hr />
-                <p class="text-center bold">Thank you for your purchase!</p>
-                <p class="text-center">Please come again.</p>
+                <p class="text-center bold">ຂອບໃຈທີ່ມາອຸດໜູນ!</p>
+                <p class="text-center">ໂອກາດໜ້າເຊີນໃໝ່.</p>
             </body>
         </html>
     `;
@@ -469,6 +485,36 @@ const printReceipt = (sale) => {
 .overflow-y-auto {
   overflow-y: auto;
 }
+.pos-product-col {
+  width: 50%;
+  flex: 0 0 50%;
+  max-width: 50%;
+}
+
+@media (min-width: 600px) {
+  .pos-product-col {
+    width: 33.33%;
+    flex: 0 0 33.33%;
+    max-width: 33.33%;
+  }
+}
+
+@media (min-width: 960px) {
+  .pos-product-col {
+    width: 25%;
+    flex: 0 0 25%;
+    max-width: 25%;
+  }
+}
+
+@media (min-width: 1264px) {
+  .pos-product-col {
+    width: 20%;
+    flex: 0 0 20%;
+    max-width: 20%;
+  }
+}
+
 /* custom scrollbar */
 ::-webkit-scrollbar {
   width: 6px;

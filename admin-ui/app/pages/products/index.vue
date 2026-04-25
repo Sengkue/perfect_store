@@ -323,7 +323,7 @@
         <v-card-actions class="pa-4">
           <v-spacer />
           <v-btn @click="stockDetailDialog = false">Close</v-btn>
-          <v-btn color="success" prepend-icon="mdi-package-down" variant="elevated" to="/imports/create">
+          <v-btn color="success" prepend-icon="mdi-package-down" variant="elevated" to="/imports">
             Record Stock Import
           </v-btn>
         </v-card-actions>

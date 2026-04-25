@@ -6,16 +6,16 @@
     <v-list class="flex-grow-1 overflow-y-auto px-0 bg-transparent" lines="two">
       <div v-if="cart.length === 0" class="text-center text-grey my-10">Cart is empty</div>
       <v-fade-transition group>
-        <v-list-item v-for="(item, index) in cart" :key="item.id" class="px-0 mb-3 rounded" :class="expandedItem === item.id ? 'border-active' : 'border'" elevation="0">
-          <div class="d-flex flex-column w-100 pa-3 cursor-pointer" @click="toggleExpand(item.id)">
+        <v-list-item v-for="(item, index) in cart" :key="item.id" class="px-0 mb-1 rounded" :class="expandedItem === item.id ? 'border-active' : 'border'" elevation="0">
+          <div class="d-flex flex-column w-100 pa-2 cursor-pointer" @click="toggleExpand(item.id)">
             <div class="d-flex align-start justify-space-between mb-2">
               <div class="d-flex align-center">
-                <v-icon size="small" class="mr-2 text-grey-darken-1">{{ expandedItem === item.id ? 'mdi-chevron-down' : 'mdi-chevron-right' }}</v-icon>
-                <span class="mr-3 font-weight-bold text-grey-darken-3">{{ item.quantity }}</span>
-                <span class="font-weight-medium">{{ item.name }}</span>
+                <v-icon size="x-small" class="mr-1 text-grey-darken-1">{{ expandedItem === item.id ? 'mdi-chevron-down' : 'mdi-chevron-right' }}</v-icon>
+                <span class="mr-2 font-weight-bold text-grey-darken-3 text-caption">{{ item.quantity }}</span>
+                <span class="font-weight-medium text-caption">{{ item.name }}</span>
               </div>
               <div class="d-flex align-center">
-                <span class="font-weight-bold mr-2">${{ (item.price * item.quantity).toFixed(2) }}</span>
+                <span class="font-weight-bold mr-2 text-caption">{{ formatKip(item.price * item.quantity) }}</span>
                 <v-btn icon="mdi-close-circle" variant="text" color="grey" size="x-small" @click.stop="$emit('remove', item.id)"></v-btn>
               </div>
             </div>
@@ -58,25 +58,25 @@
 
     <!-- Cart Actions / Totals -->
     <div class="mt-4 pb-2">
-      <div class="d-flex justify-space-between mb-4 px-3 py-3 rounded text-orange-darken-3 font-weight-medium bg-orange-lighten-5 text-caption">
+      <div class="d-flex justify-space-between mb-2 px-3 py-2 rounded text-orange-darken-3 font-weight-medium bg-orange-lighten-5 text-caption">
         <span class="cursor-pointer">Add</span>
         <span class="cursor-pointer">Discount</span>
-        <span class="cursor-pointer">Coupon Code</span>
+        <span class="cursor-pointer">Coupon</span>
         <span class="cursor-pointer">Note</span>
       </div>
 
       <div class="d-flex justify-space-between mb-1 text-subtitle-2">
         <span class="text-grey-darken-1">Subtotal</span>
-        <span class="font-weight-bold">${{ subtotal.toFixed(2) }}</span>
+        <span class="font-weight-bold">{{ formatKip(subtotal) }}</span>
       </div>
       <div class="d-flex justify-space-between mb-2 text-subtitle-2">
         <span class="text-grey-darken-1">Tax ({{ taxRate }}%)</span>
-        <span class="font-weight-bold">${{ tax.toFixed(2) }}</span>
+        <span class="font-weight-bold">{{ formatKip(tax) }}</span>
       </div>
       <v-divider class="my-2"></v-divider>
       <div class="d-flex justify-space-between mb-4 align-center">
         <span class="text-h6 font-weight-bold">Payable Amount</span>
-        <span class="text-h6 font-weight-bold">${{ total.toFixed(2) }}</span>
+        <span class="text-h6 font-weight-bold">{{ formatKip(total) }}</span>
       </div>
 
       <v-row dense>
@@ -93,6 +93,7 @@
 
 <script setup>
 import { computed, ref, watch } from 'vue'
+import { formatKip } from '~/utils/format'
 
 const props = defineProps({
   cart: { type: Array, required: true },

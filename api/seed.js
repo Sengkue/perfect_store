@@ -1,53 +1,54 @@
 import bcrypt from 'bcryptjs';
-import { 
-  User, UserProfile, Permission, ShopSetting, Category, 
-  Supplier, Product, ProductVariant, Customer, CustomerAddress, 
-  Promotion, sequelize 
+import {
+  User, UserProfile, Permission, ShopSetting, Category,
+  Supplier, Product, ProductVariant, Customer, CustomerAddress,
+  Promotion, sequelize
 } from './models/index.js';
 
 const defaultPermissions = [
   // Dashboard
-  { name: 'dashboard.view',           display_name: 'View Dashboard',          module: 'Dashboard',      description: 'Access the main dashboard' },
+  { name: 'dashboard.view', display_name: 'ເບິ່ງແຜງຄວບຄຸມ', module: 'Dashboard', description: 'ເຂົ້າເບິ່ງແຜງຄວບຄຸມຫຼັກ' },
   // POS
-  { name: 'pos.access',               display_name: 'Access POS Terminal',     module: 'POS',            description: 'Open and use the POS terminal' },
+  { name: 'pos.access', display_name: 'ເຂົ້າໃຊ້ງານລະບົບຂາຍ (POS)', module: 'POS', description: 'ເປີດ ແລະ ໃຊ້ງານເຄື່ອງຂາຍສິນຄ້າ (POS)' },
   // Products
-  { name: 'products.view',            display_name: 'View Products',           module: 'Products',       description: 'Browse products and variants' },
-  { name: 'products.create',          display_name: 'Create Products',         module: 'Products',       description: 'Add new products to catalog' },
-  { name: 'products.edit',            display_name: 'Edit Products',           module: 'Products',       description: 'Update product info and pricing' },
-  { name: 'products.delete',          display_name: 'Delete Products',         module: 'Products',       description: 'Remove products from catalog' },
+  { name: 'products.view', display_name: 'ເບິ່ງລາຍການສິນຄ້າ', module: 'Products', description: 'ເບິ່ງລາຍການສິນຄ້າ ແລະ ຊະນິດສິນຄ້າ' },
+  { name: 'products.create', display_name: 'ເພີ່ມສິນຄ້າໃໝ່', module: 'Products', description: 'ເພີ່ມສິນຄ້າໃໝ່ເຂົ້າໃນລະບົບ' },
+  { name: 'products.edit', display_name: 'ແກ້ໄຂຂໍ້ມູນສິນຄ້າ', module: 'Products', description: 'ອັບເດດຂໍ້ມູນສິນຄ້າ ແລະ ລາຄາ' },
+  { name: 'products.delete', display_name: 'ລຶບສິນຄ້າ', module: 'Products', description: 'ລຶບບັນຊີສິນຄ້າອອກຈາກລະບົບ' },
   // Categories
-  { name: 'categories.view',          display_name: 'View Categories',         module: 'Categories',     description: 'Browse product categories' },
-  { name: 'categories.manage',        display_name: 'Manage Categories',       module: 'Categories',     description: 'Create, edit, delete categories' },
+  { name: 'categories.view', display_name: 'ເບິ່ງໝວດໝູ່', module: 'Categories', description: 'ເບິ່ງລາຍການໝວດໝູ່ສິນຄ້າ' },
+  { name: 'categories.manage', display_name: 'ຈັດການໝວດໝູ່', module: 'Categories', description: 'ສ້າງ, ແກ້ໄຂ, ແລະ ລຶບໝວດໝູ່' },
   // Suppliers
-  { name: 'suppliers.view',           display_name: 'View Suppliers',          module: 'Suppliers',      description: 'Browse supplier list' },
-  { name: 'suppliers.manage',         display_name: 'Manage Suppliers',        module: 'Suppliers',      description: 'Create, edit, delete suppliers' },
+  { name: 'suppliers.view', display_name: 'ເບິ່ງຜູ້ສະໜອງ', module: 'Suppliers', description: 'ເບິ່ງລາຍຊື່ຜູ້ສະໜອງ' },
+  { name: 'suppliers.manage', display_name: 'ຈັດການຜູ້ສະໜອງ', module: 'Suppliers', description: 'ສ້າງ, ແກ້ໄຂ, ແລະ ລຶບຜູ້ສະໜອງ' },
   // Purchase Orders
-  { name: 'purchase_orders.view',     display_name: 'View Purchase Orders',    module: 'Purchase Orders',description: 'View PO list and details' },
-  { name: 'purchase_orders.create',   display_name: 'Create Purchase Orders',  module: 'Purchase Orders',description: 'Create new purchase orders' },
-  { name: 'purchase_orders.approve',  display_name: 'Approve Purchase Orders', module: 'Purchase Orders',description: 'Change PO status/approve them' },
+  { name: 'purchase_orders.view', display_name: 'ເບິ່ງໃບສັ່ງຊື້', module: 'Purchase Orders', description: 'ເບິ່ງລາຍການໃບສັ່ງຊື້ ແລະ ລາຍລະອຽດ' },
+  { name: 'purchase_orders.create', display_name: 'ສ້າງໃບສັ່ງຊື້', module: 'Purchase Orders', description: 'ສ້າງໃບສັ່ງຊື້ສິນຄ້າໃໝ່' },
+  { name: 'purchase_orders.approve', display_name: 'ອະນຸມັດໃບສັ່ງຊື້', module: 'Purchase Orders', description: 'ອະນຸມັດ ຫຼື ປ່ຽນສະຖານະໃບສັ່ງຊື້' },
   // Stock Imports
-  { name: 'imports.view',             display_name: 'View Stock Imports',      module: 'Imports',        description: 'View import/receiving records' },
-  { name: 'imports.create',           display_name: 'Record Stock Import',     module: 'Imports',        description: 'Record new stock received' },
-  { name: 'imports.complete',         display_name: 'Complete Imports',        module: 'Imports',        description: 'Mark import as completed (updates stock)' },
+  { name: 'imports.view', display_name: 'ເບິ່ງການນຳເຂົ້າສິນຄ້າ', module: 'Imports', description: 'ເບິ່ງປະຫວັດການນຳເຂົ້າສິນຄ້າ' },
+  { name: 'imports.create', display_name: 'ບັນທຶກການນຳເຂົ້າ', module: 'Imports', description: 'ບັນທຶກການຮັບສິນຄ້າໃໝ່ເຂົ້າສາງ' },
+  { name: 'imports.complete', display_name: 'ຢືນຢັນການນຳເຂົ້າ', module: 'Imports', description: 'ຢືນຢັນການນຳເຂົ້າສຳເລັດ (ຈະອັບເດດສະຕັອກ)' },
   // Sales
-  { name: 'sales.view',               display_name: 'View Sales',              module: 'Sales',          description: 'Browse all sales records' },
-  { name: 'sales.create',             display_name: 'Create Sales',            module: 'Sales',          description: 'Process new sale transactions' },
-  { name: 'sales.delete',             display_name: 'Delete Sales',            module: 'Sales',          description: 'Remove pending sale records' },
-  { name: 'sales.report',             display_name: 'View Sales Reports',      module: 'Sales',          description: 'Access revenue and sales analytics' },
+  { name: 'sales.view', display_name: 'ເບິ່ງການຂາຍ', module: 'Sales', description: 'ເບິ່ງປະຫວັດການຂາຍທັງໝົດ' },
+  { name: 'sales.create', display_name: 'ເຮັດການຂາຍ', module: 'Sales', description: 'ດຳເນີນການຂາຍສິນຄ້າ (POS)' },
+  { name: 'sales.delete', display_name: 'ລຶບລາຍການຂາຍ', module: 'Sales', description: 'ລຶບບັນທຶກການຂາຍທີ່ຍັງບໍ່ທຳສຳເລັດ' },
+  { name: 'sales.report', display_name: 'ເບິ່ງລາຍງານການຂາຍ', module: 'Sales', description: 'ເບິ່ງລາຍງານລາຍຮັບ ແລະ ວິເຄາະການຂາຍ' },
   // Returns
-  { name: 'returns.view',             display_name: 'View Returns',            module: 'Returns',        description: 'Browse return/refund records' },
-  { name: 'returns.create',           display_name: 'Process Returns',         module: 'Returns',        description: 'Create return and refund transactions' },
+  { name: 'returns.view', display_name: 'ເບິ່ງການຄືນສິນຄ້າ', module: 'Returns', description: 'ເບິ່ງລາຍການຄືນສິນຄ້າ ແລະ ສົ່ງເງິນຄືນ' },
+  { name: 'returns.create', display_name: 'ດຳເນີນການຄືນສິນຄ້າ', module: 'Returns', description: 'ສ້າງລາຍການຄືນສິນຄ້າ ແລະ ຄືນເງິນ' },
   // Customers
-  { name: 'customers.view',           display_name: 'View Customers',          module: 'Customers',      description: 'Browse customer list' },
-  { name: 'customers.manage',         display_name: 'Manage Customers',        module: 'Customers',      description: 'Create, edit, delete customers' },
+  { name: 'customers.view', display_name: 'ເບິ່ງລູກຄ້າ', module: 'Customers', description: 'ເບິ່ງລາຍຊື່ລູກຄ້າທັງໝົດ' },
+  { name: 'customers.manage', display_name: 'ຈັດການລູກຄ້າ', module: 'Customers', description: 'ສ້າງ, ແກ້ໄຂ, ແລະ ລຶບຂໍ້ມູນລູກຄ້າ' },
   // Admin
-  { name: 'users.view',               display_name: 'View Users',              module: 'Admin',          description: 'Browse user accounts' },
-  { name: 'users.manage',             display_name: 'Manage Users',            module: 'Admin',          description: 'Create, edit, delete user accounts' },
-  { name: 'permissions.manage',       display_name: 'Manage Permissions',      module: 'Admin',          description: 'Assign role and user permissions' },
+  { name: 'users.view', display_name: 'ເບິ່ງຜູ້ໃຊ້ງານ', module: 'Admin', description: 'ເບິ່ງບັນຊີຜູ້ໃຊ້ງານໃນລະບົບ' },
+  { name: 'users.manage', display_name: 'ຈັດການຜູ້ໃຊ້ງານ', module: 'Admin', description: 'ສ້າງ, ແກ້ໄຂ, ແລະ ລຶບຜູ້ໃຊ້ງານ' },
+  { name: 'permissions.manage', display_name: 'ຈັດການສິດການໃຊ້ງານ', module: 'Admin', description: 'ກຳນົດສິດການໃຊ້ງານໃຫ້ແຕ່ລະຕຳແໜ່ງ' },
   // Settings
-  { name: 'settings.view',            display_name: 'View Settings',           module: 'Settings',       description: 'View store settings' },
-  { name: 'settings.manage',          display_name: 'Manage Settings',         module: 'Settings',       description: 'Update store settings, tax rate, etc.' },
+  { name: 'settings.view', display_name: 'ເບິ່ງການຕັ້ງຄ່າ', module: 'Settings', description: 'ເບິ່ງການຕັ້ງຄ່າຂອງຮ້ານ' },
+  { name: 'settings.manage', display_name: 'ຈັດການການຕັ້ງຄ່າ', module: 'Settings', description: 'ອັບເດດການຕັ້ງຄ່າຮ້ານ, ອັດຕາອາກອນ, ແລະ ອື່ນໆ' },
 ];
+
 
 const seedDatabase = async () => {
   try {
@@ -59,12 +60,12 @@ const seedDatabase = async () => {
     // 1. Seed Shop Settings
     console.log('Seeding shop settings...');
     await ShopSetting.findOrCreate({
-      where: { shop_name: 'Perfect Store' },
+      where: { shop_name: 'ຮ້ານ ເພີເຟັກ ສະໂຕຣ' },
       defaults: {
-        shop_name: 'Perfect Store',
+        shop_name: 'ຮ້ານ ເພີເຟັກ ສະໂຕຣ',
         phone: '020-12345678',
         email: 'contact@perfectstore.com',
-        address: '123 Main St, Vientiane, Laos',
+        address: 'ເຮືອນເລກທີ 123, ຖະໜົນລ້ານຊ້າງ, ນະຄອນຫຼວງວຽງຈັນ, ລາວ',
         tax_number: 'TX-123456-LAO',
         tax_rate: 10.00
       }
@@ -83,9 +84,9 @@ const seedDatabase = async () => {
     console.log('Seeding users...');
     const salt = await bcrypt.genSalt(10);
     const usersData = [
-      { username: 'admin', password: 'admin123', role: 'admin', firstName: 'System', lastName: 'Admin' },
-      { username: 'manager', password: 'manager123', role: 'manager', firstName: 'Ken', lastName: 'Manager' },
-      { username: 'staff1', password: 'staff123', role: 'staff', firstName: 'Lina', lastName: 'Cashier' }
+      { username: 'admin', password: 'admin123', role: 'admin', firstName: 'ຜູ້ດູແລ', lastName: 'ລະບົບ' },
+      { username: 'manager', password: 'manager123', role: 'manager', firstName: 'ສົມຫັວງ', lastName: 'ຜູ້ຈັດການ' },
+      { username: 'staff1', password: 'staff123', role: 'staff', firstName: 'ຈັນທາ', lastName: 'ພະນັກງານຂາຍ' }
     ];
 
     for (const u of usersData) {
@@ -112,10 +113,10 @@ const seedDatabase = async () => {
     // 4. Seed Categories (Hierarchical)
     console.log('Seeding categories...');
     const mainCategories = [
-      { name: 'Drinks', slug: 'drinks', description: 'Beverages and water' },
-      { name: 'Food', slug: 'food', description: 'Snacks, groceries and food items' },
-      { name: 'Electronics', slug: 'electronics', description: 'Gadgets and devices' },
-      { name: 'Clothing', slug: 'clothing', description: 'Apparel and accessories' }
+      { name: 'ເຄື່ອງດື່ມ', slug: 'drinks', description: 'ນ້ຳດື່ມ ແລະ ເຄື່ອງດື່ມຕ່າງໆ' },
+      { name: 'ອາຫານ', slug: 'food', description: 'ອາຫານວ່າງ, ເຄື່ອງແຫ້ງ ແລະ ອາຫານຕ່າງໆ' },
+      { name: 'ເຄື່ອງເອເລັກໂຕຣນິກ', slug: 'electronics', description: 'ອຸປະກອນໄຟຟ້າ ແລະ ເອເລັກໂຕຣນິກ' },
+      { name: 'ເຄື່ອງນຸ່ງຫົ່ມ', slug: 'clothing', description: 'ເສື້ອຜ້າ ແລະ ອຸປະກອນຕົບແຕ່ງ' }
     ];
 
     for (const cat of mainCategories) {
@@ -131,17 +132,17 @@ const seedDatabase = async () => {
       // Add sub-categories
       if (cat.slug === 'drinks') {
         const subDrinks = [
-          { name: 'Soft Drinks', slug: 'soft-drinks', parent_id: category.id },
-          { name: 'Mineral Water', slug: 'mineral-water', parent_id: category.id },
-          { name: 'Coffee & Tea', slug: 'coffee-tea', parent_id: category.id }
+          { name: 'ນ້ຳຫວານ/ນ້ຳອັດລົມ', slug: 'soft-drinks', parent_id: category.id },
+          { name: 'ນ້ຳດື່ມບໍລິສຸດ', slug: 'mineral-water', parent_id: category.id },
+          { name: 'ກາເຟ ແລະ ຊາ', slug: 'coffee-tea', parent_id: category.id }
         ];
         for (const sub of subDrinks) {
           await Category.findOrCreate({ where: { slug: sub.slug }, defaults: { category_name: sub.name, slug: sub.slug, parent_id: sub.parent_id } });
         }
       } else if (cat.slug === 'food') {
         const subFood = [
-          { name: 'Snacks', slug: 'snacks', parent_id: category.id },
-          { name: 'Instant Noodles', slug: 'instant-noodles', parent_id: category.id }
+          { name: 'ເຂົ້າໜົມ', slug: 'snacks', parent_id: category.id },
+          { name: 'ໝີ່ສຳເລັດຮູບ', slug: 'instant-noodles', parent_id: category.id }
         ];
         for (const sub of subFood) {
           await Category.findOrCreate({ where: { slug: sub.slug }, defaults: { category_name: sub.name, slug: sub.slug, parent_id: sub.parent_id } });
@@ -152,10 +153,10 @@ const seedDatabase = async () => {
     // 5. Seed Suppliers
     console.log('Seeding suppliers...');
     const suppliers = [
-      { name: 'Lao Coca-Cola Bottling', contact_person: 'Mr. Coke', phone: '021-111222', email: 'sales@cocacola.la' },
-      { name: 'Beerlao Company', contact_person: 'Mr. Beer', phone: '021-333444', email: 'info@beerlao.la' },
-      { name: 'P&G Distribution', contact_person: 'Ms. Proctor', phone: '021-555666', email: 'distro@pg.com' },
-      { name: 'Samsung Electronics Laos', contact_person: 'Mr. Sam', phone: '021-777888', email: 'support@samsung.la' }
+      { name: 'ບໍລິສັດ ບັດເຕີລິງ ລາວ (ໂຄຄາ-ໂຄລາ)', contact_person: 'ທ່ານ ໂຄຄາ', phone: '021-111222', email: 'sales@cocacola.la' },
+      { name: 'ບໍລິສັດ ເບຍລາວ ຈຳກັດ', contact_person: 'ທ່ານ ເບຍລາວ', phone: '021-333444', email: 'info@beerlao.la' },
+      { name: 'ຕົວແທນຈຳໜ່າຍ P&G', contact_person: 'ທ່ານນາງ ພຣັອກເຕີ', phone: '021-555666', email: 'distro@pg.com' },
+      { name: 'ຊຳຊຸງ ເອເລັກໂຕຣນິກ ລາວ', contact_person: 'ທ່ານ ຊຳຊຸງ', phone: '021-777888', email: 'support@samsung.la' }
     ];
 
     for (const sup of suppliers) {
@@ -167,22 +168,22 @@ const seedDatabase = async () => {
 
     // 6. Seed Products & Variants
     console.log('Seeding products...');
-    
+
     const softDrinksCat = await Category.findOne({ where: { slug: 'soft-drinks' } });
     const waterCat = await Category.findOne({ where: { slug: 'mineral-water' } });
     const snackCat = await Category.findOne({ where: { slug: 'snacks' } });
     const electronicsCat = await Category.findOne({ where: { slug: 'electronics' } });
-    
-    const cokeSup = await Supplier.findOne({ where: { name: 'Lao Coca-Cola Bottling' } });
-    const waterSup = await Supplier.findOne({ where: { name: 'Beerlao Company' } }); // Beerlao makes Tiger Head
-    const electronicsSup = await Supplier.findOne({ where: { name: 'Samsung Electronics Laos' } });
+
+    const cokeSup = await Supplier.findOne({ where: { name: 'ບໍລິສັດ ບັດເຕີລິງ ລາວ (ໂຄຄາ-ໂຄລາ)' } });
+    const waterSup = await Supplier.findOne({ where: { name: 'ບໍລິສັດ ເບຍລາວ ຈຳກັດ' } }); // Beerlao makes Tiger Head
+    const electronicsSup = await Supplier.findOne({ where: { name: 'ຊຳຊຸງ ເອເລັກໂຕຣນິກ ລາວ' } });
 
     const products = [
       {
-        name: 'Coca Cola 325ml',
+        name: 'ໂຄຄາ ໂຄລາ 325ມລ',
         barcode: '8850999011015',
         sku: 'DRK-COKE-325',
-        description: 'Refreshing carbonated soft drink.',
+        description: 'ເຄື່ອງດື່ມນ້ຳອັດລົມ ສົດຊື່ນ',
         cost_price: 3500.00,
         selling_price: 5000.00,
         category_id: softDrinksCat?.id,
@@ -190,10 +191,10 @@ const seedDatabase = async () => {
         is_active: true
       },
       {
-        name: 'Tiger Head Water 550ml',
+        name: 'ນ້ຳດື່ມ ຫົວເສືອ 550ມລ',
         barcode: '8850999022028',
         sku: 'DRK-WATER-550',
-        description: 'Pure drinking water.',
+        description: 'ນ້ຳດື່ມບໍລິສຸດ',
         cost_price: 1500.00,
         selling_price: 3000.00,
         category_id: waterCat?.id,
@@ -201,20 +202,20 @@ const seedDatabase = async () => {
         is_active: true
       },
       {
-        name: 'Lay\'s Classic XL',
+        name: 'ມັນຝຣັ່ງທອດ ເລ (Lay\'s) ຣົດດັ້ງເດີມ XL',
         barcode: '8850999033031',
         sku: 'FOD-LAYS-XL',
-        description: 'Potato chips classic flavor.',
+        description: 'ມັນຝຣັ່ງທອດກອບ ຣົດດັ້ງເດີມ',
         cost_price: 8000.00,
         selling_price: 12000.00,
         category_id: snackCat?.id,
         is_active: true
       },
       {
-        name: 'Samsung Galaxy S24 Ultra',
+        name: 'ຊຳຊຸງ ກາແລັກຊີ S24 ອັລຕຣາ',
         barcode: '8806095300000',
         sku: 'ELE-S24U-256',
-        description: 'Latest high-end smartphone from Samsung.',
+        description: 'ໂທລະສັບສະມາດໂຟນລຸ້ນໃໝ່ຫຼ້າສຸດຈາກ ຊຳຊຸງ',
         cost_price: 12000000.00,
         selling_price: 15500000.00,
         category_id: electronicsCat?.id,
@@ -234,19 +235,19 @@ const seedDatabase = async () => {
         await ProductVariant.create({
           product_id: productRecord.id,
           variant_sku: `${prod.sku}-DEF`,
-          color: 'Standard',
-          size: 'Regular',
+          color: 'ມາດຕະຖານ',
+          size: 'ທົ່ວໄປ',
           quantity_in_stock: 100,
           reorder_level: 10,
           additional_price: 0
         });
-        
+
         // Add specific variants for phone
         if (prod.sku === 'ELE-S24U-256') {
           await ProductVariant.create({
             product_id: productRecord.id,
             variant_sku: `${prod.sku}-GRAY`,
-            color: 'Titanium Gray',
+            color: 'ສີເງິນ/ເທົາ (Titanium Gray)',
             size: '512GB',
             quantity_in_stock: 5,
             reorder_level: 2,
@@ -259,8 +260,8 @@ const seedDatabase = async () => {
     // 7. Seed Customers
     console.log('Seeding customers...');
     const customerData = [
-      { first_name: 'Somchai', last_name: 'Sivilay', phone: '020-55511122', email: 'somchai@gmail.com' },
-      { first_name: 'Keo', last_name: 'Phimmasone', phone: '020-55533344', email: 'keo.p@outlook.com' }
+      { first_name: 'ສົມໄຊ', last_name: 'ສີວິໄລ', phone: '020-55511122', email: 'somchai@gmail.com' },
+      { first_name: 'ແກ້ວ', last_name: 'ພິມມະສອນ', phone: '020-55533344', email: 'keo.p@outlook.com' }
     ];
 
     for (const cust of customerData) {
@@ -273,7 +274,7 @@ const seedDatabase = async () => {
           customer_id: customer.id,
           recipient_name: `${cust.first_name} ${cust.last_name}`,
           recipient_phone: cust.phone,
-          detailed_address: 'Sikhottabong District, Vientiane, Laos',
+          detailed_address: 'ເມືອງສີໂຄດຕະບອງ, ນະຄອນຫຼວງວຽງຈັນ, ລາວ',
           is_default: true,
           address_type: 'home'
         });
@@ -283,10 +284,10 @@ const seedDatabase = async () => {
     // 8. Seed Promotions
     console.log('Seeding promotions...');
     await Promotion.findOrCreate({
-      where: { name: 'Grand Opening Discount' },
+      where: { name: 'ສ່ວນຫຼຸດເປີດຮ້ານໃໝ່' },
       defaults: {
-        name: 'Grand Opening Discount',
-        description: '10% off on all items for the opening month',
+        name: 'ສ່ວນຫຼຸດເປີດຮ້ານໃໝ່',
+        description: 'ສ່ວນຫຼຸດ 10% ສຳລັບສິນຄ້າທຸກລາຍການໃນເດືອນເປີດຮ້ານ',
         discount_type: 'percentage',
         discount_value: 10.00,
         start_date: new Date(),
