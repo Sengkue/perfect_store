@@ -1,4 +1,4 @@
-export default defineNuxtRouteMiddleware((to, from) => {
+export default defineNuxtRouteMiddleware(async (to, from) => {
   const token = useCookie('auth_token')
   
   // If no auth token and not navigating to login, redirect to login
@@ -11,32 +11,43 @@ export default defineNuxtRouteMiddleware((to, from) => {
     return navigateTo('/')
   }
 
-  // Check roles for page access
+  // Permission-based page access control
   if (token.value && to.path !== '/login') {
-    let userRole = 'staff'
-    try {
-      // Basic JWT decode to get the role
-      const payload = JSON.parse(atob((token.value as string).split('.')[1]))
-      if (payload && payload.role) {
-        userRole = payload.role
+    const { hasPermission, permissionsLoaded, loadPermissions, userRole } = usePermissions()
+
+    // Load permissions if not yet loaded
+    if (!permissionsLoaded.value) {
+      await loadPermissions()
+    }
+
+    // Root bypasses all route checks
+    if (userRole.value === 'root') return
+
+    // Map routes to required permissions
+    const routePermissions: Record<string, string> = {
+      '/categories':       'categories.view',
+      '/products':         'products.view',
+      '/suppliers':        'suppliers.view',
+      '/purchase-orders':  'purchase_orders.view',
+      '/imports':          'imports.view',
+      '/sales':            'sales.view',
+      '/orders':           'sales.view',
+      '/customers':        'customers.view',
+      '/employees':        'users.view',
+      '/users':            'users.view',
+      '/permissions':      'permissions.manage',
+      '/settings':         'settings.view',
+      '/pos':              'pos.access',
+    }
+
+    // Check if the current route requires a permission
+    for (const [routePath, permName] of Object.entries(routePermissions)) {
+      if (to.path.startsWith(routePath)) {
+        if (!hasPermission(permName)) {
+          return navigateTo('/')
+        }
+        break
       }
-    } catch (e) {
-      // Token parsing failed, fallback to 'staff'
-    }
-
-    // Routes only accessible to Admins
-    const adminRoutes = ['/employees', '/users', '/permissions', '/settings']
-    // Routes accessible to Admins and Managers
-    const managerRoutes = ['/categories', '/products', '/suppliers', '/purchase-orders', '/imports']
-
-    // Block non-admins from admin routes
-    if (adminRoutes.some(path => to.path.startsWith(path))) {
-      if (userRole !== 'admin') return navigateTo('/')
-    }
-
-    // Block staff from manager+ routes
-    if (managerRoutes.some(path => to.path.startsWith(path))) {
-       if (!['admin', 'manager'].includes(userRole)) return navigateTo('/')
     }
   }
 })

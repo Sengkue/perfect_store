@@ -1,6 +1,6 @@
 import bcrypt from 'bcryptjs';
 import {
-  User, UserProfile, Permission, ShopSetting, Category,
+  User, UserProfile, Permission, RolePermission, ShopSetting, Category,
   Supplier, Product, ProductVariant, Customer, CustomerAddress,
   Promotion, sequelize
 } from './models/index.js';
@@ -49,6 +49,31 @@ const defaultPermissions = [
   { name: 'settings.manage', display_name: 'ຈັດການການຕັ້ງຄ່າ', module: 'Settings', description: 'ອັບເດດການຕັ້ງຄ່າຮ້ານ, ອັດຕາອາກອນ, ແລະ ອື່ນໆ' },
 ];
 
+// ── Default Role Permissions ─────────────────────────────
+// All permission names that each role gets by default
+const roleDefaults = {
+  admin: defaultPermissions.map(p => p.name), // Admin gets ALL permissions
+  manager: [
+    'dashboard.view',
+    'pos.access',
+    'products.view', 'products.create', 'products.edit',
+    'categories.view', 'categories.manage',
+    'suppliers.view', 'suppliers.manage',
+    'purchase_orders.view', 'purchase_orders.create', 'purchase_orders.approve',
+    'imports.view', 'imports.create', 'imports.complete',
+    'sales.view', 'sales.create', 'sales.report',
+    'returns.view', 'returns.create',
+    'customers.view', 'customers.manage',
+  ],
+  staff: [
+    'dashboard.view',
+    'pos.access',
+    'sales.view', 'sales.create',
+    'returns.view',
+    'customers.view',
+  ]
+};
+
 
 const seedDatabase = async () => {
   try {
@@ -84,6 +109,7 @@ const seedDatabase = async () => {
     console.log('Seeding users...');
     const salt = await bcrypt.genSalt(10);
     const usersData = [
+      { username: 'root', password: 'root123', role: 'root', firstName: 'Root', lastName: 'SuperAdmin' },
       { username: 'admin', password: 'admin123', role: 'admin', firstName: 'ຜູ້ດູແລ', lastName: 'ລະບົບ' },
       { username: 'manager', password: 'manager123', role: 'manager', firstName: 'ສົມຫັວງ', lastName: 'ຜູ້ຈັດການ' },
       { username: 'staff1', password: 'staff123', role: 'staff', firstName: 'ຈັນທາ', lastName: 'ພະນັກງານຂາຍ' }
@@ -110,7 +136,27 @@ const seedDatabase = async () => {
       }
     }
 
-    // 4. Seed Categories (Hierarchical)
+    // 4. Seed Role Permissions
+    console.log('Seeding role permissions...');
+    const allPerms = await Permission.findAll();
+    const permNameToId = {};
+    for (const p of allPerms) {
+      permNameToId[p.name] = p.id;
+    }
+
+    for (const [role, permNames] of Object.entries(roleDefaults)) {
+      for (const permName of permNames) {
+        const permId = permNameToId[permName];
+        if (permId) {
+          await RolePermission.findOrCreate({
+            where: { role, permission_id: permId },
+            defaults: { role, permission_id: permId, is_allowed: true }
+          });
+        }
+      }
+    }
+
+    // 5. Seed Categories (Hierarchical)
     console.log('Seeding categories...');
     const mainCategories = [
       { name: 'ເຄື່ອງດື່ມ', slug: 'drinks', description: 'ນ້ຳດື່ມ ແລະ ເຄື່ອງດື່ມຕ່າງໆ' },
@@ -150,7 +196,7 @@ const seedDatabase = async () => {
       }
     }
 
-    // 5. Seed Suppliers
+    // 6. Seed Suppliers
     console.log('Seeding suppliers...');
     const suppliers = [
       { name: 'ບໍລິສັດ ບັດເຕີລິງ ລາວ (ໂຄຄາ-ໂຄລາ)', contact_person: 'ທ່ານ ໂຄຄາ', phone: '021-111222', email: 'sales@cocacola.la' },
@@ -166,7 +212,7 @@ const seedDatabase = async () => {
       });
     }
 
-    // 6. Seed Products & Variants
+    // 7. Seed Products & Variants
     console.log('Seeding products...');
 
     const softDrinksCat = await Category.findOne({ where: { slug: 'soft-drinks' } });
@@ -257,7 +303,7 @@ const seedDatabase = async () => {
       }
     }
 
-    // 7. Seed Customers
+    // 8. Seed Customers
     console.log('Seeding customers...');
     const customerData = [
       { first_name: 'ສົມໄຊ', last_name: 'ສີວິໄລ', phone: '020-55511122', email: 'somchai@gmail.com' },
@@ -281,7 +327,7 @@ const seedDatabase = async () => {
       }
     }
 
-    // 8. Seed Promotions
+    // 9. Seed Promotions
     console.log('Seeding promotions...');
     await Promotion.findOrCreate({
       where: { name: 'ສ່ວນຫຼຸດເປີດຮ້ານໃໝ່' },
@@ -299,9 +345,10 @@ const seedDatabase = async () => {
     console.log('-------------------------------------------');
     console.log('✅ DATABASE SEEDING COMPLETED SUCCESSFULLY!');
     console.log('Credentials:');
-    console.log('- Admin: admin / admin123');
+    console.log('- Root:    root / root123 (SuperAdmin)');
+    console.log('- Admin:   admin / admin123');
     console.log('- Manager: manager / manager123');
-    console.log('- Staff: staff1 / staff123');
+    console.log('- Staff:   staff1 / staff123');
     console.log('-------------------------------------------');
     process.exit(0);
 

@@ -1,6 +1,6 @@
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
-import { User, UserProfile } from '../models/index.js';
+import { User, UserProfile, Permission, RolePermission, UserPermission } from '../models/index.js';
 
 // POST /api/auth/login
 export const login = async (req, res, next) => {
@@ -115,9 +115,53 @@ export const getProfile = async (req, res, next) => {
       include: [{ model: UserProfile, as: 'profile' }]
     });
 
+    // Resolve permissions
+    let permissions = [];
+
+    if (user.role === 'root') {
+      // Root gets wildcard — superAdmin
+      permissions = ['*'];
+    } else {
+      // Get all permission definitions
+      const allPerms = await Permission.findAll();
+      const permMap = {};
+      for (const p of allPerms) {
+        permMap[p.id] = p.name;
+      }
+
+      // Get role-level permissions
+      const rolePerms = await RolePermission.findAll({
+        where: { role: user.role }
+      });
+
+      // Build resolved map from role permissions
+      const resolvedMap = {};
+      for (const rp of rolePerms) {
+        resolvedMap[rp.permission_id] = rp.is_allowed;
+      }
+
+      // Apply user-level overrides
+      const userOverrides = await UserPermission.findAll({
+        where: { user_id: user.id }
+      });
+      for (const up of userOverrides) {
+        resolvedMap[up.permission_id] = up.is_allowed;
+      }
+
+      // Convert to permission name array (only allowed ones)
+      for (const [permId, isAllowed] of Object.entries(resolvedMap)) {
+        if (isAllowed && permMap[permId]) {
+          permissions.push(permMap[permId]);
+        }
+      }
+    }
+
     res.json({
       success: true,
-      data: user
+      data: {
+        ...user.toJSON(),
+        permissions
+      }
     });
   } catch (error) {
     next(error);

@@ -17,13 +17,13 @@
 
       <v-list density="compact" nav class="px-2">
         <template v-for="(group, index) in menuGroups" :key="index">
-          <v-list-subheader v-if="group.title && hasAccess(group.roles)" class="text-uppercase font-weight-bold text-caption text-grey-lighten-1 ps-4 mt-4" style="letter-spacing: 1px !important;">
+          <v-list-subheader v-if="group.title && canSeeGroup(group)" class="text-uppercase font-weight-bold text-caption text-grey-lighten-1 ps-4 mt-4" style="letter-spacing: 1px !important;">
             {{ group.title }}
           </v-list-subheader>
 
           <template v-for="item in group.items" :key="item.to">
             <v-list-item
-              v-if="hasAccess(item.roles)"
+              v-if="canSeeItem(item)"
               :prepend-icon="item.icon"
               :title="item.title"
               :to="item.to"
@@ -52,8 +52,8 @@
         ຜູ້ດູແລ Perfect Store
       </v-app-bar-title>
       <v-spacer></v-spacer>
-      <v-chip class="me-3" color="white" variant="tonal" size="small" prepend-icon="mdi-shield-account">
-        {{ userRole }}
+      <v-chip class="me-3" :color="roleChipColor" variant="tonal" size="small" prepend-icon="mdi-shield-account">
+        {{ roleDisplayLabel }}
       </v-chip>
       <v-btn icon>
         <v-icon>mdi-bell</v-icon>
@@ -80,48 +80,51 @@ const router = useRouter()
 const route = useRoute()
 const token = useCookie('auth_token')
 const api = useApi()
+const { hasPermission, hasAnyPermission, userRole, loadPermissions, clearPermissions } = usePermissions()
 
-// ── Menu Configuration & Permissions ─────────────────
-const hasAccess = (rolesAllowed) => {
-  if (!rolesAllowed || rolesAllowed.length === 0) return true
-  return rolesAllowed.includes(userRole.value)
+// ── Permission-based Menu Configuration ──────────────────
+const canSeeItem = (item) => {
+  if (!item.permission) return true
+  return hasPermission(item.permission)
+}
+
+const canSeeGroup = (group) => {
+  if (!group.items) return false
+  return group.items.some(item => canSeeItem(item))
 }
 
 const menuGroups = [
   {
     items: [
-      { title: 'ໜ້າຫຼັກ', icon: 'mdi-view-dashboard', to: '/', exact: true, roles: ['admin', 'manager', 'staff'] },
-      { title: 'ລາຍການຂາຍ', icon: 'mdi-cash-register', to: '/pos', roles: ['admin', 'manager', 'staff'] },
+      { title: 'ໜ້າຫຼັກ', icon: 'mdi-view-dashboard', to: '/', exact: true, permission: 'dashboard.view' },
+      { title: 'ລາຍການຂາຍ', icon: 'mdi-cash-register', to: '/pos', permission: 'pos.access' },
     ]
   },
   {
     title: 'ສາງສິນຄ້າ',
-    roles: ['admin', 'manager'],
     items: [
-      { title: 'ໝວດໝູ່ສິນຄ້າ', icon: 'mdi-format-list-bulleted', to: '/categories', roles: ['admin', 'manager'] },
-      { title: 'ລາຍການສິນຄ້າ', icon: 'mdi-package-variant-closed', to: '/products', roles: ['admin', 'manager'] },
-      { title: 'ຜູ້ສະໜອງ', icon: 'mdi-handshake', to: '/suppliers', roles: ['admin', 'manager'] },
-      { title: 'ໃບສັ່ງຊື້', icon: 'mdi-truck-delivery-outline', to: '/purchase-orders', roles: ['admin', 'manager'] },
-      { title: 'ນຳເຂົ້າສິນຄ້າ', icon: 'mdi-package-down', to: '/imports', roles: ['admin', 'manager'] },
+      { title: 'ໝວດໝູ່ສິນຄ້າ', icon: 'mdi-format-list-bulleted', to: '/categories', permission: 'categories.view' },
+      { title: 'ລາຍການສິນຄ້າ', icon: 'mdi-package-variant-closed', to: '/products', permission: 'products.view' },
+      { title: 'ຜູ້ສະໜອງ', icon: 'mdi-handshake', to: '/suppliers', permission: 'suppliers.view' },
+      { title: 'ໃບສັ່ງຊື້', icon: 'mdi-truck-delivery-outline', to: '/purchase-orders', permission: 'purchase_orders.view' },
+      { title: 'ນຳເຂົ້າສິນຄ້າ', icon: 'mdi-package-down', to: '/imports', permission: 'imports.view' },
     ]
   },
   {
     title: 'ການຂາຍ',
-    roles: ['admin', 'manager', 'staff'],
     items: [
-      { title: 'ລາຍງານການຂາຍ', icon: 'mdi-cart-outline', to: '/sales', roles: ['admin', 'manager', 'staff'] },
-      { title: 'ອໍເດີອອນລາຍ', icon: 'mdi-clipboard-list-outline', to: '/orders', roles: ['admin', 'manager', 'staff'] },
-      { title: 'ລູກຄ້າ', icon: 'mdi-account-group', to: '/customers', roles: ['admin', 'manager', 'staff'] },
+      { title: 'ລາຍງານການຂາຍ', icon: 'mdi-cart-outline', to: '/sales', permission: 'sales.view' },
+      { title: 'ອໍເດີອອນລາຍ', icon: 'mdi-clipboard-list-outline', to: '/orders', permission: 'sales.view' },
+      { title: 'ລູກຄ້າ', icon: 'mdi-account-group', to: '/customers', permission: 'customers.view' },
     ]
   },
   {
     title: 'ຜູ້ດູແລລະບົບ',
-    roles: ['admin'],
     items: [
-      { title: 'ຂໍ້ມູນພະນັກງານ', icon: 'mdi-account-details', to: '/employees', roles: ['admin'] },
-      { title: 'ບັນຊີຜູ້ໃຊ້', icon: 'mdi-shield-account', to: '/users', roles: ['admin'] },
-      { title: 'ສິດທິການໃຊ້', icon: 'mdi-shield-lock', to: '/permissions', roles: ['admin'] },
-      { title: 'ຕັ້ງຄ່າ', icon: 'mdi-cog', to: '/settings', roles: ['admin'] },
+      { title: 'ຂໍ້ມູນພະນັກງານ', icon: 'mdi-account-details', to: '/employees', permission: 'users.view' },
+      { title: 'ບັນຊີຜູ້ໃຊ້', icon: 'mdi-shield-account', to: '/users', permission: 'users.view' },
+      { title: 'ສິດທິການໃຊ້', icon: 'mdi-shield-lock', to: '/permissions', permission: 'permissions.manage' },
+      { title: 'ຕັ້ງຄ່າ', icon: 'mdi-cog', to: '/settings', permission: 'settings.view' },
     ]
   }
 ]
@@ -138,9 +141,13 @@ const userDisplayName = computed(() => {
   return currentUser.value.username || 'Admin User'
 })
 
-const userRole = computed(() => {
-  if (!currentUser.value) return 'admin'
-  return currentUser.value.role || 'staff'
+const roleDisplayLabel = computed(() => {
+  const labels = { root: 'Root', admin: 'Admin', manager: 'Manager', staff: 'Staff' }
+  return labels[userRole.value] || userRole.value
+})
+
+const roleChipColor = computed(() => {
+  return { root: 'purple', admin: 'error', manager: 'warning', staff: 'info' }[userRole.value] ?? 'grey'
 })
 
 const avatarUrl = computed(() => {
@@ -151,13 +158,19 @@ const avatarUrl = computed(() => {
 onMounted(async () => {
   try {
     const res = await api('/auth/me')
-    if (res.success) currentUser.value = res.data
+    if (res.success) {
+      currentUser.value = res.data
+      // Permissions are loaded by the composable via middleware,
+      // but also set them here for sidebar reactivity
+      await loadPermissions()
+    }
   } catch (e) {
     // silent fail – token may not be valid yet
   }
 })
 
 const logout = () => {
+  clearPermissions()
   token.value = null
   router.push('/login')
 }

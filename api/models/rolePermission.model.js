@@ -8,7 +8,7 @@ const RolePermission = sequelize.define('role_permissions', {
     autoIncrement: true
   },
   role: {
-    type: DataTypes.ENUM('admin', 'staff', 'manager'),
+    type: DataTypes.ENUM('root', 'admin', 'staff', 'manager'),
     allowNull: false
   },
   permission_id: {

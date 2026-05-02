@@ -7,12 +7,12 @@ import {
   updateUserPermissions
 } from '../controllers/permission.controller.js';
 import auth from '../middleware/auth.js';
-import roleCheck from '../middleware/roleCheck.js';
+import permissionCheck from '../middleware/permissionCheck.js';
 
 const router = Router();
 
 router.use(auth);
-router.use(roleCheck('admin')); // Assuming only admin manage permissions
+router.use(permissionCheck('permissions.manage'));
 
 router.get('/', getAllPermissions);
 

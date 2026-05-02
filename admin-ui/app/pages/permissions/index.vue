@@ -38,6 +38,7 @@
                 :key="r.value"
                 :value="r.value"
                 :prepend-icon="r.icon"
+                :color="r.color"
                 @click="loadRolePermissions(r.value)"
               >
                 {{ r.label }}
@@ -45,6 +46,7 @@
             </v-btn-toggle>
             <v-spacer />
             <v-btn
+              v-if="selectedRole !== 'root'"
               color="primary"
               variant="elevated"
               prepend-icon="mdi-content-save"
@@ -55,13 +57,26 @@
             </v-btn>
           </div>
 
+          <!-- Root info -->
           <v-alert
-            v-if="selectedRole === 'admin'"
+            v-if="selectedRole === 'root'"
             type="info"
             variant="tonal"
             density="compact"
             class="mb-4"
-            text="Admins have full access to everything by default. Changes here provide fine-grained overrides."
+            icon="mdi-shield-crown"
+          >
+            <div class="font-weight-bold">Root (SuperAdmin)</div>
+            <div>Root ມີສິດເຂົ້າໃຊ້ງານທຸກຢ່າງໂດຍອັດຕະໂນມັດ. ບໍ່ຈຳເປັນຕ້ອງກຳນົດສິດ — ຂ້າມການກວດສິດທັງໝົດ.</div>
+          </v-alert>
+
+          <v-alert
+            v-if="selectedRole === 'admin'"
+            type="warning"
+            variant="tonal"
+            density="compact"
+            class="mb-4"
+            text="Admin ໄດ້ສິດທັງໝົດ by default, ແຕ່ສາມາດຄວບຄຸມໄດ້ — ເຈົ້າສາມາດລຶບສິດບາງອັນອອກໄດ້."
           />
 
           <!-- Loading state -->
@@ -70,7 +85,57 @@
             <div class="text-caption mt-2">Loading permissions…</div>
           </div>
 
-          <!-- Permission matrix grouped by module -->
+          <!-- Root: show all as granted (read-only) -->
+          <div v-else-if="selectedRole === 'root'">
+            <div
+              v-for="(perms, moduleName) in groupedPermissions"
+              :key="moduleName"
+              class="mb-4"
+            >
+              <div class="d-flex align-center gap-2 mb-2">
+                <v-icon :icon="moduleIcon(moduleName)" color="primary" size="18" />
+                <span class="text-subtitle-2 font-weight-bold text-uppercase tracking-wide">{{ moduleName }}</span>
+                <v-divider class="flex-1" />
+                <v-chip size="x-small" color="purple" variant="tonal">ALL ACCESS</v-chip>
+              </div>
+
+              <v-row dense>
+                <v-col
+                  v-for="perm in perms"
+                  :key="perm.id"
+                  cols="12"
+                  sm="6"
+                  md="4"
+                >
+                  <v-card
+                    variant="outlined"
+                    rounded="lg"
+                    color="success"
+                    class="pa-3 border-success"
+                  >
+                    <div class="d-flex align-center gap-3">
+                      <v-checkbox-btn
+                        :model-value="true"
+                        color="success"
+                        hide-details
+                        disabled
+                      />
+                      <div class="flex-1 min-width-0">
+                        <div class="text-body-2 font-weight-medium">{{ perm.display_name }}</div>
+                        <div class="text-caption text-medium-emphasis">{{ perm.description }}</div>
+                        <v-chip size="x-small" variant="tonal" color="grey" class="mt-1">
+                          {{ perm.name }}
+                        </v-chip>
+                      </div>
+                      <v-icon icon="mdi-check-circle" color="success" size="20" />
+                    </div>
+                  </v-card>
+                </v-col>
+              </v-row>
+            </div>
+          </div>
+
+          <!-- Permission matrix grouped by module (admin/manager/staff) -->
           <div v-else>
             <div
               v-for="(perms, moduleName) in groupedPermissions"
@@ -197,6 +262,19 @@
             </v-btn>
           </div>
 
+          <!-- Root user info -->
+          <v-alert
+            v-if="selectedUserId && selectedUserRole === 'root'"
+            type="info"
+            variant="tonal"
+            density="compact"
+            class="mb-4"
+            icon="mdi-shield-crown"
+          >
+            <div class="font-weight-bold">Root users bypass all permissions</div>
+            <div>Overrides saved here will have no effect on root users.</div>
+          </v-alert>
+
           <!-- Empty state when no user selected -->
           <div v-if="!selectedUserId" class="text-center py-12">
             <v-icon size="80" color="grey-lighten-2">mdi-account-key</v-icon>
@@ -303,17 +381,23 @@ const groupedPermissions = computed(() => {
 
 // ── Role Permissions ────────────────────────────────────
 const roles = [
-  { value: 'admin',   label: 'Admin',   icon: 'mdi-shield-crown' },
-  { value: 'manager', label: 'Manager', icon: 'mdi-shield-half-full' },
-  { value: 'staff',   label: 'Staff',   icon: 'mdi-account' }
+  { value: 'root',    label: 'Root',    icon: 'mdi-shield-crown',     color: 'purple' },
+  { value: 'admin',   label: 'Admin',   icon: 'mdi-shield-star',      color: 'error' },
+  { value: 'manager', label: 'Manager', icon: 'mdi-shield-half-full', color: 'warning' },
+  { value: 'staff',   label: 'Staff',   icon: 'mdi-account',          color: 'info' }
 ]
 
-const selectedRole  = ref('manager')
+const selectedRole  = ref('admin')
 const loadingRole   = ref(false)
 const savingRole    = ref(false)
 const rolePermMap   = ref({})  // { permission_id: true/false }
 
 const loadRolePermissions = async (role) => {
+  if (role === 'root') {
+    // Root doesn't need DB permissions — show all as granted
+    rolePermMap.value = {}
+    return
+  }
   loadingRole.value = true
   rolePermMap.value = {}
   try {
@@ -364,6 +448,12 @@ const selectedUserId   = ref(null)
 const loadingUserPerms = ref(false)
 const savingUser       = ref(false)
 const userPermMap      = ref({})  // { permission_id: true | false | undefined (inherit) }
+
+const selectedUserRole = computed(() => {
+  if (!selectedUserId.value) return null
+  const user = users.value.find(u => u.id === selectedUserId.value)
+  return user?.role || null
+})
 
 const loadUsers = async () => {
   loadingUsers.value = true
@@ -438,7 +528,7 @@ const notify = (message, color = 'success') => {
   snackbar.value = { show: true, message, color }
 }
 
-const roleColor = (r) => ({ admin: 'error', manager: 'warning', staff: 'info' }[r] ?? 'grey')
+const roleColor = (r) => ({ root: 'purple', admin: 'error', manager: 'warning', staff: 'info' }[r] ?? 'grey')
 
 const moduleIcon = (mod) => ({
   'Dashboard':      'mdi-view-dashboard',
@@ -462,7 +552,7 @@ onMounted(async () => {
     if (res.success) allPermissions.value = res.data
   } catch (e) { console.error(e) }
 
-  await loadRolePermissions('manager')
+  await loadRolePermissions('admin')
   await loadUsers()
 })
 </script>
