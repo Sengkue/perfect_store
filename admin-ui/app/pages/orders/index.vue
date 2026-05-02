@@ -699,7 +699,6 @@ import { ref, computed, onMounted } from 'vue'
 
 const api = useApi()
 const { hasPermission } = usePermissions()
-const { showToast } = useApi()
 
 // ── Tab ────────────────────────────────────────────────────────────
 const activeTab = ref('create')

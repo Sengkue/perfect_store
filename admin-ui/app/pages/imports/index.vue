@@ -573,10 +573,10 @@
 
 <script setup>
 import { ref, onMounted, computed } from 'vue'
+import { showToast } from '~/composables/useToast'
 
 const api = useApi()
 const { hasPermission } = usePermissions()
-const { showToast } = useApi()
 
 // ── STATE ──────────────────────────────────────────
 const activeTab = ref('search')

@@ -124,6 +124,7 @@ const menuGroups = [
       { title: 'ຂໍ້ມູນພະນັກງານ', icon: 'mdi-account-details', to: '/employees', permission: 'users.view' },
       { title: 'ບັນຊີຜູ້ໃຊ້', icon: 'mdi-shield-account', to: '/users', permission: 'users.view' },
       { title: 'ສິດທິການໃຊ້', icon: 'mdi-shield-lock', to: '/permissions', permission: 'permissions.manage' },
+      { title: 'System Logs', icon: 'mdi-file-document-outline', to: '/logs', permission: 'system.view_logs' },
       { title: 'ຕັ້ງຄ່າ', icon: 'mdi-cog', to: '/settings', permission: 'settings.view' },
     ]
   }

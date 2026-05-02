@@ -33,9 +33,6 @@ const productImage = computed(() => {
 })
 
 const addItem = () => {
-  // Pos.vue already checks if it's out of stock and shows a toast, 
-  // but we can also prevent emitting if we want, but letting it emit 
-  // allows pos.vue to show the 'Product is out of stock!' error toast.
   emit('add-to-cart', props.product)
 }
 </script>

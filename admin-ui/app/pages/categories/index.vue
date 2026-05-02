@@ -121,7 +121,6 @@ import { showToast } from '~/composables/useToast'
 
 const api = useApi()
 const { hasPermission } = usePermissions()
-const { showToast } = useApi()
 
 // ── State ──────────────────────────────────────────────
 const categories = ref([])

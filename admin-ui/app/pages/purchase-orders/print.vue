@@ -124,6 +124,9 @@
 </template>
 
 <script setup>
+import { ref, computed, onMounted } from 'vue'
+import { useRoute } from 'vue-router'
+
 const route = useRoute()
 const api = useApi()
 

@@ -804,7 +804,6 @@ import { useRouter } from 'vue-router'
 const api = useApi()
 const router = useRouter()
 const { hasPermission } = usePermissions()
-const { showToast } = useApi()
 
 // ── STATE ──────────────────────────────────────────
 const activeTab = ref('list')

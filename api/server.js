@@ -10,6 +10,7 @@ import { fileURLToPath } from 'url';
 import { sequelize } from './models/index.js';
 import routes from './routes/index.js';
 import errorHandler from './middleware/errorHandler.js';
+import logger from './utils/logger.js';
 
 // Load environment variables
 dotenv.config();
@@ -57,6 +58,7 @@ app.use('/api/', limiter);
 const authLimiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
   max: 50, // 50 login attempts per 15 minutes
+  skip: () => process.env.NODE_ENV === 'test',
   message: {
     success: false,
     message: 'Too many login attempts, please try again later.'
@@ -114,27 +116,26 @@ const startServer = async () => {
   try {
     // Test database connection
     await sequelize.authenticate();
-    console.log('✅ Database connection established successfully.');
+    logger.info('✅ Database connection established successfully.');
 
     // Sync all models (alter: true will add missing columns without dropping)
     await sequelize.sync({ alter: true });
-    console.log('✅ Database models synchronized.');
+    logger.info('✅ Database models synchronized.');
 
     // Start server
     app.listen(PORT, () => {
-      console.log(`\n🚀 Perfect Store API Server`);
-      console.log(`   ├── Port: ${PORT}`);
-      console.log(`   ├── Environment: ${process.env.NODE_ENV || 'development'}`);
-      console.log(`   ├── Database: ${process.env.DB_NAME}`);
-      console.log(`   ├── API Base: http://localhost:${PORT}/api`);
-      console.log(`   └── Health: http://localhost:${PORT}/api/health\n`);
+      logger.info(`🚀 Perfect Store API Server running on port ${PORT} [${process.env.NODE_ENV || 'development'}]`);
+      logger.info(`   └── Health check: http://localhost:${PORT}/api/health`);
     });
   } catch (error) {
-    console.error('❌ Unable to start server:', error.message);
+    logger.error('❌ Unable to start server: %s', error.message);
     process.exit(1);
   }
 };
 
-startServer();
+// Start server only if not in test environment
+if (process.env.NODE_ENV !== 'test') {
+  startServer();
+}
 
 export default app;

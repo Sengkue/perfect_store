@@ -15,8 +15,13 @@ import promotionRoutes from './promotion.routes.js';
 import saleRoutes from './sale.routes.js';
 import refundRoutes from './refund.routes.js';
 import paymentRoutes from './payment.routes.js';
+import logRoutes from './log.routes.js';
+import activityLogger from '../middleware/activityLogger.js';
 
 const router = Router();
+
+// --- Log all activity (Audit Log) ---
+router.use(activityLogger);
 
 // --- Basic Routes ---
 router.get('/', (req, res) => {
@@ -39,5 +44,6 @@ router.use('/promotions', promotionRoutes);
 router.use('/sales', saleRoutes);
 router.use('/payments', paymentRoutes);
 router.use('/refunds', refundRoutes);
+router.use('/system-logs', logRoutes);
 
 export default router;

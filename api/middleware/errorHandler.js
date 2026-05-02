@@ -1,7 +1,15 @@
 import { ValidationError, UniqueConstraintError, ForeignKeyConstraintError } from 'sequelize';
+import logger from '../utils/logger.js';
 
 const errorHandler = (err, req, res, next) => {
-  console.error('Error:', err);
+  // Log error using Winston
+  logger.error('%s %s - %s', req.method, req.originalUrl, err.message, { 
+    stack: err.stack,
+    body: req.body,
+    params: req.params,
+    query: req.query,
+    user: req.user ? req.user.id : 'anonymous'
+  });
 
   // Sequelize validation errors
   if (err instanceof ValidationError) {

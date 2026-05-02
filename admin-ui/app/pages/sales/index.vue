@@ -175,16 +175,16 @@
 
 <script setup>
 import { ref, onMounted } from 'vue'
+import { showToast } from '~/composables/useToast'
 import * as XLSX from 'xlsx'
 import { saveAs } from 'file-saver'
 import {
   Document, Packer, Paragraph, Table, TableRow, TableCell,
-  TextRun, HeadingLevel, AlignmentType, WidthType, BorderStyle
+  TextRun, HeadingLevel, WidthType
 } from 'docx'
 
 const api = useApi()
 const { hasPermission } = usePermissions()
-const { showToast } = useApi()
 
 // ── State ────────────────────────────────────────────────────
 const sales         = ref([])

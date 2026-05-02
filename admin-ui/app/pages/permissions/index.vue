@@ -370,10 +370,10 @@
 
 <script setup>
 import { ref, computed, onMounted } from 'vue'
+import { showToast } from '~/composables/useToast'
 
 const api = useApi()
 const { hasPermission } = usePermissions()
-const { showToast } = useApi()
 
 // ── Tabs ────────────────────────────────────────────────
 const tab = ref('roles')
@@ -402,7 +402,7 @@ const roles = [
 const selectedRole  = ref('admin')
 const loadingRole   = ref(false)
 const savingRole    = ref(false)
-const rolePermMap   = ref({})  // { permission_id: true/false }
+const rolePermMap   = ref({})
 
 const loadRolePermissions = async (role) => {
   if (role === 'root') {
@@ -459,7 +459,7 @@ const loadingUsers     = ref(false)
 const selectedUserId   = ref(null)
 const loadingUserPerms = ref(false)
 const savingUser       = ref(false)
-const userPermMap      = ref({})  // { permission_id: true | false | undefined (inherit) }
+const userPermMap      = ref({})
 
 const selectedUserRole = computed(() => {
   if (!selectedUserId.value) return null

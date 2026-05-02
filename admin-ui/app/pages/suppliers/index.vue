@@ -246,7 +246,6 @@ import { showToast } from '~/composables/useToast'
 
 const api = useApi()
 const { hasPermission } = usePermissions()
-const { showToast } = useApi()
 
 // ── State ──────────────────────────────────────────────
 const suppliers  = ref([])
@@ -263,6 +262,8 @@ const editingId  = ref(null)
 const form       = ref(emptyForm())
 
 // Delete dialog
+const deleteDialog = ref(false)
+const deleting     = ref(false)
 const selectedSupplier  = ref(null)
 
 // ── Table headers ──────────────────────────────────────
@@ -296,7 +297,7 @@ const debouncedLoad = () => {
 const loadSuppliers = async () => {
   loading.value = true
   try {
-    const params = new URLSearchParams({ pageSize: 200 })
+    const params = new URLSearchParams({ pageSize: '200' })
     if (search.value) params.set('search', search.value)
 
     const res = await api(`/suppliers?${params}`)

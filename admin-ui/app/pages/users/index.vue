@@ -396,8 +396,7 @@ import { ref, computed, onMounted } from 'vue'
 import { showToast } from '~/composables/useToast'
 
 const api = useApi()
-const { hasPermission } = usePermissions()
-const { showToast } = useApi()
+const { hasPermission, isRoot } = usePermissions()
 
 // ── State ──────────────────────────────────────────────
 const users   = ref([])
@@ -439,13 +438,23 @@ const headers = [
 ]
 
 // ── Form options ───────────────────────────────────────
-const roleOptions = [
-  { label: 'Admin',   value: 'admin'   },
-  { label: 'Manager', value: 'manager' },
-  { label: 'Staff',   value: 'staff'   }
-]
+const roleOptions = computed(() => {
+  const base = [
+    { label: 'Admin',   value: 'admin'   },
+    { label: 'Manager', value: 'manager' },
+    { label: 'Staff',   value: 'staff'   }
+  ]
+  if (isRoot.value) {
+    base.unshift({ label: 'Root (SuperAdmin)', value: 'root' })
+  }
+  return base
+})
 
-const roleFilterOptions = ['admin', 'manager', 'staff']
+const roleFilterOptions = computed(() => {
+  const base = ['admin', 'manager', 'staff']
+  if (isRoot.value) base.unshift('root')
+  return base
+})
 
 const activeFilterOptions = [
   { title: 'Active',   value: 'true'  },
@@ -453,13 +462,19 @@ const activeFilterOptions = [
 ]
 
 // ── Stats ──────────────────────────────────────────────
-const stats = computed(() => [
-  { label: 'Total',    value: users.value.length,                                   icon: 'mdi-account-multiple', color: 'primary' },
-  { label: 'Admins',   value: users.value.filter(u => u.role === 'admin').length,   icon: 'mdi-shield-crown',     color: 'error'   },
-  { label: 'Managers', value: users.value.filter(u => u.role === 'manager').length, icon: 'mdi-shield-half-full', color: 'warning' },
-  { label: 'Staff',    value: users.value.filter(u => u.role === 'staff').length,   icon: 'mdi-account',          color: 'info'    },
-  { label: 'Inactive', value: users.value.filter(u => !u.is_active).length,         icon: 'mdi-account-off',      color: 'grey'    }
-])
+const stats = computed(() => {
+  const base = [
+    { label: 'Total',    value: users.value.length,                                   icon: 'mdi-account-multiple', color: 'primary' },
+    { label: 'Admins',   value: users.value.filter(u => u.role === 'admin').length,   icon: 'mdi-shield-crown',     color: 'error'   },
+    { label: 'Managers', value: users.value.filter(u => u.role === 'manager').length, icon: 'mdi-shield-half-full', color: 'warning' },
+    { label: 'Staff',    value: users.value.filter(u => u.role === 'staff').length,   icon: 'mdi-account',          color: 'info'    },
+    { label: 'Inactive', value: users.value.filter(u => !u.is_active).length,         icon: 'mdi-account-off',      color: 'grey'    }
+  ]
+  if (isRoot.value) {
+    base.splice(1, 0, { label: 'Roots', value: users.value.filter(u => u.role === 'root').length, icon: 'mdi-crown', color: 'purple' })
+  }
+  return base
+})
 
 // ── Helpers ────────────────────────────────────────────
 function emptyForm () {
@@ -479,9 +494,9 @@ const formatDateTime = (val) =>
     hour: '2-digit', minute: '2-digit'
   })
 
-const roleColor  = (r) => ({ admin: 'error', manager: 'warning', staff: 'info' }[r] ?? 'grey')
-const roleIcon   = (r) => ({ admin: 'mdi-shield-crown', manager: 'mdi-shield-half-full', staff: 'mdi-account' }[r] ?? 'mdi-account')
-const avatarColor = (r) => ({ admin: '#E53935', manager: '#FB8C00', staff: '#1E88E5' }[r] ?? '#78909C')
+const roleColor  = (r) => ({ root: 'purple', admin: 'error', manager: 'warning', staff: 'info' }[r] ?? 'grey')
+const roleIcon   = (r) => ({ root: 'mdi-crown', admin: 'mdi-shield-crown', manager: 'mdi-shield-half-full', staff: 'mdi-account' }[r] ?? 'mdi-account')
+const avatarColor = (r) => ({ root: '#9C27B0', admin: '#E53935', manager: '#FB8C00', staff: '#1E88E5' }[r] ?? '#78909C')
 
 // Debounced search
 let searchTimer = null
@@ -494,7 +509,7 @@ const debouncedLoad = () => {
 const loadUsers = async () => {
   loading.value = true
   try {
-    const params = new URLSearchParams({ pageSize: 200 })
+    const params = new URLSearchParams({ pageSize: '200' })
     if (filters.value.search)    params.set('search', filters.value.search)
     if (filters.value.role)      params.set('role', filters.value.role)
     if (filters.value.is_active) params.set('is_active', filters.value.is_active)

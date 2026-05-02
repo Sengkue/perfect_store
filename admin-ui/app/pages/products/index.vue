@@ -597,10 +597,10 @@
 
 <script setup>
 import { ref, computed, onMounted } from 'vue'
+import { showToast } from '~/composables/useToast'
 
 const api = useApi()
 const { hasPermission } = usePermissions()
-const { showToast } = useApi()
 
 // ── State ──────────────────────────────────────────────
 const products       = ref([])
@@ -703,9 +703,9 @@ const debouncedLoad = () => {
 const loadProducts = async () => {
   loading.value = true
   try {
-    const params = new URLSearchParams({ pageSize: 500 })
+    const params = new URLSearchParams({ pageSize: '500' })
     if (search.value)      params.set('search', search.value)
-    if (filterCategory.value) params.set('category_id', filterCategory.value)
+    if (filterCategory.value) params.set('category_id', String(filterCategory.value))
 
     const res = await api(`/products?${params}`)
     if (res.success) products.value = res.data

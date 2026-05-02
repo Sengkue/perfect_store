@@ -118,12 +118,12 @@
 
 <script setup>
 import { ref, onMounted, watch } from 'vue'
+import { showToast } from '~/composables/useToast'
 import { useTheme } from 'vuetify'
 
 const api = useApi()
 const theme = useTheme()
 const { hasPermission } = usePermissions()
-const { showToast } = useApi()
 
 const isValid = ref(false)
 const loading = ref(false)

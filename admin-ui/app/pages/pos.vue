@@ -111,9 +111,11 @@
 
 <script setup>
 import { ref, computed, onMounted, watch } from 'vue'
+import { showToast } from '~/composables/useToast'
 import { formatKip } from '~/utils/format'
+
 const { hasPermission } = usePermissions()
-const { showToast } = useApi()
+const api = useApi()
 
 definePageMeta({
   layout: 'default',
@@ -133,17 +135,16 @@ const playSound = (type) => {
   if (typeof window !== 'undefined' && localStorage.getItem('pos_sound_enabled') === 'false') return;
   
   if (sounds[type]) {
-    sounds[type].currentTime = 0
-    sounds[type].play().catch(e => console.warn(`Audio ${type} play failed:`, e))
+    const audio = sounds[type];
+    audio.currentTime = 0
+    audio.play().catch(e => console.warn(`Audio ${type} play failed:`, e))
   }
 }
-
-const api = useApi()
 
 // State
 const searchQuery = ref('')
 const activeCategory = ref(0)
-const categories = ref([{ id: 0, category_name: 'All' }])
+const categories = ref([{ id: 0, category_name: 'ທັງໝົດ', slug: 'all' }])
 const products = ref([])
 const taxRate = ref(0)
 const shopSettings = ref({ shop_name: 'PERFECT STORE', phone: '', address: '' })

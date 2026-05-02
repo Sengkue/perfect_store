@@ -17,6 +17,11 @@ export const getAll = async (req, res, next) => {
       where.username = { [Op.like]: `%${req.query.search}%` };
     }
 
+    // Security: Only root can see other root users
+    if (req.user.role !== 'root') {
+      where.role = { [Op.ne]: 'root' };
+    }
+
     const data = await User.findAndCountAll({
       where,
       attributes: { exclude: ['password_hash'] },
@@ -72,6 +77,11 @@ export const create = async (req, res, next) => {
     const salt = await bcrypt.genSalt(10);
     const password_hash = await bcrypt.hash(password, salt);
 
+    // Role restriction: Only root can create another root
+    if (role === 'root' && req.user.role !== 'root') {
+      return res.status(403).json({ success: false, message: 'Only Root users can create other Root accounts.' });
+    }
+
     const user = await User.create({
       username,
       password_hash,
@@ -103,6 +113,11 @@ export const update = async (req, res, next) => {
     }
 
     const { role, is_active } = req.body;
+
+    // Role restriction: Only root can modify a root user or assign root role
+    if ((user.role === 'root' || role === 'root') && req.user.role !== 'root') {
+      return res.status(403).json({ success: false, message: 'Only Root users can modify or assign Root role.' });
+    }
 
     const allowed = {};
     if (role !== undefined) allowed.role = role;
@@ -137,6 +152,11 @@ export const resetPassword = async (req, res, next) => {
     const salt = await bcrypt.genSalt(10);
     const password_hash = await bcrypt.hash(new_password, salt);
 
+    // Role restriction: Only root can reset password for another root
+    if (user.role === 'root' && req.user.role !== 'root') {
+      return res.status(403).json({ success: false, message: 'Only Root users can reset passwords for other Root accounts.' });
+    }
+
     await user.update({ password_hash });
 
     res.json({ success: true, message: 'Password reset successfully' });
@@ -156,6 +176,11 @@ export const remove = async (req, res, next) => {
     const user = await User.findByPk(req.params.id);
     if (!user) {
       return res.status(404).json({ success: false, message: 'User not found' });
+    }
+
+    // Role restriction: Only root can delete another root
+    if (user.role === 'root' && req.user.role !== 'root') {
+      return res.status(403).json({ success: false, message: 'Only Root users can delete other Root accounts.' });
     }
 
     await user.destroy();

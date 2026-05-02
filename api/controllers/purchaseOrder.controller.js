@@ -60,12 +60,13 @@ export const create = async (req, res, next) => {
 
     let total_amount = 0;
     const detailRecords = (items || []).map(d => {
-      const subtotal = Number(d.quantity || 0) * Number(d.unit_cost || 0);
+      const qty = Number(d.quantity_ordered || d.quantity || 0);
+      const subtotal = qty * Number(d.unit_cost || 0);
       total_amount += subtotal;
       return {
         product_id: d.product_id,
         variant_id: d.variant_id || null,
-        quantity_ordered: d.quantity,
+        quantity_ordered: qty,
         unit_cost: d.unit_cost,
         subtotal
       };
@@ -129,13 +130,14 @@ export const update = async (req, res, next) => {
       await PurchaseOrderDetail.destroy({ where: { po_id: po.id }, transaction: t });
       
       const detailRecords = items.map(d => {
-        const subtotal = d.quantity * (d.unit_cost || 0);
+        const qty = Number(d.quantity_ordered || d.quantity || 0);
+        const subtotal = qty * (d.unit_cost || 0);
         total_amount += subtotal;
         return {
           po_id: po.id,
           product_id: d.product_id,
           variant_id: d.variant_id || null,
-          quantity_ordered: d.quantity,
+          quantity_ordered: qty,
           unit_cost: d.unit_cost,
           subtotal
         };

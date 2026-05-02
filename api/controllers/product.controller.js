@@ -1,4 +1,4 @@
-import { Product, ProductVariant, ProductImage, Category, Supplier, ProductSupplier } from '../models/index.js';
+import { sequelize, Product, ProductVariant, ProductImage, Category, Supplier, ProductSupplier } from '../models/index.js';
 import { getPagination, getPaginatedResponse } from '../utils/helpers.js';
 import { Op } from 'sequelize';
 
@@ -77,10 +77,11 @@ export const getById = async (req, res, next) => {
 
 // POST /api/products
 export const create = async (req, res, next) => {
+  const transaction = await sequelize.transaction();
   try {
     const { variants, images, suppliers, ...productData } = req.body;
 
-    const product = await Product.create(productData);
+    const product = await Product.create(productData, { transaction });
 
     // Create supplier associations if provided
     if (suppliers && Array.isArray(suppliers)) {
@@ -88,13 +89,13 @@ export const create = async (req, res, next) => {
         ...s,
         product_id: product.id
       }));
-      await ProductSupplier.bulkCreate(supplierData);
+      await ProductSupplier.bulkCreate(supplierData, { transaction });
     }
 
     // Create variants if provided
     if (variants && Array.isArray(variants)) {
       const variantData = variants.map(v => ({ ...v, product_id: product.id }));
-      await ProductVariant.bulkCreate(variantData);
+      await ProductVariant.bulkCreate(variantData, { transaction });
     }
 
     // Create images if provided
@@ -104,10 +105,13 @@ export const create = async (req, res, next) => {
         product_id: product.id,
         sort_order: img.sort_order || idx
       }));
-      await ProductImage.bulkCreate(imageData);
+      await ProductImage.bulkCreate(imageData, { transaction });
     }
 
-    // Reload with associations
+    // Commit transaction
+    await transaction.commit();
+
+    // Reload with associations (outside transaction for reading the final state)
     const result = await Product.findByPk(product.id, {
       include: [
         { model: Supplier, as: 'primary_supplier' },
@@ -123,32 +127,37 @@ export const create = async (req, res, next) => {
       data: result
     });
   } catch (error) {
+    await transaction.rollback();
     next(error);
   }
 };
 
 // PUT /api/products/:id
 export const update = async (req, res, next) => {
+  const transaction = await sequelize.transaction();
   try {
     const product = await Product.findByPk(req.params.id);
     if (!product) {
+      await transaction.rollback();
       return res.status(404).json({ success: false, message: 'Product not found' });
     }
 
     const { variants, images, suppliers, ...productData } = req.body;
-    await product.update(productData);
+    await product.update(productData, { transaction });
 
     // Update supplier associations if provided
     if (suppliers && Array.isArray(suppliers)) {
       // For simplicity, we replace all associations. 
-      // In a production app, you might want more complex sync logic.
-      await ProductSupplier.destroy({ where: { product_id: product.id } });
+      await ProductSupplier.destroy({ where: { product_id: product.id }, transaction });
       const supplierData = suppliers.map(s => ({
         ...s,
         product_id: product.id
       }));
-      await ProductSupplier.bulkCreate(supplierData);
+      await ProductSupplier.bulkCreate(supplierData, { transaction });
     }
+
+    // Commit transaction
+    await transaction.commit();
 
     const result = await Product.findByPk(product.id, {
       include: [
@@ -166,21 +175,27 @@ export const update = async (req, res, next) => {
       data: result
     });
   } catch (error) {
+    await transaction.rollback();
     next(error);
   }
 };
 
 // DELETE /api/products/:id
 export const remove = async (req, res, next) => {
+  const transaction = await sequelize.transaction();
   try {
     const product = await Product.findByPk(req.params.id);
     if (!product) {
+      await transaction.rollback();
       return res.status(404).json({ success: false, message: 'Product not found' });
     }
 
-    await product.destroy();
+    await product.destroy({ transaction });
+    await transaction.commit();
+    
     res.json({ success: true, message: 'Product deleted successfully' });
   } catch (error) {
+    await transaction.rollback();
     next(error);
   }
 };
