@@ -552,6 +552,7 @@ const moduleIcon = (mod) => ({
   'Sales':          'mdi-cart-outline',
   'Refunds':        'mdi-keyboard-return',
   'Customers':      'mdi-account-group',
+  'Reports':        'mdi-chart-bar',
   'Admin':          'mdi-shield-crown',
   'Settings':       'mdi-cog',
 }[mod] ?? 'mdi-key')

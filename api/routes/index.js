@@ -16,6 +16,7 @@ import saleRoutes from './sale.routes.js';
 import refundRoutes from './refund.routes.js';
 import paymentRoutes from './payment.routes.js';
 import logRoutes from './log.routes.js';
+import reportRoutes from './report.routes.js';
 import activityLogger from '../middleware/activityLogger.js';
 
 const router = Router();
@@ -45,5 +46,6 @@ router.use('/sales', saleRoutes);
 router.use('/payments', paymentRoutes);
 router.use('/refunds', refundRoutes);
 router.use('/system-logs', logRoutes);
+router.use('/reports', reportRoutes);
 
 export default router;

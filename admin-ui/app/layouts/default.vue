@@ -113,9 +113,20 @@ const menuGroups = [
   {
     title: 'ການຂາຍ',
     items: [
-      { title: 'ລາຍງານການຂາຍ', icon: 'mdi-cart-outline', to: '/sales', permission: 'sales.view' },
       { title: 'ອໍເດີອອນລາຍ', icon: 'mdi-clipboard-list-outline', to: '/orders', permission: 'sales.view' },
       { title: 'ລູກຄ້າ', icon: 'mdi-account-group', to: '/customers', permission: 'customers.view' },
+    ]
+  },
+  {
+    title: 'ວິເຄາະ ແລະ ລາຍງານ',
+    items: [
+      { title: 'ລາຍງານທຸລະກິດ', icon: 'mdi-finance', to: '/reports', permission: 'sales.report' },
+      { title: 'ລາຍງານການຂາຍ', icon: 'mdi-receipt', to: '/reports/sales', permission: 'sales.view' },
+      { title: 'ລາຍງານສິນຄ້າຄົງຄັງ', icon: 'mdi-package-variant', to: '/reports/inventory', permission: 'sales.report' },
+      { title: 'ລາຍງານລູກຄ້າ', icon: 'mdi-account-star', to: '/reports/customers', permission: 'sales.report' },
+      { title: 'ລາຍງານພະນັກງານ', icon: 'mdi-account-tie', to: '/reports/staff', permission: 'sales.report' },
+      { title: 'ສິນຄ້າຂາຍດີ', icon: 'mdi-fire', to: '/reports/products', permission: 'sales.report' },
+      { title: 'ລາຍງານລາຍຈ່າຍ', icon: 'mdi-cash-minus', to: '/reports/expenses', permission: 'sales.report' },
     ]
   },
   {

@@ -1,10 +1,20 @@
 <template>
   <v-card rounded="lg" elevation="2" v-if="hasPermission('categories.view')">
     <!-- Header -->
-    <v-card-title class="d-flex align-center py-3 px-4">
-      <span class="text-h6 font-weight-bold">Categories</span>
+    <v-card-title class="d-flex align-center py-3 px-4 bg-primary text-white">
+      <v-icon icon="mdi-format-list-bulleted" class="me-2"></v-icon>
+      <span class="text-h6 font-weight-bold">ໝວດໝູ່ສິນຄ້າ</span>
       <v-spacer></v-spacer>
-      <v-btn v-if="hasPermission('categories.create')" color="primary" prepend-icon="mdi-plus" @click="openAddDialog">Add Category</v-btn>
+      <v-btn 
+        v-if="hasPermission('categories.create')" 
+        color="white" 
+        variant="elevated" 
+        class="text-primary font-weight-bold" 
+        prepend-icon="mdi-plus" 
+        @click="openAddDialog"
+      >
+        ເພີ່ມໝວດໝູ່
+      </v-btn>
     </v-card-title>
     <v-divider></v-divider>
 
