@@ -93,7 +93,7 @@ const canSeeGroup = (group) => {
   return group.items.some(item => canSeeItem(item))
 }
 
-const menuGroups = [
+const allMenuGroups = [
   {
     items: [
       { title: 'ໜ້າຫຼັກ', icon: 'mdi-view-dashboard', to: '/', exact: true, permission: 'dashboard.view' },
@@ -144,6 +144,13 @@ const menuGroups = [
   }
 ]
 
+const menuGroups = computed(() => {
+  return allMenuGroups.map(group => ({
+    ...group,
+    items: group.items.filter(item => canSeeItem(item))
+  })).filter(group => group.items.length > 0)
+})
+
 // ── User Info ─────────────────────────────────────────
 const currentUser = ref(null)
 
@@ -175,9 +182,22 @@ onMounted(async () => {
     const res = await api('/auth/me')
     if (res.success) {
       currentUser.value = res.data
-      // Permissions are loaded by the composable via middleware,
-      // but also set them here for sidebar reactivity
       await loadPermissions()
+
+      // Redirection logic for users with limited access
+      if (route.path === '/') {
+        if (!hasPermission('dashboard.view')) {
+          if (hasPermission('pos.access')) {
+            router.push('/pos')
+          } else {
+            // Find first available permission
+            const firstGroup = menuGroups.value[0]
+            if (firstGroup && firstGroup.items.length > 0) {
+              router.push(firstGroup.items[0].to)
+            }
+          }
+        }
+      }
     }
   } catch (e) {
     // silent fail – token may not be valid yet

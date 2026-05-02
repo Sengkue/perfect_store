@@ -163,6 +163,18 @@
       </v-col>
     </v-row>
   </v-container>
+
+  <v-container v-else class="fill-height d-flex flex-column align-center justify-center py-12">
+    <v-icon size="120" color="grey-lighten-2" class="mb-6">mdi-lock-outline</v-icon>
+    <h2 class="text-h4 font-weight-bold text-grey-darken-1 mb-2">Access Restricted</h2>
+    <p class="text-body-1 text-grey text-center mb-6">
+      ທ່ານບໍ່ມີສິດເຂົ້າເຖິງໜ້າ Dashboard. <br/>
+      ກະລຸນາເລືອກເມນູອື່ນຈາກແຖບດ້ານຂ້າງ.
+    </p>
+    <v-btn v-if="hasPermission('pos.access')" to="/pos" color="primary" size="large" rounded="pill" prepend-icon="mdi-cash-register">
+      ໄປທີ່ລະບົບຂາຍ (POS)
+    </v-btn>
+  </v-container>
 </template>
 
 <script setup>

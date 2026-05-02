@@ -1,5 +1,5 @@
 <template>
-  <v-container fluid class="fill-height pa-0 ma-0 bg-background" v-if="hasPermission('sales.create')">
+  <v-container fluid class="fill-height pa-0 ma-0 bg-background" v-if="hasAnyPermission('pos.access', 'sales.create')">
     <v-row class="fill-height ma-0">
       
       <!-- Left Area: Search, Categories & Products -->
@@ -114,7 +114,7 @@ import { ref, computed, onMounted, watch } from 'vue'
 import { showToast } from '~/composables/useToast'
 import { formatKip } from '~/utils/format'
 
-const { hasPermission } = usePermissions()
+const { hasPermission, hasAnyPermission } = usePermissions()
 const api = useApi()
 
 definePageMeta({

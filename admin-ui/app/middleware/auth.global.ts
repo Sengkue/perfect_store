@@ -38,6 +38,8 @@ export default defineNuxtRouteMiddleware(async (to, from) => {
       '/permissions':      'permissions.manage',
       '/settings':         'settings.view',
       '/pos':              'pos.access',
+      '/reports':          'sales.report',
+      '/logs':             'system.view_logs',
     }
 
     // Check if the current route requires a permission
