@@ -17,13 +17,48 @@
 </template>
 
 <script setup>
+import { useTheme } from 'vuetify'
+import { ref, onMounted, onBeforeUnmount } from 'vue'
+
 const loading = ref(true)
+const theme = useTheme()
+
+let mediaQuery = null
+
+const handleThemeChange = (e) => {
+  const savedTheme = localStorage.getItem('pos_theme') || 'system'
+  if (savedTheme === 'system') {
+    theme.global.name.value = e.matches ? 'dark' : 'light'
+  }
+}
 
 onMounted(() => {
+  const savedTheme = localStorage.getItem('pos_theme') || 'system'
+  
+  if (savedTheme === 'dark') {
+    theme.global.name.value = 'dark'
+  } else if (savedTheme === 'light') {
+    theme.global.name.value = 'light'
+  } else {
+    // system
+    const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches
+    theme.global.name.value = prefersDark ? 'dark' : 'light'
+  }
+
+  // Listen for system theme changes
+  mediaQuery = window.matchMedia('(prefers-color-scheme: dark)')
+  mediaQuery.addEventListener('change', handleThemeChange)
+
   // Add a slight delay to ensure smooth transition and allow animations to show
   setTimeout(() => {
     loading.value = false
   }, 500)
+})
+
+onBeforeUnmount(() => {
+  if (mediaQuery) {
+    mediaQuery.removeEventListener('change', handleThemeChange)
+  }
 })
 </script>
 

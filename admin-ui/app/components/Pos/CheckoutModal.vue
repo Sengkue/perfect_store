@@ -1,46 +1,52 @@
 <template>
-  <v-dialog v-model="internalValue" max-width="600" persistent>
-    <v-card class="rounded-lg">
-      <v-card-title class="bg-primary text-white d-flex align-center justify-space-between py-3">
-        <span>ການຊຳລະເງິນ & ສັ່ງຊື້</span>
-        <v-btn icon="mdi-close" variant="text" @click="close" color="white"></v-btn>
+  <v-dialog v-model="internalValue" max-width="650" persistent>
+    <v-card class="rounded-xl elevation-24">
+      <v-card-title class="bg-primary text-white d-flex align-center justify-space-between py-4 px-6">
+        <span class="text-h6 font-weight-bold">ການຊຳລະເງິນ & ສັ່ງຊື້</span>
+        <v-btn icon="mdi-close" variant="text" @click="close" color="white" size="small"></v-btn>
       </v-card-title>
       
-      <v-card-text class="pt-4">
+      <v-card-text class="pa-6">
         <v-row>
-          <v-col cols="12" sm="6">
-            <h3 class="text-subtitle-1 mb-2 font-weight-bold text-grey-darken-2">ສະຫຼຸບການສັ່ງຊື້</h3>
-            <div class="d-flex justify-space-between mb-1">
-              <span>ລາຄາລວມ:</span>
-              <span>{{ formatKip(subtotal) }}</span>
+          <!-- Left side: Summary -->
+          <v-col cols="12" sm="5" class="border-e-sm pr-sm-6">
+            <h3 class="text-subtitle-1 mb-4 font-weight-bold text-primary d-flex align-center">
+              <v-icon size="small" class="mr-2">mdi-receipt-text</v-icon> ສະຫຼຸບການສັ່ງຊື້
+            </h3>
+            
+            <div class="d-flex justify-space-between mb-2 text-body-2">
+              <span class="text-medium-emphasis">ລາຄາລວມ:</span>
+              <span class="font-weight-medium">{{ formatKip(subtotal) }}</span>
             </div>
-            <div class="d-flex justify-space-between mb-1">
-              <span>ອາກອນ ({{ taxRate }}%):</span>
-              <span>{{ formatKip(taxAmount) }}</span>
+            <div class="d-flex justify-space-between mb-4 text-body-2">
+              <span class="text-medium-emphasis">ອາກອນ ({{ taxRate }}%):</span>
+              <span class="font-weight-medium">{{ formatKip(taxAmount) }}</span>
             </div>
             
-            <div class="d-flex align-center mt-3 mb-4">
-              <v-text-field
-                v-model.number="discount"
-                label="ສ່ວນຫຼຸດທັງໝົດ (₭)"
-                density="compact"
-                hide-details
-                variant="outlined"
-                type="number"
-                min="0"
-                prefix="₭"
-              ></v-text-field>
-            </div>
+            <v-text-field
+              v-model.number="discount"
+              label="ສ່ວນຫຼຸດ (₭)"
+              density="compact"
+              hide-details
+              variant="outlined"
+              type="number"
+              min="0"
+              prefix="₭"
+              class="mb-6"
+              color="primary"
+            ></v-text-field>
             
-            <v-divider class="my-2"></v-divider>
-            <div class="d-flex justify-space-between text-h6 font-weight-black mt-2">
-              <span>ລວມທັງໝົດ:</span>
-              <span class="text-primary">{{ formatKip(finalTotal) }}</span>
-            </div>
+            <v-card variant="tonal" color="primary" class="pa-4 rounded-lg mt-auto">
+              <div class="text-caption text-primary mb-1 text-uppercase font-weight-bold">ລວມທັງໝົດ</div>
+              <div class="text-h5 font-weight-black text-primary">{{ formatKip(finalTotal) }}</div>
+            </v-card>
           </v-col>
           
-          <v-col cols="12" sm="6" class="bg-grey-lighten-4 rounded pa-4">
-            <h3 class="text-subtitle-1 mb-3 font-weight-bold">ລາຍລະອຽດການຊຳລະ</h3>
+          <!-- Right side: Payment Details -->
+          <v-col cols="12" sm="7" class="pl-sm-6">
+            <h3 class="text-subtitle-1 mb-4 font-weight-bold text-primary d-flex align-center">
+              <v-icon size="small" class="mr-2">mdi-credit-card</v-icon> ລາຍລະອຽດການຊຳລະ
+            </h3>
             
             <v-autocomplete
               v-model="selectedCustomer"
@@ -51,10 +57,11 @@
               variant="outlined"
               density="compact"
               hide-details
-              class="mb-3 bg-white"
+              class="mb-4"
+              color="primary"
               clearable>
-              <template v-slot:append>
-                <v-btn icon="mdi-account-plus" color="primary" variant="flat" size="small" @click="showAddCustomer = true"></v-btn>
+              <template v-slot:append-inner>
+                <v-icon color="primary" @click.stop="showAddCustomer = true" class="cursor-pointer">mdi-account-plus</v-icon>
               </template>
             </v-autocomplete>
 
@@ -65,7 +72,8 @@
               variant="outlined"
               density="compact"
               hide-details
-              class="mb-3 bg-white"
+              class="mb-4"
+              color="primary"
             ></v-select>
 
             <v-text-field
@@ -74,33 +82,44 @@
               variant="outlined"
               type="number"
               hide-details
-              class="mb-3 bg-white"
+              class="mb-4"
+              color="primary"
               prefix="₭"
+              style="font-size: 1.1rem; font-weight: bold;"
             ></v-text-field>
             
-            <v-card v-if="amountTendered >= finalTotal" class="bg-success text-white pa-3 mb-2" flat>
-              <div class="d-flex justify-space-between">
-                <span>ເງິນທອນ:</span>
-                <span class="font-weight-black text-h6">{{ formatKip(changeDue) }}</span>
+            <v-card v-if="amountTendered >= finalTotal" variant="tonal" color="success" class="pa-4 rounded-lg">
+              <div class="d-flex justify-space-between align-center">
+                <span class="font-weight-medium">ເງິນທອນ:</span>
+                <span class="font-weight-black text-h5">{{ formatKip(changeDue) }}</span>
               </div>
             </v-card>
-            <v-card v-else-if="amountTendered > 0" class="bg-warning text-white pa-3 mb-2" flat>
-              <div class="d-flex justify-space-between">
-                <span>ຍອດຄົງເຫຼືອ:</span>
-                <span class="font-weight-black text-h6">{{ formatKip(finalTotal - amountTendered) }}</span>
+            
+            <v-card v-else-if="amountTendered > 0" variant="tonal" color="warning" class="pa-4 rounded-lg">
+              <div class="d-flex justify-space-between align-center">
+                <span class="font-weight-medium">ຍອດຄົງເຫຼືອ:</span>
+                <span class="font-weight-black text-h5">{{ formatKip(finalTotal - amountTendered) }}</span>
               </div>
-              <div class="text-caption mt-1">ລາຍການນີ້ຈະຖືກບັນທຶກເປັນການຊຳລະບາງສ່ວນ.</div>
+              <div class="text-caption mt-2 opacity-80">ລາຍການນີ້ຈະຖືກບັນທຶກເປັນການຊຳລະບາງສ່ວນ.</div>
             </v-card>
           </v-col>
         </v-row>
       </v-card-text>
       
-      <v-divider></v-divider>
+      <v-divider class="opacity-20"></v-divider>
       
-      <v-card-actions class="pa-3">
+      <v-card-actions class="pa-4">
         <v-spacer></v-spacer>
-        <v-btn variant="text" @click="close">ຍົກເລີກ</v-btn>
-        <v-btn color="primary" variant="flat" size="large" @click="confirm" :disabled="!canProceed">
+        <v-btn variant="text" @click="close" class="px-4 text-none font-weight-medium">ຍົກເລີກ</v-btn>
+        <v-btn 
+          color="primary" 
+          variant="flat" 
+          size="large" 
+          @click="confirm" 
+          :disabled="!canProceed"
+          class="px-6 rounded-lg text-none font-weight-bold elevation-2"
+        >
+          <v-icon start>mdi-check-circle</v-icon>
           {{ amountTendered < finalTotal ? 'ຊຳລະບາງສ່ວນ & ສຳເລັດ' : 'ຊຳລະ & ສຳເລັດ' }}
         </v-btn>
       </v-card-actions>
@@ -108,17 +127,17 @@
 
     <!-- Quick Add Customer Dialog inside Modal -->
     <v-dialog v-model="showAddCustomer" max-width="400">
-      <v-card>
-        <v-card-title>ເພີ່ມລູກຄ້າໃໝ່</v-card-title>
-        <v-card-text>
-          <v-text-field v-model="newCustomer.first_name" label="ຊື່" variant="outlined" density="compact" class="mb-2"></v-text-field>
-          <v-text-field v-model="newCustomer.last_name" label="ນາມສະກຸນ" variant="outlined" density="compact" class="mb-2"></v-text-field>
-          <v-text-field v-model="newCustomer.phone" label="ເບີໂທລະສັບ" variant="outlined" density="compact" class="mb-2"></v-text-field>
+      <v-card class="rounded-xl">
+        <v-card-title class="pa-4 bg-primary text-white text-subtitle-1 font-weight-bold">ເພີ່ມລູກຄ້າໃໝ່</v-card-title>
+        <v-card-text class="pt-6">
+          <v-text-field v-model="newCustomer.first_name" label="ຊື່" variant="outlined" density="compact" class="mb-3" color="primary"></v-text-field>
+          <v-text-field v-model="newCustomer.last_name" label="ນາມສະກຸນ" variant="outlined" density="compact" class="mb-3" color="primary"></v-text-field>
+          <v-text-field v-model="newCustomer.phone" label="ເບີໂທລະສັບ" variant="outlined" density="compact" color="primary" hide-details></v-text-field>
         </v-card-text>
-        <v-card-actions>
+        <v-card-actions class="pa-4">
           <v-spacer></v-spacer>
-          <v-btn @click="showAddCustomer = false">ຍົກເລີກ</v-btn>
-          <v-btn color="primary" @click="saveNewCustomer">ບັນທຶກ</v-btn>
+          <v-btn variant="text" @click="showAddCustomer = false">ຍົກເລີກ</v-btn>
+          <v-btn color="primary" variant="flat" class="px-4" @click="saveNewCustomer">ບັນທຶກ</v-btn>
         </v-card-actions>
       </v-card>
     </v-dialog>
@@ -128,6 +147,7 @@
 <script setup>
 import { ref, computed, watch, onMounted } from 'vue'
 import { formatKip } from '~/utils/format'
+import { showToast } from '#imports'
 
 const props = defineProps({
   modelValue: { type: Boolean, default: false },

@@ -1,5 +1,5 @@
 <template>
-  <v-container fluid class="fill-height pa-0 ma-0 bg-blue-grey-lighten-5">
+  <v-container fluid class="fill-height pa-0 ma-0 bg-background">
     <v-row class="fill-height ma-0">
       
       <!-- Left Area: Search, Categories & Products -->
@@ -15,7 +15,6 @@
                 clearable
                 autofocus
                 class="flex-grow-1 mr-4 rounded-lg elevation-1"
-                bg-color="white"
             ></v-text-field>
 
             <v-btn
@@ -44,12 +43,12 @@
       </v-col>
 
       <!-- Right Area: Cart Panel -->
-      <v-col cols="12" md="4" class="h-100 d-flex flex-column pa-0 bg-white">
+      <v-col cols="12" md="4" class="h-100 pa-0 bg-surface border-s border-grey-lighten-2" style="display: flex; flex-direction: column; overflow: hidden;">
         <!-- We keep the CartPanel as the view, but hook its Proceed to our new Modal -->
         <PosCartPanel 
           :cart="cart" 
           :tax-rate="taxRate"
-          class="h-100"
+          style="height: 100%; flex-grow: 1; overflow: hidden;"
           @update-qty="updateCartQty" 
           @remove="removeFromCart"
           @hold="holdOrder"
@@ -113,13 +112,30 @@
 <script setup>
 import { ref, computed, onMounted, watch } from 'vue'
 import { formatKip } from '~/utils/format'
+import { showToast } from '#imports'
 
 definePageMeta({
-  layout: 'pos-layout'
+  layout: 'default',
+  fluid: true
 })
 
 // Audio
-const successSound = typeof Audio !== 'undefined' ? new Audio('/sounds/success.mp3') : null
+const sounds = {
+  scanner: typeof Audio !== 'undefined' ? new Audio('/sounds/scanner_beep.mp3') : null,
+  click: typeof Audio !== 'undefined' ? new Audio('/sounds/UI_click.mp3') : null,
+  cash: typeof Audio !== 'undefined' ? new Audio('/sounds/cash_register_beep.mp3') : null,
+  error: typeof Audio !== 'undefined' ? new Audio('/sounds/error.mp3') : null,
+  success: typeof Audio !== 'undefined' ? new Audio('/sounds/success_transaction_chim.mp3') : null,
+}
+
+const playSound = (type) => {
+  if (typeof window !== 'undefined' && localStorage.getItem('pos_sound_enabled') === 'false') return;
+  
+  if (sounds[type]) {
+    sounds[type].currentTime = 0
+    sounds[type].play().catch(e => console.warn(`Audio ${type} play failed:`, e))
+  }
+}
 
 const api = useApi()
 
@@ -219,7 +235,8 @@ watch(searchQuery, (val) => {
     if (!val) return;
     const exactMatch = products.value.find(p => p.barcode === val.trim());
     if (exactMatch) {
-        addToCart(exactMatch);
+        playSound('scanner');
+        addToCart(exactMatch, true);
         searchQuery.value = ''; // clear scanner
     }
 })
@@ -248,27 +265,22 @@ const filteredProducts = computed(() => {
 })
 
 // === Cart Logic ===
-const addToCart = (product) => {
+const addToCart = (product, fromScanner = false) => {
   const existing = cart.value.find(item => item.id === product.id)
   if (existing) {
     if (existing.quantity >= product.stockQty) {
+      playSound('error');
       return showToast(`Not enough stock. Only ${product.stockQty} available.`, 'warning');
     }
     existing.quantity += 1
   } else {
     if (product.stockQty <= 0) {
+      playSound('error');
       return showToast('Product is out of stock!', 'error');
     }
     cart.value.push({ ...product, quantity: 1, discountPercent: 0 })
-    playSuccessSound();
   }
-}
-
-const playSuccessSound = () => {
-    if (successSound) {
-        successSound.currentTime = 0;
-        successSound.play().catch(e => console.warn('Audio play failed:', e));
-    }
+  if (!fromScanner) playSound('click');
 }
 
 const updateCartQty = (id, newQty) => {
@@ -358,7 +370,7 @@ const executeCheckout = async (checkoutData) => {
         });
 
         if (res.success) {
-            playSuccessSound();
+            playSound('success');
             if (res.data) {
                 printReceipt(res.data);
             }
@@ -481,6 +493,7 @@ const printReceipt = (sale) => {
 <style scoped>
 .fill-height {
   height: calc(100vh - 64px);
+  overflow: hidden;
 }
 .overflow-y-auto {
   overflow-y: auto;

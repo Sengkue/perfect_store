@@ -1,64 +1,64 @@
 <template>
-  <div class="d-flex flex-column h-100 pa-2">
-
-
-    <!-- Cart Items list -->
-    <v-list class="flex-grow-1 overflow-y-auto px-0 bg-transparent" lines="two">
-      <div v-if="cart.length === 0" class="text-center text-grey my-10">Cart is empty</div>
-      <v-fade-transition group>
-        <v-list-item v-for="(item, index) in cart" :key="item.id" class="px-0 mb-1 rounded" :class="expandedItem === item.id ? 'border-active' : 'border'" elevation="0">
-          <div class="d-flex flex-column w-100 pa-2 cursor-pointer" @click="toggleExpand(item.id)">
-            <div class="d-flex align-start justify-space-between mb-2">
-              <div class="d-flex align-center">
-                <v-icon size="x-small" class="mr-1 text-grey-darken-1">{{ expandedItem === item.id ? 'mdi-chevron-down' : 'mdi-chevron-right' }}</v-icon>
-                <span class="mr-2 font-weight-bold text-grey-darken-3 text-caption">{{ item.quantity }}</span>
-                <span class="font-weight-medium text-caption">{{ item.name }}</span>
+  <div class="cart-panel-container pa-2">
+    <!-- Cart Items list wrapper -->
+    <div class="cart-items-wrapper">
+      <v-list class="bg-transparent" density="compact">
+        <div v-if="cart.length === 0" class="text-center text-grey my-10">Cart is empty</div>
+        <v-fade-transition group>
+          <v-list-item v-for="(item, index) in cart" :key="item.id" class="px-0 mb-1 rounded" :class="expandedItem === item.id ? 'border-active' : 'border'" elevation="0">
+            <div class="d-flex flex-column w-100 cursor-pointer" :class="expandedItem === item.id ? 'pa-2' : 'py-1 px-2'" @click="toggleExpand(item.id)">
+              <div class="d-flex align-center justify-space-between" :class="expandedItem === item.id ? 'mb-2' : ''">
+                <div class="d-flex align-center">
+                  <v-icon size="x-small" class="mr-1 text-grey-darken-1">{{ expandedItem === item.id ? 'mdi-chevron-down' : 'mdi-chevron-right' }}</v-icon>
+                  <span class="mr-2 font-weight-bold text-caption">{{ item.quantity }}</span>
+                  <span class="font-weight-medium text-caption text-truncate" style="max-width: 150px;">{{ item.name }}</span>
+                </div>
+                <div class="d-flex align-center">
+                  <span class="font-weight-bold mr-2 text-caption">{{ formatKip(item.price * item.quantity) }}</span>
+                  <v-btn icon="mdi-close-circle" variant="text" color="grey" size="x-small" @click.stop="$emit('remove', item.id)"></v-btn>
+                </div>
               </div>
-              <div class="d-flex align-center">
-                <span class="font-weight-bold mr-2 text-caption">{{ formatKip(item.price * item.quantity) }}</span>
-                <v-btn icon="mdi-close-circle" variant="text" color="grey" size="x-small" @click.stop="$emit('remove', item.id)"></v-btn>
-              </div>
+
+              <!-- Expandable Detail Row -->
+              <v-expand-transition>
+                <div v-if="expandedItem === item.id">
+                  <v-row dense align="center" class="mt-1" @click.stop>
+                    <v-col cols="6">
+                      <div class="text-caption text-grey mb-1">Quantity</div>
+                      <v-text-field
+                        :model-value="item.quantity"
+                        @update:model-value="(v) => $emit('update-qty', item.id, Number(v))"
+                        type="number"
+                        density="compact"
+                        variant="outlined"
+                        hide-details
+                        min="1"
+                      ></v-text-field>
+                    </v-col>
+                    <v-col cols="6">
+                      <div class="text-caption text-grey mb-1">Discount(%)</div>
+                      <v-text-field
+                        v-model="item.discountPercent"
+                        type="number"
+                        density="compact"
+                        variant="outlined"
+                        hide-details
+                        min="0"
+                        max="100"
+                      ></v-text-field>
+                    </v-col>
+                  </v-row>
+                </div>
+              </v-expand-transition>
             </div>
+          </v-list-item>
+        </v-fade-transition>
+      </v-list>
+    </div>
 
-            <!-- Expandable Detail Row -->
-            <v-expand-transition>
-              <div v-if="expandedItem === item.id">
-                <v-row dense align="center" class="mt-1" @click.stop>
-                  <v-col cols="6">
-                    <div class="text-caption text-grey mb-1">Quantity</div>
-                    <v-text-field
-                      :model-value="item.quantity"
-                      @update:model-value="(v) => $emit('update-qty', item.id, Number(v))"
-                      type="number"
-                      density="compact"
-                      variant="outlined"
-                      hide-details
-                      min="1"
-                    ></v-text-field>
-                  </v-col>
-                  <v-col cols="6">
-                    <div class="text-caption text-grey mb-1">Discount(%)</div>
-                    <v-text-field
-                      v-model="item.discountPercent"
-                      type="number"
-                      density="compact"
-                      variant="outlined"
-                      hide-details
-                      min="0"
-                      max="100"
-                    ></v-text-field>
-                  </v-col>
-                </v-row>
-              </div>
-            </v-expand-transition>
-          </div>
-        </v-list-item>
-      </v-fade-transition>
-    </v-list>
-
-    <!-- Cart Actions / Totals -->
-    <div class="mt-4 pb-2">
-      <div class="d-flex justify-space-between mb-2 px-3 py-2 rounded text-orange-darken-3 font-weight-medium bg-orange-lighten-5 text-caption">
+    <!-- Cart Actions / Totals (Fixed at bottom) -->
+    <div class="cart-footer mt-4 pb-2">
+      <div class="d-flex justify-space-between mb-2 px-3 py-2 rounded text-warning font-weight-medium text-caption" style="background-color: rgba(var(--v-theme-warning), 0.1);">
         <span class="cursor-pointer">Add</span>
         <span class="cursor-pointer">Discount</span>
         <span class="cursor-pointer">Coupon</span>
@@ -133,17 +133,32 @@ const total = computed(() => {
 </script>
 
 <style scoped>
+.cart-panel-container {
+  display: grid;
+  grid-template-rows: 1fr auto;
+  height: 100%;
+  max-height: 100vh; /* Force constraint */
+  overflow: hidden;
+}
+.cart-items-wrapper {
+  overflow-y: auto;
+  min-height: 0;
+}
+.cart-footer {
+  padding-top: 10px;
+  background-color: rgb(var(--v-theme-surface)); /* Ensure it stays above nothing */
+}
 .cursor-pointer {
   cursor: pointer;
 }
 .border {
-  border: 1px solid #e0e0e0;
-  background-color: #fafafa;
+  border: 1px solid rgba(var(--v-theme-on-surface), 0.12);
+  background-color: rgba(var(--v-theme-on-surface), 0.02);
 }
 .border-active {
-  border: 1px solid #e0e0e0;
+  border: 1px solid rgba(var(--v-theme-on-surface), 0.12);
   border-left: 3px solid #10b981;
-  background-color: #f1f5f9;
+  background-color: rgba(var(--v-theme-on-surface), 0.08);
 }
 /* custom scrollbar */
 ::-webkit-scrollbar {

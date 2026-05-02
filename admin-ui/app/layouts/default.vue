@@ -1,14 +1,14 @@
 <template>
   <v-app>
-    <v-navigation-drawer v-model="drawer" color="white" elevation="3" width="280">
+    <v-navigation-drawer v-model="drawer" elevation="3" width="280">
       <!-- Shop Branding Section -->
       <div class="pa-4 pt-6 d-flex align-center">
-        <div class="branding-icon-container bg-primary-lighten-4 rounded-xl pa-2 me-3">
+        <div class="branding-icon-container rounded-xl pa-2 me-3">
           <v-icon color="primary" icon="mdi-store" size="28"></v-icon>
         </div>
         <div>
           <div class="text-overline text-primary font-weight-black mb-n1" style="letter-spacing: 2px !important;">ລະບົບຈັດການ</div>
-          <div class="text-h6 font-weight-black text-grey-darken-4" style="line-height: 1;">PERFECT STORE</div>
+          <div class="text-h6 font-weight-black" style="line-height: 1;">PERFECT STORE</div>
         </div>
         <v-spacer></v-spacer>
       </div>
@@ -61,19 +61,23 @@
     </v-app-bar>
 
     <v-main class="bg-background">
-      <v-container fluid class="pa-4 fill-height align-start">
+      <v-container v-if="!route.meta.fluid" fluid class="pa-4 fill-height align-start">
         <slot />
       </v-container>
+      <slot v-else />
     </v-main>
+
+    <GlobalToast />
   </v-app>
 </template>
 
 <script setup>
 import { ref, computed, onMounted } from 'vue'
-import { useRouter } from 'vue-router'
+import { useRouter, useRoute } from 'vue-router'
 
 const drawer = ref(true)
 const router = useRouter()
+const route = useRoute()
 const token = useCookie('auth_token')
 const api = useApi()
 
@@ -167,17 +171,17 @@ const logout = () => {
 /* Premium Sidebar Styles */
 .nav-item {
   transition: all 0.2s ease-in-out;
-  color: #64748b !important; /* Slate 500 */
+  color: rgba(var(--v-theme-on-surface), 0.6) !important;
 }
 
 .nav-item:hover {
-  background-color: #f1f5f9 !important; /* Slate 100 */
-  color: #1e293b !important; /* Slate 800 */
+  background-color: rgba(var(--v-theme-on-surface), 0.05) !important;
+  color: rgb(var(--v-theme-on-surface)) !important;
 }
 
 .nav-item-active {
-  background-color: #eff6ff !important; /* Blue 50 */
-  color: #1d4ed8 !important; /* Blue 700 */
+  background-color: rgba(var(--v-theme-primary), 0.1) !important;
+  color: rgb(var(--v-theme-primary)) !important;
   font-weight: 600 !important;
   position: relative;
 }
@@ -189,7 +193,7 @@ const logout = () => {
   top: 20%;
   height: 60%;
   width: 4px;
-  background-color: #1d4ed8;
+  background-color: rgb(var(--v-theme-primary));
   border-radius: 0 4px 4px 0;
 }
 
@@ -197,12 +201,7 @@ const logout = () => {
   display: flex;
   align-items: center;
   justify-content: center;
-  background-color: #eff6ff; /* Match primary light */
-}
-
-.user-profile-item {
-  background-color: #f8fafc;
-  border: 1px solid #f1f5f9;
+  background-color: rgba(var(--v-theme-primary), 0.1);
 }
 
 .opacity-10 {

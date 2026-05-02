@@ -79,12 +79,18 @@
         hover
         items-per-page="20"
       >
-        <!-- Product name + SKU -->
+        <!-- Product name + SKU + Barcode -->
         <template #item.name="{ item }">
           <div class="py-1">
             <div class="font-weight-medium">{{ item.name }}</div>
-            <div class="text-caption text-medium-emphasis">
-              <v-icon size="12" class="me-1">mdi-barcode</v-icon>{{ item.sku || item.barcode || '—' }}
+            <div class="d-flex align-center flex-wrap gap-2 mt-1">
+              <v-chip v-if="item.sku" size="x-small" variant="tonal" color="primary" class="px-2">
+                <v-icon start size="12">mdi-identifier</v-icon>{{ item.sku }}
+              </v-chip>
+              <v-chip v-if="item.barcode" size="x-small" variant="tonal" color="secondary" class="px-2">
+                <v-icon start size="12">mdi-barcode</v-icon>{{ item.barcode }}
+              </v-chip>
+              <span v-if="!item.sku && !item.barcode" class="text-caption text-grey">—</span>
             </div>
           </div>
         </template>
@@ -135,6 +141,12 @@
         <!-- Actions -->
         <template #item.actions="{ item }">
           <div class="d-flex align-center justify-end gap-1">
+            <v-tooltip text="View Product Details" location="top">
+              <template #activator="{ props }">
+                <v-btn v-bind="props" icon="mdi-eye" variant="text" size="small" color="secondary"
+                  @click="viewProductDetail(item)" />
+              </template>
+            </v-tooltip>
             <v-tooltip text="View Stock Details" location="top">
               <template #activator="{ props }">
                 <v-btn v-bind="props" icon="mdi-warehouse" variant="text" size="small" color="info"
@@ -248,8 +260,116 @@
             In Stock
           </v-chip>
         </template>
+
+        <!-- Actions -->
+        <template #item.actions="{ item }">
+          <v-btn
+            size="small"
+            color="success"
+            variant="tonal"
+            class="text-none font-weight-medium"
+            prepend-icon="mdi-package-down"
+            :to="`/imports?product_id=${item._product?.id}&variant_id=${item.id}`"
+          >
+            Import
+          </v-btn>
+        </template>
       </v-data-table>
     </v-card>
+
+    <!-- ══════════════ PRODUCT DETAIL DIALOG ══════════════ -->
+    <v-dialog v-model="detailDialog" max-width="600" scrollable>
+      <v-card rounded="xl" v-if="selectedProduct" class="border bg-white" max-height="90vh">
+        <!-- Top Banner / Header Profile -->
+        <div class="position-relative pb-4" style="background: linear-gradient(135deg, rgba(var(--v-theme-primary), .08), rgba(var(--v-theme-secondary), .08));">
+          <v-btn icon="mdi-close" variant="text" size="small" @click="detailDialog = false" class="position-absolute right-0 top-0 ma-2 text-grey-darken-1" />
+          
+          <div class="d-flex flex-column align-center pt-8 px-6 text-center">
+            <v-avatar size="90" color="white" class="elevation-2 mb-4 border-sm" style="border-color: rgba(var(--v-theme-primary), .2) !important;">
+              <v-icon size="45" color="primary">mdi-package-variant</v-icon>
+            </v-avatar>
+            <div class="text-h5 font-weight-black mb-1 text-grey-darken-3">{{ selectedProduct.name }}</div>
+            <div class="d-flex align-center gap-2 mt-1">
+              <v-chip size="small" color="primary" variant="flat" class="font-weight-medium px-3">
+                {{ selectedProduct.category?.category_name || 'Uncategorized' }}
+              </v-chip>
+              <v-chip :color="selectedProduct.is_active ? 'success' : 'error'" size="small" variant="tonal" class="px-3 font-weight-medium">
+                <v-icon start size="14">{{ selectedProduct.is_active ? 'mdi-check-circle' : 'mdi-close-circle' }}</v-icon>
+                {{ selectedProduct.is_active ? 'Active' : 'Inactive' }}
+              </v-chip>
+            </div>
+          </div>
+        </div>
+
+        <v-card-text class="pa-6 pt-2">
+          <!-- Quick Stats Grid -->
+          <v-row dense>
+            <v-col cols="12" sm="6">
+              <v-card variant="flat" color="blue-lighten-5" rounded="lg" class="pa-4 d-flex align-center h-100 border-sm border-blue-lighten-4">
+                <v-avatar color="blue-lighten-4" size="44" class="me-3">
+                  <v-icon color="primary" size="24">mdi-identifier</v-icon>
+                </v-avatar>
+                <div>
+                  <div class="text-caption font-weight-medium text-uppercase text-blue-darken-2" style="letter-spacing: 0.5px;">SKU</div>
+                  <div class="font-weight-bold text-body-1 text-grey-darken-4">{{ selectedProduct.sku || '—' }}</div>
+                </div>
+              </v-card>
+            </v-col>
+            <v-col cols="12" sm="6">
+              <v-card variant="flat" color="purple-lighten-5" rounded="lg" class="pa-4 d-flex align-center h-100 border-sm border-purple-lighten-4">
+                <v-avatar color="purple-lighten-4" size="44" class="me-3">
+                  <v-icon color="secondary" size="24">mdi-barcode</v-icon>
+                </v-avatar>
+                <div>
+                  <div class="text-caption font-weight-medium text-uppercase text-purple-darken-2" style="letter-spacing: 0.5px;">Barcode</div>
+                  <div class="font-weight-bold text-body-1 text-grey-darken-4">{{ selectedProduct.barcode || '—' }}</div>
+                </div>
+              </v-card>
+            </v-col>
+            <v-col cols="12" sm="6">
+              <v-card variant="flat" color="green-lighten-5" rounded="lg" class="pa-4 d-flex align-center h-100 border-sm border-green-lighten-4 mt-2">
+                <v-avatar color="green-lighten-4" size="48" class="me-3">
+                  <v-icon color="success" size="24">mdi-cash-plus</v-icon>
+                </v-avatar>
+                <div>
+                  <div class="text-caption font-weight-bold text-uppercase text-green-darken-2" style="letter-spacing: 0.5px;">Selling Price</div>
+                  <div class="font-weight-black text-h6 text-success">{{ formatCurrency(selectedProduct.selling_price) }}</div>
+                </div>
+              </v-card>
+            </v-col>
+            <v-col cols="12" sm="6">
+              <v-card variant="flat" color="orange-lighten-5" rounded="lg" class="pa-4 d-flex align-center h-100 border-sm border-orange-lighten-4 mt-2">
+                <v-avatar color="orange-lighten-4" size="48" class="me-3">
+                  <v-icon color="warning" size="24">mdi-cash-minus</v-icon>
+                </v-avatar>
+                <div>
+                  <div class="text-caption font-weight-bold text-uppercase text-orange-darken-2" style="letter-spacing: 0.5px;">Cost Price</div>
+                  <div class="font-weight-bold text-h6 text-warning">{{ formatCurrency(selectedProduct.cost_price) }}</div>
+                </div>
+              </v-card>
+            </v-col>
+          </v-row>
+
+          <!-- Description Section -->
+          <div v-if="selectedProduct.description" class="mt-6">
+            <div class="text-caption text-uppercase font-weight-bold text-primary mb-2 ps-1" style="letter-spacing: 1px;">
+              <v-icon size="14" class="me-1 pb-1">mdi-text</v-icon> Description
+            </div>
+            <v-card variant="flat" color="grey-lighten-4" rounded="lg" class="pa-4 border-sm border-grey-lighten-2 shadow-sm">
+              <div class="text-body-2 text-grey-darken-3" style="line-height: 1.7; white-space: pre-wrap;">{{ selectedProduct.description }}</div>
+            </v-card>
+          </div>
+        </v-card-text>
+
+        <v-divider />
+        <v-card-actions class="pa-4 bg-grey-lighten-5 d-flex justify-end gap-2">
+          <v-btn @click="detailDialog = false" variant="text" color="grey-darken-2" class="font-weight-medium px-4 text-none">Close</v-btn>
+          <v-btn color="primary" variant="elevated" prepend-icon="mdi-pencil" @click="detailDialog = false; openEditDialog(selectedProduct)" class="font-weight-bold px-6 text-none rounded-pill" elevation="2">
+            Edit Product
+          </v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
 
     <!-- ══════════════ STOCK DETAIL DIALOG ══════════════ -->
     <v-dialog v-model="stockDetailDialog" max-width="600">
@@ -323,7 +443,7 @@
         <v-card-actions class="pa-4">
           <v-spacer />
           <v-btn @click="stockDetailDialog = false">Close</v-btn>
-          <v-btn color="success" prepend-icon="mdi-package-down" variant="elevated" to="/imports">
+          <v-btn color="success" prepend-icon="mdi-package-down" variant="elevated" :to="`/imports?product_id=${selectedProduct.id}`">
             Record Stock Import
           </v-btn>
         </v-card-actions>
@@ -496,7 +616,8 @@ const search         = ref('')
 const filterCategory = ref(null)
 const viewMode       = ref('products')
 
-// Stock detail dialog
+// Detail dialogs
+const detailDialog      = ref(false)
 const stockDetailDialog = ref(false)
 const selectedProduct   = ref(null)
 
@@ -530,7 +651,8 @@ const variantHeaders = [
   { title: 'Variant',      key: 'variant_info',     sortable: false, minWidth: 180 },
   { title: 'In Stock',     key: 'quantity_in_stock', minWidth: 200 },
   { title: 'Reorder At',   key: 'reorder_level',     sortable: false },
-  { title: 'Status',       key: 'status',            sortable: false }
+  { title: 'Status',       key: 'status',            sortable: false },
+  { title: 'Actions',      key: 'actions',           sortable: false, align: 'end' }
 ]
 
 // ── Computed ───────────────────────────────────────────
@@ -612,7 +734,12 @@ const loadDropdowns = async () => {
   if (suppRes.status === 'fulfilled' && suppRes.value.success) suppliers.value  = suppRes.value.data
 }
 
-// ── Stock Detail ───────────────────────────────────────
+// ── Detail Views ───────────────────────────────────────
+const viewProductDetail = (product) => {
+  selectedProduct.value = product
+  detailDialog.value = true
+}
+
 const viewStockDetail = (product) => {
   selectedProduct.value = product
   stockDetailDialog.value = true

@@ -40,6 +40,20 @@ export default defineNuxtConfig({
               warning: '#FB8C00',
               background: '#F5F7FA'
             }
+          },
+          dark: {
+            dark: true,
+            colors: {
+              primary: '#818CF8', // Needs to be light enough to read as text on dark backgrounds!
+              secondary: '#9CA3AF',
+              accent: '#C084FC',
+              error: '#EF4444',
+              info: '#3B82F6',
+              success: '#10B981',
+              warning: '#F59E0B',
+              background: '#121212', // Standard dark background
+              surface: '#1E1E1E'     // Standard dark surface
+            }
           }
         }
       },
