@@ -1,8 +1,14 @@
 <template>
-  <div class="w-100">
+  <div class="w-100" v-if="hasPermission('settings.view')">
     <div class="d-flex align-center justify-space-between mb-4">
       <h1 class="text-h4 font-weight-bold">Shop Settings</h1>
-      <v-btn color="primary" prepend-icon="mdi-content-save" @click="saveSettings" :loading="loading">Save Change</v-btn>
+      <v-btn 
+        v-if="hasPermission('settings.view')" 
+        color="primary" 
+        prepend-icon="mdi-content-save" 
+        @click="saveSettings" 
+        :loading="loading"
+      >Save Change</v-btn>
     </div>
 
     <v-card elevation="2" class="rounded-lg pa-4">
@@ -106,29 +112,21 @@
           </v-col>
         </v-row>
       </v-form>
-
-      <v-alert v-if="successMessage" type="success" variant="tonal" class="mt-4" closable @click:close="successMessage = ''">
-        {{ successMessage }}
-      </v-alert>
-      <v-alert v-if="errorMessage" type="error" variant="tonal" class="mt-4" closable @click:close="errorMessage = ''">
-        {{ errorMessage }}
-      </v-alert>
-
     </v-card>
   </div>
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, watch } from 'vue'
 import { useTheme } from 'vuetify'
 
 const api = useApi()
 const theme = useTheme()
+const { hasPermission } = usePermissions()
+const { showToast } = useApi()
 
 const isValid = ref(false)
 const loading = ref(false)
-const successMessage = ref('')
-const errorMessage = ref('')
 
 const form = ref({
   shop_name: '',
@@ -151,7 +149,7 @@ const fetchSettings = async () => {
     }
   } catch(err) {
     console.error(err)
-    errorMessage.value = 'Failed to load settings.'
+    showToast('Failed to load settings.', 'error')
   }
   
   posSoundEnabled.value = localStorage.getItem('pos_sound_enabled') !== 'false'
@@ -161,7 +159,6 @@ const fetchSettings = async () => {
 
 onMounted(fetchSettings)
 
-import { watch } from 'vue'
 watch(posSoundEnabled, (val) => {
   if (isLoaded) {
     localStorage.setItem('pos_sound_enabled', val)
@@ -182,13 +179,11 @@ watch(themeSetting, (val) => {
 
 const saveSettings = async () => {
   if (!isValid.value) {
-    errorMessage.value = 'Please correct the validation errors.'
+    showToast('Please correct the validation errors.', 'error')
     return
   }
 
   loading.value = true
-  errorMessage.value = ''
-  successMessage.value = ''
 
   try {
     const payload = { ...form.value, tax_rate: Number(form.value.tax_rate) }
@@ -198,14 +193,14 @@ const saveSettings = async () => {
     })
 
     if (res.success) {
-      successMessage.value = 'Settings updated successfully!'
+      showToast('Settings updated successfully!', 'success')
       form.value = { ...res.data }
     } else {
-      errorMessage.value = res.message || 'Failed to update settings'
+      showToast(res.message || 'Failed to update settings', 'error')
     }
   } catch(err) {
     console.error(err)
-    errorMessage.value = 'A server error occurred while updating settings.'
+    showToast('A server error occurred while updating settings.', 'error')
   } finally {
     loading.value = false
   }

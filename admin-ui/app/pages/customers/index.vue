@@ -31,7 +31,7 @@
         @update:modelValue="loadCustomers"
       ></v-select>
 
-      <v-btn color="primary" prepend-icon="mdi-plus" @click="openAddDialog">Add Customer</v-btn>
+      <v-btn v-if="hasPermission('customers.manage')" color="primary" prepend-icon="mdi-plus" @click="openAddDialog">Add Customer</v-btn>
     </v-card-title>
     <v-divider></v-divider>
 
@@ -62,8 +62,8 @@
 
       <!-- Actions -->
       <template v-slot:item.actions="{ item }">
-        <v-btn icon="mdi-pencil" variant="text" size="small" color="primary" @click="openEditDialog(item)"></v-btn>
-        <v-btn icon="mdi-delete" variant="text" size="small" color="error" @click="openDeleteDialog(item)"></v-btn>
+        <v-btn v-if="hasPermission('customers.manage')" icon="mdi-pencil" variant="text" size="small" color="primary" @click="openEditDialog(item)"></v-btn>
+        <v-btn v-if="hasPermission('customers.manage')" icon="mdi-delete" variant="text" size="small" color="error" @click="openDeleteDialog(item)"></v-btn>
       </template>
     </v-data-table>
 
@@ -190,20 +190,15 @@
       </v-card>
     </v-dialog>
 
-    <!-- ── Snackbar ── -->
-    <v-snackbar v-model="snackbar.show" :color="snackbar.color" timeout="3000" location="bottom right">
-      {{ snackbar.message }}
-      <template v-slot:actions>
-        <v-btn variant="text" icon="mdi-close" @click="snackbar.show = false"></v-btn>
-      </template>
-    </v-snackbar>
   </v-card>
 </template>
 
 <script setup>
 import { ref, onMounted } from 'vue'
+import { showToast } from '~/composables/useToast'
 
 const api = useApi()
+const { hasPermission } = usePermissions()
 
 // ── State ──────────────────────────────────────────────
 const customers  = ref([])
@@ -221,12 +216,7 @@ const editingId   = ref(null)
 const form        = ref(emptyForm())
 
 // Delete dialog
-const deleteDialog      = ref(false)
-const deleting          = ref(false)
 const selectedCustomer  = ref(null)
-
-// Snackbar
-const snackbar = ref({ show: false, message: '', color: 'success' })
 
 // ── Constants ──────────────────────────────────────────
 const tierOptions = ['Bronze', 'Silver', 'Gold', 'Platinum']
@@ -269,7 +259,7 @@ const formatCurrency = (val) =>
     : '—'
 
 const notify = (message, color = 'success') => {
-  snackbar.value = { show: true, message, color }
+  showToast(message, color)
 }
 
 const resetForm = () => {
@@ -290,8 +280,7 @@ const loadCustomers = async () => {
     const res = await api(`/customers?${params.toString()}`)
     if (res.success) customers.value = res.data
   } catch (err) {
-    console.error(err)
-    notify('Failed to load customers', 'error')
+    // Error is handled globally by useApi
   } finally {
     loading.value = false
   }
@@ -345,12 +334,9 @@ const submitForm = async () => {
       notify(isEditing.value ? 'Customer updated successfully' : 'Customer created successfully')
       closeFormDialog()
       loadCustomers()
-    } else {
-      notify(res.message || 'Operation failed', 'error')
     }
   } catch (err) {
-    console.error(err)
-    notify('An unexpected error occurred', 'error')
+    // Error is handled globally by useApi
   } finally {
     saving.value = false
   }
@@ -369,12 +355,9 @@ const confirmDelete = async () => {
       notify('Customer deleted successfully')
       deleteDialog.value = false
       loadCustomers()
-    } else {
-      notify(res.message || 'Failed to delete customer', 'error')
     }
   } catch (err) {
-    console.error(err)
-    notify('An unexpected error occurred', 'error')
+    // Error is handled globally by useApi
   } finally {
     deleting.value = false
   }

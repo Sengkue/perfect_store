@@ -24,6 +24,10 @@ const Category = sequelize.define('categories', {
     type: DataTypes.TEXT,
     allowNull: true
   }
+}, {
+  indexes: [
+    { fields: ['category_name'] }
+  ]
 });
 
 export default Category;

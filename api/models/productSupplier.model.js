@@ -35,7 +35,8 @@ const ProductSupplier = sequelize.define('product_suppliers', {
     {
       unique: true,
       fields: ['product_id', 'supplier_id']
-    }
+    },
+    { fields: ['supplier_sku'] }
   ]
 });
 

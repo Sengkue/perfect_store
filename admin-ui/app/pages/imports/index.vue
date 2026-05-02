@@ -1,5 +1,5 @@
 <template>
-  <div class="imports-page">
+  <div class="imports-page" v-if="hasPermission('imports.view')">
     
     <!-- ══ HEADER ════════════════════════════════════════════════════ -->
     <div class="header-section mb-6">
@@ -21,6 +21,7 @@
             @click="activeTab = 'search'"
           >ຄົ້ນຫາ & ນໍາເຂົ້າ</v-btn>
           <v-btn
+            v-if="hasPermission('imports.create')"
             :variant="activeTab === 'direct' ? 'flat' : 'outlined'"
             prepend-icon="mdi-plus-box-outline"
             @click="activeTab = 'direct'; initDirectImport()"
@@ -177,6 +178,7 @@
                   
                   <template v-if="selectedImport.status !== 'completed' && selectedImport.status !== 'cancelled'">
                     <v-btn
+                      v-if="hasPermission('imports.complete')"
                       color="success"
                       size="large"
                       rounded="lg"
@@ -278,6 +280,7 @@
                   <v-btn variant="text" color="grey" @click="selectedPO = null">ຍົກເລີກ</v-btn>
                   <v-spacer />
                   <v-btn
+                    v-if="hasPermission('imports.create')"
                     color="orange-darken-1"
                     size="large"
                     rounded="lg"
@@ -296,7 +299,7 @@
       </v-window-item>
 
       <!-- ══ TAB 1.5: DIRECT IMPORT ══════════════════════════════════ -->
-      <v-window-item value="direct">
+      <v-window-item value="direct" v-if="hasPermission('imports.create')">
         <v-row>
           <v-col cols="12" md="4">
             <v-card rounded="xl" elevation="3" class="search-card">
@@ -549,7 +552,7 @@
                     size="large"
                     class="font-weight-bold px-5"
                     elevation="2"
-                    @click="addDirectItem(item); notify('ເພີ່ມ ' + item.product.name + ' ລົງຕາຕະລາງແລ້ວ', 'success')"
+                    @click="addDirectItem(item); showToast('ເພີ່ມ ' + item.product.name + ' ລົງຕາຕະລາງແລ້ວ', 'success')"
                   >
                     ເພີ່ມລົງລາຍການ
                   </v-btn>
@@ -565,11 +568,6 @@
         </v-card-text>
       </v-card>
     </v-dialog>
-
-    <!-- Snackbar -->
-    <v-snackbar v-model="snackbar.show" :color="snackbar.color" timeout="3000">
-      {{ snackbar.message }}
-    </v-snackbar>
   </div>
 </template>
 
@@ -577,6 +575,8 @@
 import { ref, onMounted, computed } from 'vue'
 
 const api = useApi()
+const { hasPermission } = usePermissions()
+const { showToast } = useApi()
 
 // ── STATE ──────────────────────────────────────────
 const activeTab = ref('search')
@@ -625,16 +625,12 @@ const filteredCatalogProducts = computed(() => {
   return allImportableItems.value.filter(i => i.searchString.includes(q))
 })
 
-
-
 const directImport = ref({
   supplier_id: null,
   invoice_number: '',
   receive_date: new Date().toISOString().split('T')[0],
   items: []
 })
-
-const snackbar = ref({ show: false, message: '', color: 'success' })
 
 const headers = [
   { title: 'ເລກທີໃບບິນ',   key: 'invoice_number' },
@@ -660,7 +656,7 @@ const performSearch = async () => {
       
       // Check if already received or completed
       if (po.status === 'received' || po.status === 'completed') {
-        notify('ໃບສັ່ງຊື້ນີ້ ໄດ້ຖືກນໍາເຂົ້າສາງຮຽບຮ້ອຍແລ້ວ (Already Imported)', 'success')
+        showToast('ໃບສັ່ງຊື້ນີ້ ໄດ້ຖືກນໍາເຂົ້າສາງຮຽບຮ້ອຍແລ້ວ (Already Imported)', 'success')
         
         // Find and show the linked import record
         const impRes = await api(`/imports?purchase_order_id=${po.id}`)
@@ -671,12 +667,12 @@ const performSearch = async () => {
       }
       
       if (po.status === 'cancelled') {
-        notify('ລາຍການນີ້ຖືກຍົກເລີກແລ້ວ', 'error')
+        showToast('ລາຍການນີ້ຖືກຍົກເລີກແລ້ວ', 'error')
         return
       } 
       
       if (po.status === 'draft') {
-        notify('ໃບສັ່ງຊື້ນີ້ຍັງຢູ່ໃນສະຖານະ "ຮ່າງ", ກະລຸນາຢືນຢັນການສັ່ງຊື້ກ່ອນ', 'warning')
+        showToast('ໃບສັ່ງຊື້ນີ້ຍັງຢູ່ໃນສະຖານະ "ຮ່າງ", ກະລຸນາຢືນຢັນການສັ່ງຊື້ກ່ອນ', 'warning')
         return
       }
 
@@ -692,9 +688,9 @@ const performSearch = async () => {
       return
     }
 
-    notify('ບໍ່ພົບຂໍ້ມູນໃບບິນ ຫຼື PO ນີ້', 'error')
+    showToast('ບໍ່ພົບຂໍ້ມູນໃບບິນ ຫຼື PO ນີ້', 'error')
   } catch (err) {
-    notify('ເກີດຂໍ້ຜິດພາດໃນການຄົ້ນຫາ', 'error')
+    showToast('ເກີດຂໍ້ຜິດພາດໃນການຄົ້ນຫາ', 'error')
   } finally {
     searching.value = false
   }
@@ -709,7 +705,7 @@ const openDetail = async (item) => {
       updateRecent(res.data)
     }
   } catch (err) {
-    notify('ບໍ່ສາມາດໂຫຼດລາຍລະອຽດໄດ້', 'error')
+    showToast('ບໍ່ສາມາດໂຫຼດລາຍລະອຽດໄດ້', 'error')
   }
 }
 
@@ -729,7 +725,7 @@ const openPODetail = async (item) => {
       selectedPO.value = data
     }
   } catch (err) {
-    notify('ບໍ່ສາມາດໂຫຼດລາຍລະອຽດ PO ໄດ້', 'error')
+    showToast('ບໍ່ສາມາດໂຫຼດລາຍລະອຽດ PO ໄດ້', 'error')
   }
 }
 
@@ -750,14 +746,14 @@ const finalizeBill = async () => {
       }
     })
     if (res.success) {
-      notify('ສໍາເລັດສິ້ນ! ອັບເດດສະຕ໋ອກສິນຄ້າແລ້ວ', 'success')
+      showToast('ສໍາເລັດສິ້ນ! ອັບເດດສະຕ໋ອກສິນຄ້າແລ້ວ', 'success')
       selectedImport.value = res.data
       loadImports()
     } else {
-      notify(res.message || 'ບໍ່ສາມາດອັບເດດໄດ້', 'error')
+      showToast(res.message || 'ບໍ່ສາມາດອັບເດດໄດ້', 'error')
     }
   } catch (err) {
-    notify('ເກີດຂໍ້ຜິດພາດ', 'error')
+    showToast('ເກີດຂໍ້ຜິດພາດ', 'error')
   } finally {
     statusChanging.value = false
   }
@@ -787,15 +783,15 @@ const importFromPO = async () => {
     })
 
     if (res.success) {
-      notify('ນໍາເຂົ້າສິນຄ້າສໍາເລັດ! ກະລຸນາກວດສອບ ແລະ ຢືນຢັນຂັ້ນຕອນສຸດທ້າຍ', 'success')
+      showToast('ນໍາເຂົ້າສິນຄ້າສໍາເລັດ! ກະລຸນາກວດສອບ ແລະ ຢືນຢັນຂັ້ນຕອນສຸດທ້າຍ', 'success')
       selectedPO.value = null
       await openDetail(res.data)
       loadImports()
     } else {
-      notify(res.message || 'ບໍ່ສາມາດນໍາເຂົ້າໄດ້', 'error')
+      showToast(res.message || 'ບໍ່ສາມາດນໍາເຂົ້າໄດ້', 'error')
     }
   } catch (err) {
-    notify('ເກີດຂໍ້ຜິດພາດໃນການນໍາເຂົ້າ', 'error')
+    showToast('ເກີດຂໍ້ຜິດພາດໃນການນໍາເຂົ້າ', 'error')
   } finally {
     statusChanging.value = false
   }
@@ -872,16 +868,16 @@ const submitDirectImport = async () => {
     })
 
     if (res.success) {
-      notify('ສ້າງໃບນໍາເຂົ້າສໍາເລັດ! ກະລຸນາກວດສອບ ແລະ ຢືນຢັນຂັ້ນຕອນສຸດທ້າຍ', 'success')
+      showToast('ສ້າງໃບນໍາເຂົ້າສໍາເລັດ! ກະລຸນາກວດສອບ ແລະ ຢືນຢັນຂັ້ນຕອນສຸດທ້າຍ', 'success')
       activeTab.value = 'search'
       initDirectImport()
       await openDetail(res.data)
       loadImports()
     } else {
-      notify(res.message || 'ບໍ່ສາມາດນໍາເຂົ້າໄດ້', 'error')
+      showToast(res.message || 'ບໍ່ສາມາດນໍາເຂົ້າໄດ້', 'error')
     }
   } catch (err) {
-    notify('ເກີດຂໍ້ຜິດພາດໃນການນໍາເຂົ້າ', 'error')
+    showToast('ເກີດຂໍ້ຜິດພາດໃນການນໍາເຂົ້າ', 'error')
   } finally {
     statusChanging.value = false
   }
@@ -894,10 +890,6 @@ const customFilterProduct = (itemTitle, queryText, item) => {
   const sku = item.raw.sku?.toLowerCase() || ''
   const query = queryText.toLowerCase()
   return name.includes(query) || barcode.includes(query) || sku.includes(query)
-}
-
-const notify = (message, color = 'success') => {
-  snackbar.value = { show: true, message, color }
 }
 
 const formatCurrency = (v) =>
@@ -999,7 +991,7 @@ onMounted(async () => {
 .empty-state {
   height: 380px;
   display: flex;
-  flex-column: column;
+  flex-direction: column;
   align-items: center;
   justify-content: center;
   border: 2px dashed rgba(var(--v-border-color), 0.3);

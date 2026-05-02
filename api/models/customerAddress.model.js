@@ -31,6 +31,10 @@ const CustomerAddress = sequelize.define('customer_addresses', {
     type: DataTypes.ENUM('home', 'work', 'other'),
     defaultValue: 'home'
   }
+}, {
+  indexes: [
+    { fields: ['customer_id'] }
+  ]
 });
 
 export default CustomerAddress;

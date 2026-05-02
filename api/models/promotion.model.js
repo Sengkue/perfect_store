@@ -49,6 +49,11 @@ const Promotion = sequelize.define('promotions', {
     type: DataTypes.BOOLEAN,
     defaultValue: true
   }
+}, {
+  indexes: [
+    { fields: ['promo_code'] },
+    { fields: ['name'] }
+  ]
 });
 
 export default Promotion;

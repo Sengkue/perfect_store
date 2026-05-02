@@ -1,5 +1,5 @@
 <template>
-  <v-container fluid class="fill-height pa-0 ma-0 bg-background">
+  <v-container fluid class="fill-height pa-0 ma-0 bg-background" v-if="hasPermission('sales.create')">
     <v-row class="fill-height ma-0">
       
       <!-- Left Area: Search, Categories & Products -->
@@ -66,7 +66,7 @@
     />
 
     <!-- Quick Add Customer Dialog inside POS -->
-    <v-dialog v-model="showAddCustomer" max-width="400">
+    <v-dialog v-model="showAddCustomer" max-width="400" v-if="hasPermission('customers.create')">
       <v-card>
         <v-card-title>ເພີ່ມລູກຄ້າໃໝ່</v-card-title>
         <v-card-text class="pt-4">
@@ -112,7 +112,8 @@
 <script setup>
 import { ref, computed, onMounted, watch } from 'vue'
 import { formatKip } from '~/utils/format'
-import { showToast } from '#imports'
+const { hasPermission } = usePermissions()
+const { showToast } = useApi()
 
 definePageMeta({
   layout: 'default',

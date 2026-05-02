@@ -1,5 +1,5 @@
 <template>
-  <v-card rounded="lg" elevation="2">
+  <v-card rounded="lg" elevation="2" v-if="hasPermission('sales.view')">
     <!-- Header -->
     <v-card-title class="d-flex align-center py-3 px-4 flex-wrap gap-2">
       <span class="text-h6 font-weight-bold">Sales</span>
@@ -56,7 +56,7 @@
       ></v-select>
 
       <!-- Export buttons -->
-      <v-btn-group variant="outlined" density="comfortable" divided>
+      <v-btn-group variant="outlined" density="comfortable" divided v-if="hasPermission('sales.report')">
         <v-btn
           prepend-icon="mdi-microsoft-excel"
           color="success"
@@ -170,14 +170,6 @@
         </v-card-actions>
       </v-card>
     </v-dialog>
-
-    <!-- ── Snackbar ── -->
-    <v-snackbar v-model="snackbar.show" :color="snackbar.color" timeout="3000" location="bottom right">
-      {{ snackbar.message }}
-      <template v-slot:actions>
-        <v-btn variant="text" icon="mdi-close" @click="snackbar.show = false"></v-btn>
-      </template>
-    </v-snackbar>
   </v-card>
 </template>
 
@@ -191,6 +183,8 @@ import {
 } from 'docx'
 
 const api = useApi()
+const { hasPermission } = usePermissions()
+const { showToast } = useApi()
 
 // ── State ────────────────────────────────────────────────────
 const sales         = ref([])
@@ -205,9 +199,6 @@ const exportingWord  = ref(false)
 // Detail dialog
 const detailDialog = ref(false)
 const detailSale   = ref(null)
-
-// Snackbar
-const snackbar = ref({ show: false, message: '', color: 'success' })
 
 // ── Constants ─────────────────────────────────────────────────
 const statusOptions = ['pending', 'processing', 'completed', 'cancelled', 'refunded']
@@ -238,10 +229,6 @@ const formatDate = (val) =>
 
 const statusColor  = (s) => ({ pending: 'orange', processing: 'blue', completed: 'green', cancelled: 'red', refunded: 'purple' }[s] ?? 'grey')
 const paymentColor = (s) => ({ paid: 'green', partial: 'orange', pending: 'red', refunded: 'purple' }[s] ?? 'grey')
-
-const notify = (message, color = 'success') => {
-  snackbar.value = { show: true, message, color }
-}
 
 // Flat rows for export
 const toExportRows = () =>
@@ -275,7 +262,7 @@ const loadSales = async () => {
     if (res.success) sales.value = res.data
   } catch (err) {
     console.error(err)
-    notify('Failed to load sales', 'error')
+    showToast('Failed to load sales', 'error')
   } finally {
     loading.value = false
   }
@@ -289,7 +276,7 @@ const openDetail = (item) => {
 
 // ── Export: Excel ─────────────────────────────────────────────
 const exportExcel = async () => {
-  if (!sales.value.length) { notify('No data to export', 'warning'); return }
+  if (!sales.value.length) { showToast('No data to export', 'warning'); return }
   exportingExcel.value = true
   try {
     const rows = toExportRows()
@@ -307,10 +294,10 @@ const exportExcel = async () => {
 
     const fileName = `sales_export_${new Date().toISOString().slice(0, 10)}.xlsx`
     XLSX.writeFile(wb, fileName)
-    notify(`Exported ${rows.length} records to ${fileName}`)
+    showToast(`Exported ${rows.length} records to ${fileName}`, 'success')
   } catch (err) {
     console.error(err)
-    notify('Excel export failed', 'error')
+    showToast('Excel export failed', 'error')
   } finally {
     exportingExcel.value = false
   }
@@ -318,7 +305,7 @@ const exportExcel = async () => {
 
 // ── Export: Word ──────────────────────────────────────────────
 const exportWord = async () => {
-  if (!sales.value.length) { notify('No data to export', 'warning'); return }
+  if (!sales.value.length) { showToast('No data to export', 'warning'); return }
   exportingWord.value = true
   try {
     const rows = toExportRows()
@@ -383,10 +370,10 @@ const exportWord = async () => {
     const blob     = await Packer.toBlob(doc)
     const fileName = `sales_report_${new Date().toISOString().slice(0, 10)}.docx`
     saveAs(blob, fileName)
-    notify(`Exported ${rows.length} records to ${fileName}`)
+    showToast(`Exported ${rows.length} records to ${fileName}`, 'success')
   } catch (err) {
     console.error(err)
-    notify('Word export failed', 'error')
+    showToast('Word export failed', 'error')
   } finally {
     exportingWord.value = false
   }

@@ -1,5 +1,5 @@
 <template>
-  <v-row>
+  <v-row v-if="hasPermission('dashboard.view')">
     <v-col cols="12">
       <h1 class="text-h4 font-weight-bold mb-4">Dashboard</h1>
     </v-col>
@@ -64,19 +64,19 @@
         <v-divider />
         <v-card-text>
           <div class="d-flex flex-wrap gap-3">
-            <v-btn color="primary" prepend-icon="mdi-cash-register" to="/pos" variant="elevated" rounded="lg">
+            <v-btn v-if="hasPermission('sales.create')" color="primary" prepend-icon="mdi-cash-register" to="/pos" variant="elevated" rounded="lg">
               Open POS
             </v-btn>
-            <v-btn color="success" prepend-icon="mdi-package-down" to="/imports" variant="tonal" rounded="lg">
+            <v-btn v-if="hasPermission('imports.create')" color="success" prepend-icon="mdi-package-down" to="/imports" variant="tonal" rounded="lg">
               Record Import
             </v-btn>
-            <v-btn color="warning" prepend-icon="mdi-truck-delivery-outline" to="/purchase-orders" variant="tonal" rounded="lg">
+            <v-btn v-if="hasPermission('purchases.view')" color="warning" prepend-icon="mdi-truck-delivery-outline" to="/purchase-orders" variant="tonal" rounded="lg">
               Purchase Orders
             </v-btn>
-            <v-btn color="info" prepend-icon="mdi-account-plus" to="/customers" variant="tonal" rounded="lg">
+            <v-btn v-if="hasPermission('customers.view')" color="info" prepend-icon="mdi-account-plus" to="/customers" variant="tonal" rounded="lg">
               Manage Customers
             </v-btn>
-            <v-btn color="secondary" prepend-icon="mdi-chart-bar" to="/sales" variant="tonal" rounded="lg">
+            <v-btn v-if="hasPermission('sales.view')" color="secondary" prepend-icon="mdi-chart-bar" to="/sales" variant="tonal" rounded="lg">
               View Sales
             </v-btn>
           </div>
@@ -146,6 +146,7 @@
 import { ref, onMounted } from 'vue'
 
 const api = useApi()
+const { hasPermission } = usePermissions()
 
 const todayRevenue    = ref(0)
 const totalOrders     = ref(0)

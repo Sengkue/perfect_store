@@ -1,5 +1,5 @@
 <template>
-  <v-card rounded="lg" elevation="2">
+  <v-card rounded="lg" elevation="2" v-if="hasPermission('users.view')">
     <!-- ── Header ── -->
     <v-card-title class="d-flex align-center py-3 px-4 flex-wrap gap-2">
       <div class="d-flex align-center">
@@ -42,7 +42,7 @@
         style="max-width:130px"
         @update:model-value="loadUsers"
       />
-      <v-btn color="primary" prepend-icon="mdi-account-plus" @click="openAddDialog">
+      <v-btn v-if="hasPermission('users.create')" color="primary" prepend-icon="mdi-account-plus" @click="openAddDialog">
         Add User
       </v-btn>
     </v-card-title>
@@ -124,14 +124,14 @@
       <template #item.actions="{ item }">
         <div class="d-flex align-center justify-end gap-1">
           <!-- Edit -->
-          <v-tooltip text="Edit User" location="top">
+          <v-tooltip v-if="hasPermission('users.edit')" text="Edit User" location="top">
             <template #activator="{ props }">
               <v-btn v-bind="props" icon="mdi-pencil" variant="text" size="small" color="primary" @click="openEditDialog(item)" />
             </template>
           </v-tooltip>
 
           <!-- Toggle active -->
-          <v-tooltip :text="item.is_active ? 'Deactivate' : 'Activate'" location="top">
+          <v-tooltip v-if="hasPermission('users.edit')" :text="item.is_active ? 'Deactivate' : 'Activate'" location="top">
             <template #activator="{ props }">
               <v-btn
                 v-bind="props"
@@ -145,14 +145,14 @@
           </v-tooltip>
 
           <!-- Reset password -->
-          <v-tooltip text="Reset Password" location="top">
+          <v-tooltip v-if="hasPermission('users.edit')" text="Reset Password" location="top">
             <template #activator="{ props }">
               <v-btn v-bind="props" icon="mdi-lock-reset" variant="text" size="small" color="orange" @click="openResetDialog(item)" />
             </template>
           </v-tooltip>
 
           <!-- Delete -->
-          <v-tooltip text="Delete User" location="top">
+          <v-tooltip v-if="hasPermission('users.delete')" text="Delete User" location="top">
             <template #activator="{ props }">
               <v-btn v-bind="props" icon="mdi-delete" variant="text" size="small" color="error" @click="openDeleteDialog(item)" />
             </template>
@@ -388,20 +388,16 @@
       </v-card>
     </v-dialog>
 
-    <!-- Snackbar -->
-    <v-snackbar v-model="snackbar.show" :color="snackbar.color" timeout="3000" location="bottom right">
-      {{ snackbar.message }}
-      <template #actions>
-        <v-btn variant="text" icon="mdi-close" @click="snackbar.show = false" />
-      </template>
-    </v-snackbar>
   </v-card>
 </template>
 
 <script setup>
 import { ref, computed, onMounted } from 'vue'
+import { showToast } from '~/composables/useToast'
 
 const api = useApi()
+const { hasPermission } = usePermissions()
+const { showToast } = useApi()
 
 // ── State ──────────────────────────────────────────────
 const users   = ref([])
@@ -431,9 +427,6 @@ const deleting     = ref(false)
 
 // Shared selected user
 const selectedUser = ref(null)
-
-// Snackbar
-const snackbar = ref({ show: false, message: '', color: 'success' })
 
 // ── Table headers ──────────────────────────────────────
 const headers = [
@@ -477,7 +470,7 @@ function emptyForm () {
 }
 
 const notify = (message, color = 'success') => {
-  snackbar.value = { show: true, message, color }
+  showToast(message, color)
 }
 
 const formatDateTime = (val) =>
@@ -509,8 +502,7 @@ const loadUsers = async () => {
     const res = await api(`/users?${params}`)
     if (res.success) users.value = res.data
   } catch (err) {
-    console.error(err)
-    notify('Failed to load users', 'error')
+    // Error is handled globally by useApi
   } finally {
     loading.value = false
   }
@@ -613,12 +605,9 @@ const submitForm = async () => {
       notify(isEditing.value ? 'User updated successfully' : 'User created successfully')
       closeFormDialog()
       loadUsers()
-    } else {
-      notify(res.message || 'Operation failed', 'error')
     }
   } catch (err) {
-    console.error(err)
-    notify('An unexpected error occurred', 'error')
+    // Error is handled globally by useApi
   } finally {
     saving.value = false
   }
@@ -634,12 +623,9 @@ const toggleActive = async (item) => {
     if (res.success) {
       notify(`User ${!item.is_active ? 'activated' : 'deactivated'}`)
       loadUsers()
-    } else {
-      notify(res.message || 'Update failed', 'error')
     }
   } catch (err) {
-    console.error(err)
-    notify('An error occurred', 'error')
+    // Error is handled globally by useApi
   }
 }
 
@@ -665,12 +651,9 @@ const confirmReset = async () => {
     if (res.success) {
       notify('Password reset successfully', 'success')
       resetDialog.value = false
-    } else {
-      notify(res.message || 'Reset failed', 'error')
     }
   } catch (err) {
-    console.error(err)
-    notify('An error occurred', 'error')
+    // Error is handled globally by useApi
   } finally {
     resetting.value = false
   }
@@ -690,12 +673,9 @@ const confirmDelete = async () => {
       notify('User deleted successfully')
       deleteDialog.value = false
       loadUsers()
-    } else {
-      notify(res.message || 'Delete failed', 'error')
     }
   } catch (err) {
-    console.error(err)
-    notify('An error occurred', 'error')
+    // Error is handled globally by useApi
   } finally {
     deleting.value = false
   }

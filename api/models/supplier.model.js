@@ -23,6 +23,11 @@ const Supplier = sequelize.define('suppliers', {
     type: DataTypes.STRING(100),
     allowNull: true
   }
+}, {
+  indexes: [
+    { fields: ['name'] },
+    { fields: ['phone'] }
+  ]
 });
 
 export default Supplier;

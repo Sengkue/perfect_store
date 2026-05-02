@@ -35,6 +35,12 @@ const SaleDetail = sequelize.define('sale_details', {
     type: DataTypes.DECIMAL(12, 2),
     allowNull: true
   }
+}, {
+  indexes: [
+    { fields: ['sale_id'] },
+    { fields: ['product_id'] },
+    { fields: ['variant_id'] }
+  ]
 });
 
 export default SaleDetail;

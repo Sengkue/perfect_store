@@ -31,6 +31,12 @@ const ImportDetail = sequelize.define('import_details', {
     type: DataTypes.DECIMAL(12, 2),
     allowNull: true
   }
+}, {
+  indexes: [
+    { fields: ['import_id'] },
+    { fields: ['product_id'] },
+    { fields: ['variant_id'] }
+  ]
 });
 
 export default ImportDetail;

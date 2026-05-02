@@ -31,6 +31,11 @@ const Payment = sequelize.define('payments', {
     type: DataTypes.STRING(100),
     allowNull: true
   }
+}, {
+  indexes: [
+    { fields: ['sale_id'] },
+    { fields: ['transaction_id'] }
+  ]
 });
 
 export default Payment;

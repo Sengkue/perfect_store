@@ -23,6 +23,10 @@ const ProductImage = sequelize.define('product_images', {
     type: DataTypes.INTEGER,
     defaultValue: 0
   }
+}, {
+  indexes: [
+    { fields: ['product_id'] }
+  ]
 });
 
 export default ProductImage;

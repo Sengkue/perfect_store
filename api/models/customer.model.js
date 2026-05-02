@@ -49,6 +49,13 @@ const Customer = sequelize.define('customers', {
     type: DataTypes.BOOLEAN,
     defaultValue: false
   }
+}, {
+  indexes: [
+    { fields: ['first_name'] },
+    { fields: ['last_name'] },
+    { fields: ['phone'] },
+    { fields: ['email'] }
+  ]
 });
 
 export default Customer;

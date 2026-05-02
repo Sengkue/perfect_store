@@ -21,8 +21,8 @@ import ImportDetail from './importDetail.model.js';
 import Promotion from './promotion.model.js';
 import Sale from './sale.model.js';
 import SaleDetail from './saleDetail.model.js';
-import Return from './return.model.js';
-import ReturnDetail from './returnDetail.model.js';
+import Refund from './refund.model.js';
+import RefundDetail from './refundDetail.model.js';
 import Payment from './payment.model.js';
 import ProductSupplier from './productSupplier.model.js';
 
@@ -136,16 +136,16 @@ SaleDetail.belongsTo(ProductVariant, { foreignKey: 'variant_id', as: 'variant' }
 Sale.hasMany(Payment, { foreignKey: 'sale_id', as: 'payments' });
 Payment.belongsTo(Sale, { foreignKey: 'sale_id', as: 'sale' });
 
-Sale.hasMany(Return, { foreignKey: 'sale_id', as: 'returns' });
-Return.belongsTo(Sale, { foreignKey: 'sale_id', as: 'sale' });
+Sale.hasMany(Refund, { foreignKey: 'sale_id', as: 'refunds' });
+Refund.belongsTo(Sale, { foreignKey: 'sale_id', as: 'sale' });
 
-// --- Returns ---
-Return.belongsTo(User, { foreignKey: 'user_id', as: 'user' });
+// --- Refunds ---
+Refund.belongsTo(User, { foreignKey: 'user_id', as: 'user' });
 
-Return.hasMany(ReturnDetail, { foreignKey: 'return_id', as: 'details', onDelete: 'CASCADE' });
-ReturnDetail.belongsTo(Return, { foreignKey: 'return_id', as: 'return' });
+Refund.hasMany(RefundDetail, { foreignKey: 'refund_id', as: 'details', onDelete: 'CASCADE' });
+RefundDetail.belongsTo(Refund, { foreignKey: 'refund_id', as: 'refund' });
 
-ReturnDetail.belongsTo(SaleDetail, { foreignKey: 'sale_detail_id', as: 'saleDetail' });
+RefundDetail.belongsTo(SaleDetail, { foreignKey: 'sale_detail_id', as: 'saleDetail' });
 
 // Export all models & sequelize instance
 export {
@@ -170,8 +170,8 @@ export {
   Promotion,
   Sale,
   SaleDetail,
-  Return,
-  ReturnDetail,
+  Refund,
+  RefundDetail,
   Payment,
   ProductSupplier
 };

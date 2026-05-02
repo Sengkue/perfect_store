@@ -20,7 +20,11 @@ const RolePermission = sequelize.define('role_permissions', {
     defaultValue: true
   }
 }, {
-  timestamps: false
+  timestamps: false,
+  indexes: [
+    { fields: ['role'] },
+    { fields: ['permission_id'] }
+  ]
 });
 
 export default RolePermission;

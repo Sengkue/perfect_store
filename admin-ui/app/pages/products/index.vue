@@ -1,5 +1,5 @@
 <template>
-  <div>
+  <div v-if="hasPermission('products.view')">
     <!-- ── Page Header with Tabs ── -->
     <v-card rounded="lg" elevation="2">
       <v-card-title class="d-flex align-center py-3 px-4 flex-wrap gap-2">
@@ -33,7 +33,7 @@
           style="max-width:160px"
           @update:model-value="loadProducts"
         />
-        <v-btn color="primary" prepend-icon="mdi-plus" @click="openAddDialog">
+        <v-btn v-if="hasPermission('products.create')" color="primary" prepend-icon="mdi-plus" @click="openAddDialog">
           Add Product
         </v-btn>
       </v-card-title>
@@ -153,13 +153,13 @@
                   @click="viewStockDetail(item)" />
               </template>
             </v-tooltip>
-            <v-tooltip text="Edit Product" location="top">
+            <v-tooltip v-if="hasPermission('products.edit')" text="Edit Product" location="top">
               <template #activator="{ props }">
                 <v-btn v-bind="props" icon="mdi-pencil" variant="text" size="small" color="primary"
                   @click="openEditDialog(item)" />
               </template>
             </v-tooltip>
-            <v-tooltip text="Delete Product" location="top">
+            <v-tooltip v-if="hasPermission('products.delete')" text="Delete Product" location="top">
               <template #activator="{ props }">
                 <v-btn v-bind="props" icon="mdi-delete" variant="text" size="small" color="error"
                   @click="openDeleteDialog(item)" />
@@ -173,7 +173,7 @@
           <div class="text-center py-8">
             <v-icon size="64" color="grey-lighten-2">mdi-package-variant</v-icon>
             <div class="text-h6 text-grey mt-3">No products found</div>
-            <v-btn color="primary" prepend-icon="mdi-plus" class="mt-3" @click="openAddDialog">Add Product</v-btn>
+            <v-btn v-if="hasPermission('products.create')" color="primary" prepend-icon="mdi-plus" class="mt-3" @click="openAddDialog">Add Product</v-btn>
           </div>
         </template>
       </v-data-table>
@@ -264,6 +264,7 @@
         <!-- Actions -->
         <template #item.actions="{ item }">
           <v-btn
+            v-if="hasPermission('imports.create')"
             size="small"
             color="success"
             variant="tonal"
@@ -364,7 +365,7 @@
         <v-divider />
         <v-card-actions class="pa-4 bg-grey-lighten-5 d-flex justify-end gap-2">
           <v-btn @click="detailDialog = false" variant="text" color="grey-darken-2" class="font-weight-medium px-4 text-none">Close</v-btn>
-          <v-btn color="primary" variant="elevated" prepend-icon="mdi-pencil" @click="detailDialog = false; openEditDialog(selectedProduct)" class="font-weight-bold px-6 text-none rounded-pill" elevation="2">
+          <v-btn v-if="hasPermission('products.edit')" color="primary" variant="elevated" prepend-icon="mdi-pencil" @click="detailDialog = false; openEditDialog(selectedProduct)" class="font-weight-bold px-6 text-none rounded-pill" elevation="2">
             Edit Product
           </v-btn>
         </v-card-actions>
@@ -443,7 +444,7 @@
         <v-card-actions class="pa-4">
           <v-spacer />
           <v-btn @click="stockDetailDialog = false">Close</v-btn>
-          <v-btn color="success" prepend-icon="mdi-package-down" variant="elevated" :to="`/imports?product_id=${selectedProduct.id}`">
+          <v-btn v-if="hasPermission('imports.create')" color="success" prepend-icon="mdi-package-down" variant="elevated" :to="`/imports?product_id=${selectedProduct.id}`">
             Record Stock Import
           </v-btn>
         </v-card-actions>
@@ -591,14 +592,6 @@
         </v-card-actions>
       </v-card>
     </v-dialog>
-
-    <!-- Snackbar -->
-    <v-snackbar v-model="snackbar.show" :color="snackbar.color" timeout="3000" location="bottom right">
-      {{ snackbar.message }}
-      <template #actions>
-        <v-btn variant="text" icon="mdi-close" @click="snackbar.show = false" />
-      </template>
-    </v-snackbar>
   </div>
 </template>
 
@@ -606,6 +599,8 @@
 import { ref, computed, onMounted } from 'vue'
 
 const api = useApi()
+const { hasPermission } = usePermissions()
+const { showToast } = useApi()
 
 // ── State ──────────────────────────────────────────────
 const products       = ref([])
@@ -632,9 +627,6 @@ const form       = ref(emptyForm())
 // Delete dialog
 const deleteDialog = ref(false)
 const deleting     = ref(false)
-
-// Snackbar
-const snackbar = ref({ show: false, message: '', color: 'success' })
 
 // ── Table Headers ──────────────────────────────────────
 const productHeaders = [
@@ -698,7 +690,7 @@ const formatCurrency = (val) =>
   new Intl.NumberFormat('lo-LA', { style: 'currency', currency: 'LAK' }).format(val || 0)
 
 const notify = (message, color = 'success') => {
-  snackbar.value = { show: true, message, color }
+  showToast(message, color)
 }
 
 let searchTimer = null
@@ -718,8 +710,7 @@ const loadProducts = async () => {
     const res = await api(`/products?${params}`)
     if (res.success) products.value = res.data
   } catch (err) {
-    console.error(err)
-    notify('Failed to load products', 'error')
+    // Error is handled globally by useApi
   } finally {
     loading.value = false
   }
@@ -792,12 +783,9 @@ const submitForm = async () => {
       notify(isEditing.value ? 'Product updated' : 'Product added')
       closeFormDialog()
       loadProducts()
-    } else {
-      notify(res.message || 'Operation failed', 'error')
     }
   } catch (err) {
-    console.error(err)
-    notify('An error occurred', 'error')
+    // Error is handled globally by useApi
   } finally {
     saving.value = false
   }
@@ -809,6 +797,7 @@ const openDeleteDialog = (item) => {
 }
 
 const confirmDelete = async () => {
+  if (!selectedProduct.value) return
   deleting.value = true
   try {
     const res = await api(`/products/${selectedProduct.value.id}`, { method: 'DELETE' })
@@ -816,12 +805,9 @@ const confirmDelete = async () => {
       notify('Product deleted')
       deleteDialog.value = false
       loadProducts()
-    } else {
-      notify(res.message || 'Delete failed', 'error')
     }
   } catch (err) {
-    console.error(err)
-    notify('An error occurred', 'error')
+    // Error is handled globally by useApi
   } finally {
     deleting.value = false
   }
@@ -833,4 +819,3 @@ onMounted(() => {
   loadDropdowns()
 })
 </script>
-

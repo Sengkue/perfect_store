@@ -1,18 +1,18 @@
-import { Return, ReturnDetail, Sale, SaleDetail, Product, ProductVariant, User } from '../models/index.js';
+import { Refund, RefundDetail, Sale, SaleDetail, Product, ProductVariant, User } from '../models/index.js';
 import { getPagination, getPaginatedResponse } from '../utils/helpers.js';
 import { Op } from 'sequelize';
 import sequelize from '../config/database.js';
 
-// GET /api/returns
+// GET /api/refunds
 export const getAll = async (req, res, next) => {
   try {
     const { limit, offset, page, pageSize } = getPagination(req.query);
     const where = {};
 
-    if (req.query.return_status) where.return_status = req.query.return_status;
+    if (req.query.refund_status) where.refund_status = req.query.refund_status;
     if (req.query.sale_id) where.sale_id = req.query.sale_id;
 
-    const data = await Return.findAndCountAll({
+    const data = await Refund.findAndCountAll({
       where,
       limit,
       offset,
@@ -40,15 +40,15 @@ export const getAll = async (req, res, next) => {
   }
 };
 
-// GET /api/returns/:id
+// GET /api/refunds/:id
 export const getById = async (req, res, next) => {
   try {
-    const returnRecord = await Return.findByPk(req.params.id, {
+    const refundRecord = await Refund.findByPk(req.params.id, {
       include: [
         { model: Sale, as: 'sale' },
         { model: User, as: 'user' },
         {
-          model: ReturnDetail,
+          model: RefundDetail,
           as: 'details',
           include: [{
             model: SaleDetail,
@@ -62,25 +62,25 @@ export const getById = async (req, res, next) => {
       ]
     });
 
-    if (!returnRecord) {
-      return res.status(404).json({ success: false, message: 'Return not found' });
+    if (!refundRecord) {
+      return res.status(404).json({ success: false, message: 'Refund not found' });
     }
 
-    res.json({ success: true, data: returnRecord });
+    res.json({ success: true, data: refundRecord });
   } catch (error) {
     next(error);
   }
 };
 
-// POST /api/returns
+// POST /api/refunds
 export const create = async (req, res, next) => {
   const t = await sequelize.transaction();
 
   try {
-    const { items, ...returnData } = req.body;
+    const { items, ...refundData } = req.body;
 
     // Verify sale exists
-    const sale = await Sale.findByPk(returnData.sale_id);
+    const sale = await Sale.findByPk(refundData.sale_id);
     if (!sale) {
       await t.rollback();
       return res.status(404).json({ success: false, message: 'Sale not found' });
@@ -88,7 +88,7 @@ export const create = async (req, res, next) => {
 
     // Set user from auth
     if (req.user) {
-      returnData.user_id = req.user.id;
+      refundData.user_id = req.user.id;
     }
 
     // Calculate total refund
@@ -97,31 +97,31 @@ export const create = async (req, res, next) => {
       totalRefund += parseFloat(item.refund_amount) || 0;
       return {
         sale_detail_id: item.sale_detail_id,
-        quantity_returned: item.quantity_returned,
+        quantity_refunded: item.quantity_refunded,
         refund_amount: item.refund_amount || 0
       };
     });
 
-    returnData.refund_amount = totalRefund;
+    refundData.refund_amount = totalRefund;
 
-    const returnRecord = await Return.create(returnData, { transaction: t });
+    const refundRecord = await Refund.create(refundData, { transaction: t });
 
-    // Create return details
-    const details = detailsData.map(d => ({ ...d, return_id: returnRecord.id }));
-    await ReturnDetail.bulkCreate(details, { transaction: t });
+    // Create refund details
+    const details = detailsData.map(d => ({ ...d, refund_id: refundRecord.id }));
+    await RefundDetail.bulkCreate(details, { transaction: t });
 
     await t.commit();
 
-    const result = await Return.findByPk(returnRecord.id, {
+    const result = await Refund.findByPk(refundRecord.id, {
       include: [
         { model: Sale, as: 'sale', attributes: ['id', 'sale_number'] },
-        { model: ReturnDetail, as: 'details' }
+        { model: RefundDetail, as: 'details' }
       ]
     });
 
     res.status(201).json({
       success: true,
-      message: 'Return created successfully',
+      message: 'Refund created successfully',
       data: result
     });
   } catch (error) {
@@ -130,14 +130,14 @@ export const create = async (req, res, next) => {
   }
 };
 
-// PUT /api/returns/:id/status
+// PUT /api/refunds/:id/status
 export const updateStatus = async (req, res, next) => {
   const t = await sequelize.transaction();
 
   try {
-    const returnRecord = await Return.findByPk(req.params.id, {
+    const refundRecord = await Refund.findByPk(req.params.id, {
       include: [{
-        model: ReturnDetail,
+        model: RefundDetail,
         as: 'details',
         include: [{
           model: SaleDetail,
@@ -146,21 +146,21 @@ export const updateStatus = async (req, res, next) => {
       }]
     });
 
-    if (!returnRecord) {
+    if (!refundRecord) {
       await t.rollback();
-      return res.status(404).json({ success: false, message: 'Return not found' });
+      return res.status(404).json({ success: false, message: 'Refund not found' });
     }
 
-    const { return_status } = req.body;
+    const { refund_status } = req.body;
 
-    // If completing return, restore stock
-    if (return_status === 'completed' && returnRecord.return_status !== 'completed') {
-      for (const detail of returnRecord.details) {
+    // If completing refund, restore stock
+    if (refund_status === 'completed' && refundRecord.refund_status !== 'completed') {
+      for (const detail of refundRecord.details) {
         if (detail.saleDetail && detail.saleDetail.variant_id) {
           await ProductVariant.increment(
             'quantity_in_stock',
             {
-              by: detail.quantity_returned,
+              by: detail.quantity_refunded,
               where: { id: detail.saleDetail.variant_id },
               transaction: t
             }
@@ -171,17 +171,17 @@ export const updateStatus = async (req, res, next) => {
       // Update sale status
       await Sale.update(
         { sale_status: 'returned' },
-        { where: { id: returnRecord.sale_id }, transaction: t }
+        { where: { id: refundRecord.sale_id }, transaction: t }
       );
     }
 
-    await returnRecord.update({ return_status }, { transaction: t });
+    await refundRecord.update({ refund_status }, { transaction: t });
     await t.commit();
 
     res.json({
       success: true,
-      message: `Return status updated to ${return_status}`,
-      data: returnRecord
+      message: `Refund status updated to ${refund_status}`,
+      data: refundRecord
     });
   } catch (error) {
     await t.rollback();
@@ -189,23 +189,23 @@ export const updateStatus = async (req, res, next) => {
   }
 };
 
-// DELETE /api/returns/:id
+// DELETE /api/refunds/:id
 export const remove = async (req, res, next) => {
   try {
-    const returnRecord = await Return.findByPk(req.params.id);
-    if (!returnRecord) {
-      return res.status(404).json({ success: false, message: 'Return not found' });
+    const refundRecord = await Refund.findByPk(req.params.id);
+    if (!refundRecord) {
+      return res.status(404).json({ success: false, message: 'Refund not found' });
     }
 
-    if (returnRecord.return_status === 'completed') {
+    if (refundRecord.refund_status === 'completed') {
       return res.status(400).json({
         success: false,
-        message: 'Cannot delete a completed return.'
+        message: 'Cannot delete a completed refund.'
       });
     }
 
-    await returnRecord.destroy();
-    res.json({ success: true, message: 'Return deleted successfully' });
+    await refundRecord.destroy();
+    res.json({ success: true, message: 'Refund deleted successfully' });
   } catch (error) {
     next(error);
   }

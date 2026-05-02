@@ -30,7 +30,12 @@ const PurchaseOrderDetail = sequelize.define('purchase_order_details', {
     type: DataTypes.DECIMAL(12, 2)
   }
 }, {
-  timestamps: false
+  timestamps: false,
+  indexes: [
+    { fields: ['po_id'] },
+    { fields: ['product_id'] },
+    { fields: ['variant_id'] }
+  ]
 });
 
 export default PurchaseOrderDetail;

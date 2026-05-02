@@ -36,6 +36,11 @@ const ProductVariant = sequelize.define('product_variants', {
     type: DataTypes.DECIMAL(10, 2),
     defaultValue: 0
   }
+}, {
+  indexes: [
+    { fields: ['product_id'] },
+    { fields: ['variant_sku'] }
+  ]
 });
 
 export default ProductVariant;

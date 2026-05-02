@@ -102,6 +102,14 @@ const Sale = sequelize.define('sales', {
     type: DataTypes.DATE,
     allowNull: true
   }
+}, {
+  indexes: [
+    { fields: ['sale_date'] },
+    { fields: ['customer_id'] },
+    { fields: ['user_id'] },
+    { fields: ['sale_status'] },
+    { fields: ['sale_number'] }
+  ]
 });
 
 export default Sale;

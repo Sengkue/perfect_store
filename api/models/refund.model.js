@@ -1,7 +1,7 @@
 import { DataTypes } from 'sequelize';
 import sequelize from '../config/database.js';
 
-const Return = sequelize.define('returns', {
+const Refund = sequelize.define('refunds', {
   id: {
     type: DataTypes.INTEGER,
     primaryKey: true,
@@ -15,7 +15,7 @@ const Return = sequelize.define('returns', {
     type: DataTypes.INTEGER,
     allowNull: true
   },
-  return_date: {
+  refund_date: {
     type: DataTypes.DATE,
     defaultValue: DataTypes.NOW
   },
@@ -27,10 +27,16 @@ const Return = sequelize.define('returns', {
     type: DataTypes.TEXT,
     allowNull: true
   },
-  return_status: {
+  refund_status: {
     type: DataTypes.ENUM('pending', 'approved', 'rejected', 'completed'),
     defaultValue: 'pending'
   }
+}, {
+  indexes: [
+    { fields: ['sale_id'] },
+    { fields: ['user_id'] },
+    { fields: ['refund_status'] }
+  ]
 });
 
-export default Return;
+export default Refund;

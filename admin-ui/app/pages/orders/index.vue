@@ -1,5 +1,5 @@
 <template>
-  <div class="orders-page">
+  <div class="orders-page" v-if="hasPermission('sales.view')">
 
     <!-- ══ Page Header ══════════════════════════════════════════════ -->
     <div class="page-header mb-4">
@@ -11,6 +11,7 @@
         <v-spacer />
         <v-btn-group variant="outlined" density="comfortable" divided>
           <v-btn
+            v-if="hasPermission('sales.create')"
             :color="activeTab === 'create' ? 'primary' : ''"
             :variant="activeTab === 'create' ? 'flat' : 'outlined'"
             prepend-icon="mdi-plus-circle-outline"
@@ -27,7 +28,7 @@
     </div>
 
     <!-- ══ CREATE ORDER TAB ══════════════════════════════════════════ -->
-    <div v-if="activeTab === 'create'">
+    <div v-if="activeTab === 'create' && hasPermission('sales.create')">
       <v-row>
 
         <!-- LEFT: Product Picker ─────────────────────────── -->
@@ -338,7 +339,7 @@
                 </div>
 
                 <!-- Submit button -->
-                <div class="px-4 pb-4">
+                <div class="px-4 pb-4" v-if="hasPermission('sales.create')">
                   <v-btn
                     block
                     color="primary"
@@ -463,40 +464,43 @@
                 <v-icon>mdi-eye-outline</v-icon>
                 <v-tooltip activator="parent">ເບິ່ງລາຍລະອຽດ</v-tooltip>
               </v-btn>
-              <!-- ✅ Confirm Payment button — shown when payment is still pending/partial -->
-              <v-btn
-                v-if="['pending','partial'].includes(item.payment_status)"
-                icon="mdi-cash-check" variant="text" size="small" color="green"
-                :loading="confirmingPayment === item.id"
-                @click="confirmPayment(item)"
-              >
-                <v-icon>mdi-cash-check</v-icon>
-                <v-tooltip activator="parent">ຢືນຢັນຮັບເງິນໂອນ</v-tooltip>
-              </v-btn>
-              <v-btn
-                v-if="item.sale_status === 'pending'"
-                icon="mdi-check" variant="text" size="small" color="success"
-                @click="updateOrderStatus(item, 'processing')"
-              >
-                <v-icon>mdi-check</v-icon>
-                <v-tooltip activator="parent">ຮັບລາຍການ</v-tooltip>
-              </v-btn>
-              <v-btn
-                v-if="item.sale_status === 'processing'"
-                icon="mdi-truck-check-outline" variant="text" size="small" color="teal"
-                @click="updateOrderStatus(item, 'completed')"
-              >
-                <v-icon>mdi-truck-check-outline</v-icon>
-                <v-tooltip activator="parent">ຈັດສົ່ງສໍາເລັດ</v-tooltip>
-              </v-btn>
-              <v-btn
-                v-if="['pending','processing'].includes(item.sale_status)"
-                icon="mdi-close-circle-outline" variant="text" size="small" color="error"
-                @click="updateOrderStatus(item, 'cancelled')"
-              >
-                <v-icon>mdi-close-circle-outline</v-icon>
-                <v-tooltip activator="parent">ຍົກເລີກ</v-tooltip>
-              </v-btn>
+              
+              <template v-if="hasPermission('sales.manage')">
+                <!-- ✅ Confirm Payment button — shown when payment is still pending/partial -->
+                <v-btn
+                  v-if="['pending','partial'].includes(item.payment_status)"
+                  icon="mdi-cash-check" variant="text" size="small" color="green"
+                  :loading="confirmingPayment === item.id"
+                  @click="confirmPayment(item)"
+                >
+                  <v-icon>mdi-cash-check</v-icon>
+                  <v-tooltip activator="parent">ຢືນຢັນຮັບເງິນໂອນ</v-tooltip>
+                </v-btn>
+                <v-btn
+                  v-if="item.sale_status === 'pending'"
+                  icon="mdi-check" variant="text" size="small" color="success"
+                  @click="updateOrderStatus(item, 'processing')"
+                >
+                  <v-icon>mdi-check</v-icon>
+                  <v-tooltip activator="parent">ຮັບລາຍການ</v-tooltip>
+                </v-btn>
+                <v-btn
+                  v-if="item.sale_status === 'processing'"
+                  icon="mdi-truck-check-outline" variant="text" size="small" color="teal"
+                  @click="updateOrderStatus(item, 'completed')"
+                >
+                  <v-icon>mdi-truck-check-outline</v-icon>
+                  <v-tooltip activator="parent">ຈັດສົ່ງສໍາເລັດ</v-tooltip>
+                </v-btn>
+                <v-btn
+                  v-if="['pending','processing'].includes(item.sale_status)"
+                  icon="mdi-close-circle-outline" variant="text" size="small" color="error"
+                  @click="updateOrderStatus(item, 'cancelled')"
+                >
+                  <v-icon>mdi-close-circle-outline</v-icon>
+                  <v-tooltip activator="parent">ຍົກເລີກ</v-tooltip>
+                </v-btn>
+              </template>
             </div>
           </template>
         </v-data-table>
@@ -530,7 +534,7 @@
               </template>
               <template #append>
                 <v-chip v-if="variant.quantity_in_stock === 0" color="error" size="x-small" variant="tonal">ໝົດ</v-chip>
-                <v-icon v-else icon="mdi-chevron-right" color="grey" />
+                <v-icon icon="mdi-chevron-right" color="grey" />
               </template>
             </v-list-item>
           </v-list>
@@ -598,7 +602,7 @@
 
           <!-- ── Payment Confirmation Banner ── -->
           <v-alert
-            v-if="['pending','partial'].includes(detailOrder.payment_status)"
+            v-if="['pending','partial'].includes(detailOrder.payment_status) && hasPermission('sales.manage')"
             type="warning"
             variant="tonal"
             rounded="lg"
@@ -634,8 +638,8 @@
           />
 
           <!-- Change status -->
-          <v-divider class="my-3" />
-          <div class="d-flex align-center gap-2 flex-wrap">
+          <v-divider class="my-3" v-if="hasPermission('sales.manage')" />
+          <div class="d-flex align-center gap-2 flex-wrap" v-if="hasPermission('sales.manage')">
             <span class="text-body-2 font-weight-medium">ປ່ຽນສະຖານະ:</span>
             <v-btn
               v-for="st in allowedStatusTransitions(detailOrder)"
@@ -687,14 +691,6 @@
         </v-card-actions>
       </v-card>
     </v-dialog>
-
-    <!-- Snackbar -->
-    <v-snackbar v-model="snackbar.show" :color="snackbar.color" timeout="3500" location="bottom right">
-      {{ snackbar.message }}
-      <template #actions>
-        <v-btn icon="mdi-close" variant="text" @click="snackbar.show = false" />
-      </template>
-    </v-snackbar>
   </div>
 </template>
 
@@ -702,6 +698,8 @@
 import { ref, computed, onMounted } from 'vue'
 
 const api = useApi()
+const { hasPermission } = usePermissions()
+const { showToast } = useApi()
 
 // ── Tab ────────────────────────────────────────────────────────────
 const activeTab = ref('create')
@@ -798,13 +796,16 @@ const deliveryAddress  = ref('')
 const paymentMethod    = ref('cash')
 const orderType        = ref('online')
 const orderNote        = ref('')
-const discountAmount   = ref(0)
-const taxRate          = ref(10)
 
-const paymentMethods = ['cash', 'bank_transfer', 'qr_code', 'card', 'credit']
-const orderTypes     = [
+const paymentMethods = [
+  { title: 'ເງິນສົດ (Cash)', value: 'cash' },
+  { title: 'ໂອນເງິນ (Transfer)', value: 'transfer' },
+  { title: 'ອື່ນໆ', value: 'other' }
+]
+const orderTypes = [
   { title: 'ອອນລາຍ (Online)', value: 'online' },
-  { title: 'ໜ້າຮ້ານ (In-shop)', value: 'in_shop' }
+  { title: 'ໜ້າຮ້ານ (POS)', value: 'pos' },
+  { title: 'ສັ່ງຈອງ (Pre-order)', value: 'pre-order' }
 ]
 
 const loadCustomers = async () => {
@@ -814,266 +815,237 @@ const loadCustomers = async () => {
   } catch (e) { console.error(e) }
 }
 
-const loadTaxRate = async () => {
+// ── Totals ───────────────────────────────────────────────────────
+const discountAmount = ref(0)
+const taxRate = ref(10) // default tax
+
+const subtotal = computed(() => {
+  return cart.value.reduce((sum, item) => sum + (item.price * item.quantity), 0)
+})
+const taxAmount = computed(() => {
+  return (subtotal.value - discountAmount.value) * (taxRate.value / 100)
+})
+const totalAmount = computed(() => {
+  return subtotal.value - discountAmount.value + taxAmount.value
+})
+const totalItems = computed(() => {
+  return cart.value.reduce((sum, item) => sum + item.quantity, 0)
+})
+
+const fetchTaxRate = async () => {
   try {
     const res = await api('/shop-settings')
-    if (res.success && res.data?.tax_rate != null) taxRate.value = Number(res.data.tax_rate)
-  } catch (e) { console.error(e) }
+    if (res.success && res.data) taxRate.value = res.data.tax_rate
+  } catch (e) {}
 }
 
-// ── Totals ────────────────────────────────────────────────────────
-const totalItems  = computed(() => cart.value.reduce((s, c) => s + c.quantity, 0))
-const subtotal    = computed(() => cart.value.reduce((s, c) => s + c.price * c.quantity, 0))
-const taxAmount   = computed(() => Math.round((subtotal.value * taxRate.value) / 100 * 100) / 100)
-const totalAmount = computed(() => subtotal.value + taxAmount.value - (discountAmount.value || 0))
-
-// ── Submit ────────────────────────────────────────────────────────
-const submitting    = ref(false)
+// ── Submit ───────────────────────────────────────────────────────
+const submitting = ref(false)
 const successDialog = ref(false)
-const createdOrder  = ref(null)
+const createdOrder = ref(null)
 
 const submitOrder = async () => {
   if (!cart.value.length) return
   submitting.value = true
   try {
     const payload = {
-      customer_id:     selectedCustomer.value?.id || null,
-      sale_type:       orderType.value,
-      payment_method:  paymentMethod.value,
+      customer_id: selectedCustomer.value?.id || null,
+      sale_type: orderType.value,
+      payment_method: paymentMethod.value,
+      payment_status: paymentMethod.value === 'transfer' ? 'pending' : 'paid',
+      sale_status: 'pending',
+      subtotal: subtotal.value,
+      tax_amount: taxAmount.value,
       discount_amount: discountAmount.value || 0,
-      tax_amount:      taxAmount.value,
-      notes:           [
-        orderNote.value || '',
-        deliveryAddress.value ? `ທີ່ຢູ່ຈັດສົ່ງ: ${deliveryAddress.value}` : ''
-      ].filter(Boolean).join('\n') || null,
-      items: cart.value.map(c => ({
-        product_id:  c.product.id,
-        variant_id:  c.variantId || null,
-        quantity:    c.quantity,
-        unit_price:  c.price
+      total_amount: totalAmount.value,
+      notes: orderNote.value,
+      delivery_address: deliveryAddress.value,
+      items: cart.value.map(item => ({
+        product_id: item.product.id,
+        variant_id: item.variantId,
+        quantity: item.quantity,
+        unit_price: item.price,
+        subtotal: item.price * item.quantity
       }))
     }
-    const res = await api('/sales', { method: 'POST', body: payload })
+
+    const res = await api('/sales', {
+      method: 'POST',
+      body: payload
+    })
+
     if (res.success) {
-      createdOrder.value  = res.data
+      createdOrder.value = res.data
       successDialog.value = true
     } else {
-      notify(res.message || 'ສ້າງລາຍການບໍ່ສໍາເລັດ', 'error')
+      showToast(res.message || 'Error creating order', 'error')
     }
   } catch (e) {
-    console.error(e)
-    notify('ເກີດຂໍ້ຜິດພາດ', 'error')
+    showToast('Failed to connect to server', 'error')
   } finally {
     submitting.value = false
   }
 }
 
 const resetOrder = () => {
-  cart.value           = []
+  cart.value = []
   selectedCustomer.value = null
-  deliveryAddress.value  = ''
-  orderNote.value        = ''
-  discountAmount.value   = 0
-  paymentMethod.value    = 'cash'
-  orderType.value        = 'online'
+  deliveryAddress.value = ''
+  orderNote.value = ''
+  discountAmount.value = 0
 }
 
-// ── Orders List ───────────────────────────────────────────────────
-const orders           = ref([])
-const loadingOrders    = ref(false)
-const orderSearch      = ref('')
+// ── Orders List ──────────────────────────────────────────────────
+const orders = ref([])
+const loadingOrders = ref(false)
+const orderSearch = ref('')
 const orderStatusFilter = ref(null)
-const detailDialog       = ref(false)
-const detailOrder        = ref(null)
-const updatingStatus     = ref(null)
-const confirmingPayment  = ref(null)  // tracks which order id is being confirmed
-
-const orderStatusOptions = ['pending', 'processing', 'completed', 'cancelled', 'refunded']
+const confirmingPayment = ref(null)
+const updatingStatus = ref(null)
 
 const orderHeaders = [
-  { title: 'ເລກທີ',     key: 'sale_number',    width: 120 },
-  { title: 'ວັນທີ',     key: 'sale_date' },
-  { title: 'ລູກຄ້າ',   key: 'customer',       sortable: false },
-  { title: 'ຍອດ',       key: 'total_amount' },
-  { title: 'ສະຖານະ',   key: 'sale_status' },
-  { title: 'ຊຳລະ',     key: 'payment_status' },
-  { title: 'ຈັດການ',   key: 'actions',        sortable: false, align: 'end' }
+  { title: 'ເລກບິນ', key: 'sale_number' },
+  { title: 'ວັນທີ', key: 'sale_date' },
+  { title: 'ລູກຄ້າ', key: 'customer' },
+  { title: 'ຍອດລວມ', key: 'total_amount' },
+  { title: 'ສະຖານະ', key: 'sale_status' },
+  { title: 'ການຊຳລະ', key: 'payment_status' },
+  { title: 'ຈັດການ', key: 'actions', align: 'end', sortable: false }
 ]
 
-const orderStats = computed(() => [
-  { label: 'ລໍຖ້າ',         color: 'orange',  icon: 'mdi-clock-outline',       count: orders.value.filter(o => o.sale_status === 'pending').length },
-  { label: 'ກຳລັງດຳເນີນ', color: 'blue',    icon: 'mdi-progress-clock',      count: orders.value.filter(o => o.sale_status === 'processing').length },
-  { label: 'ສໍາເລັດ',      color: 'green',   icon: 'mdi-check-circle-outline', count: orders.value.filter(o => o.sale_status === 'completed').length },
-  { label: 'ຍົກເລີກ',      color: 'red',     icon: 'mdi-close-circle-outline', count: orders.value.filter(o => o.sale_status === 'cancelled').length },
-])
+const orderStatusOptions = [
+  { title: 'ລໍຖ້າ (Pending)', value: 'pending' },
+  { title: 'ກຳລັງດຳເນີນການ (Processing)', value: 'processing' },
+  { title: 'ສຳເລັດ (Completed)', value: 'completed' },
+  { title: 'ຍົກເລີກ (Cancelled)', value: 'cancelled' }
+]
+
+const orderStats = computed(() => {
+  const all = orders.value.length
+  const pending = orders.value.filter(o => o.sale_status === 'pending').length
+  const processing = orders.value.filter(o => o.sale_status === 'processing').length
+  const completed = orders.value.filter(o => o.sale_status === 'completed').length
+  return [
+    { label: 'ທັງໝົດ', count: all, color: 'primary', icon: 'mdi-clipboard-text-outline' },
+    { label: 'ລໍຖ້າ', count: pending, color: 'warning', icon: 'mdi-clock-outline' },
+    { label: 'ກຳລັງດຳເນີນ', count: processing, color: 'info', icon: 'mdi-progress-check' },
+    { label: 'ສຳເລັດ', count: completed, color: 'success', icon: 'mdi-check-circle-outline' }
+  ]
+})
 
 const loadOrders = async () => {
   loadingOrders.value = true
   try {
     const params = new URLSearchParams({ pageSize: 500, sale_type: 'online' })
-    if (orderSearch.value)       params.set('search',      orderSearch.value)
+    if (orderSearch.value) params.set('search', orderSearch.value)
     if (orderStatusFilter.value) params.set('sale_status', orderStatusFilter.value)
+
     const res = await api(`/sales?${params}`)
     if (res.success) orders.value = res.data
-  } catch (e) {
-    console.error(e)
-    notify('ໂຫຼດລາຍການບໍ່ສໍາເລັດ', 'error')
-  } finally {
-    loadingOrders.value = false
-  }
+  } catch (e) { console.error(e) }
+  finally { loadingOrders.value = false }
 }
 
-const openOrderDetail = (item) => {
-  detailOrder.value  = item
-  detailDialog.value = true
-}
-
-const allowedStatusTransitions = (order) => {
-  const map = {
-    pending:    [{ value: 'processing', label: 'ຮັບລາຍການ',   color: 'blue',    icon: 'mdi-check' },
-                 { value: 'cancelled',  label: 'ຍົກເລີກ',     color: 'error',   icon: 'mdi-close-circle-outline' }],
-    processing: [{ value: 'completed',  label: 'ຈັດສົ່ງສໍາເລັດ', color: 'teal',  icon: 'mdi-truck-check-outline' },
-                 { value: 'cancelled',  label: 'ຍົກເລີກ',     color: 'error',   icon: 'mdi-close-circle-outline' }],
-    completed:  [],
-    cancelled:  [],
-    refunded:   [],
-  }
-  return map[order?.sale_status] ?? []
-}
-
-const updateOrderStatus = async (order, newStatus) => {
-  updatingStatus.value = newStatus
-  try {
-    const res = await api(`/sales/${order.id}/status`, { method: 'PUT', body: { sale_status: newStatus } })
-    if (res.success) {
-      notify('ອັບເດດສະຖານະສໍາເລັດ', 'success')
-      order.sale_status = newStatus
-      if (detailOrder.value?.id === order.id) detailOrder.value.sale_status = newStatus
-    } else {
-      notify(res.message || 'ອັບເດດບໍ່ສໍາເລັດ', 'error')
-    }
-  } catch (e) {
-    console.error(e)
-    notify('ເກີດຂໍ້ຜິດພາດ', 'error')
-  } finally {
-    updatingStatus.value = null
-  }
-}
-
-// ── Confirm Payment (bank transfer received) ──────────────────────
 const confirmPayment = async (order) => {
   confirmingPayment.value = order.id
   try {
-    const res = await api(`/sales/${order.id}/status`, {
+    const res = await api(`/sales/${order.id}`, {
       method: 'PUT',
       body: { payment_status: 'paid' }
     })
     if (res.success) {
-      notify('ຢືນຢັນຮັບເງິນສຳເລັດ ✓', 'success')
-      // Update local state instantly (no full reload needed)
-      order.payment_status = 'paid'
-      if (detailOrder.value?.id === order.id) detailOrder.value.payment_status = 'paid'
-    } else {
-      notify(res.message || 'ຢືນຢັນບໍ່ສຳເລັດ', 'error')
+      showToast('ຢືນຢັນການຊຳລະເງິນສຳເລັດ', 'success')
+      loadOrders()
+      if (detailOrder.value?.id === order.id) {
+        detailOrder.value.payment_status = 'paid'
+      }
     }
   } catch (e) {
-    console.error(e)
-    notify('ເກີດຂໍ້ຜິດພາດ', 'error')
+    showToast('Error confirming payment', 'error')
   } finally {
     confirmingPayment.value = null
   }
 }
 
-// ── Helpers ───────────────────────────────────────────────────────
-const formatCurrency = (val) =>
-  val != null
-    ? new Intl.NumberFormat('lo-LA', { style: 'currency', currency: 'LAK' }).format(val)
-    : '—'
+const updateOrderStatus = async (order, status) => {
+  updatingStatus.value = status
+  try {
+    const res = await api(`/sales/${order.id}`, {
+      method: 'PUT',
+      body: { sale_status: status }
+    })
+    if (res.success) {
+      showToast('ອັບເດດສະຖານະສຳເລັດ', 'success')
+      loadOrders()
+      if (detailOrder.value?.id === order.id) {
+        detailOrder.value.sale_status = status
+      }
+    }
+  } catch (e) {
+    showToast('Error updating status', 'error')
+  } finally {
+    updatingStatus.value = null
+  }
+}
 
-const formatDate = (val) =>
-  val ? new Date(val).toLocaleString('lo-LA', {
-    day: '2-digit', month: 'short', year: 'numeric',
-    hour: '2-digit', minute: '2-digit'
-  }) : '—'
+// Order detail
+const detailDialog = ref(false)
+const detailOrder = ref(null)
 
-const statusColor = (s) => ({ pending: 'orange', processing: 'blue', completed: 'green', cancelled: 'red', refunded: 'purple' }[s] ?? 'grey')
-const statusIcon  = (s) => ({ pending: 'mdi-clock-outline', processing: 'mdi-progress-clock', completed: 'mdi-check-circle-outline', cancelled: 'mdi-close-circle-outline', refunded: 'mdi-cash-refund' }[s] ?? '')
-const statusLabel = (s) => ({ pending: 'ລໍຖ້າ', processing: 'ກຳລັງດຳເນີນ', completed: 'ສໍາເລັດ', cancelled: 'ຍົກເລີກ', refunded: 'ຄືນເງິນ' }[s] ?? s)
+const openOrderDetail = (order) => {
+  detailOrder.value = order
+  detailDialog.value = true
+}
 
-const paymentColor = (s) => ({ paid: 'green', partial: 'orange', pending: 'red', refunded: 'purple' }[s] ?? 'grey')
-const paymentLabel = (s) => ({ paid: 'ຊຳລະແລ້ວ', partial: 'ບາງສ່ວນ', pending: 'ລໍຖ້າ', refunded: 'ຄືນ' }[s] ?? (s ?? '—'))
+const allowedStatusTransitions = (order) => {
+  if (order.sale_status === 'pending') return [
+    { label: 'ຮັບລາຍການ', value: 'processing', color: 'success', icon: 'mdi-check' },
+    { label: 'ຍົກເລີກ', value: 'cancelled', color: 'error', icon: 'mdi-close' }
+  ]
+  if (order.sale_status === 'processing') return [
+    { label: 'ຈັດສົ່ງສໍາເລັດ', value: 'completed', color: 'teal', icon: 'mdi-truck-check' },
+    { label: 'ຍົກເລີກ', value: 'cancelled', color: 'error', icon: 'mdi-close' }
+  ]
+  return []
+}
 
-// Snackbar
-const snackbar = ref({ show: false, message: '', color: 'success' })
-const notify   = (message, color = 'success') => { snackbar.value = { show: true, message, color } }
+// ── Format Helpers ───────────────────────────────────────────────
+const formatCurrency = (v) =>
+  v != null ? new Intl.NumberFormat('lo-LA', { style: 'currency', currency: 'LAK' }).format(v) : '—'
 
-// ── Init ──────────────────────────────────────────────────────────
+const formatDate = (v) =>
+  v ? new Date(v).toLocaleString('lo-LA', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' }) : '—'
+
+const statusColor = (s) => ({ pending: 'warning', processing: 'info', completed: 'success', cancelled: 'error', refunded: 'purple' }[s] ?? 'grey')
+const statusIcon = (s) => ({ pending: 'mdi-clock-outline', processing: 'mdi-progress-check', completed: 'mdi-check-circle-outline', cancelled: 'mdi-close-circle-outline', refunded: 'mdi-undo' }[s] ?? 'mdi-help')
+const statusLabel = (s) => ({ pending: 'ລໍຖ້າ', processing: 'ດຳເນີນການ', completed: 'ສຳເລັດ', cancelled: 'ຍົກເລີກ', refunded: 'ຄືນເງິນ' }[s] ?? s)
+
+const paymentColor = (s) => ({ paid: 'success', partial: 'orange', pending: 'error', refunded: 'purple' }[s] ?? 'grey')
+const paymentLabel = (s) => ({ paid: 'ຈ່າຍແລ້ວ', partial: 'ບາງສ່ວນ', pending: 'ລໍຖ້າ', refunded: 'ຄືນເງິນ' }[s] ?? s)
+
+// ── Init ────────────────────────────────────────────────────────
 onMounted(async () => {
-  await Promise.all([loadProducts(), loadCategories(), loadCustomers(), loadTaxRate()])
+  loadProducts()
+  loadCategories()
+  loadCustomers()
+  fetchTaxRate()
+  loadOrders()
 })
 </script>
 
 <style scoped>
-.orders-page {
-  width: 100%;
-}
-
-.page-header {
-  border-bottom: 1px solid rgba(var(--v-border-color), var(--v-border-opacity));
-  padding-bottom: 16px;
-}
-
-.product-grid-container {
-  max-height: calc(100vh - 280px);
-  overflow-y: auto;
-  min-height: 300px;
-}
-
-.product-card {
-  cursor: pointer;
-  transition: transform 0.15s ease, box-shadow 0.15s ease, border-color 0.15s ease;
-  border: 2px solid transparent;
-}
-
-.product-card:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 6px 20px rgba(0,0,0,0.12) !important;
-}
-
-.product-card--selected {
-  border-color: rgb(var(--v-theme-primary));
-  background: rgba(var(--v-theme-primary), 0.04);
-}
-
-.out-of-stock-overlay {
-  position: absolute;
-  inset: 0;
-  background: rgba(0,0,0,0.45);
-}
-
-.detail-label {
-  font-size: 11px;
-  color: rgba(var(--v-theme-on-surface), 0.6);
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-  margin-bottom: 2px;
-}
-
-.detail-value {
-  font-size: 14px;
-  font-weight: 500;
-}
-
-.success-checkmark {
-  animation: pop 0.4s cubic-bezier(0.175,0.885,0.32,1.275);
-}
-
-@keyframes pop {
-  0%   { transform: scale(0.5); opacity: 0; }
-  100% { transform: scale(1);   opacity: 1; }
-}
-
-.border-b {
-  border-bottom: 1px solid rgba(var(--v-border-color), var(--v-border-opacity));
+.orders-page { width: 100%; }
+.product-grid-container { max-height: 600px; overflow-y: auto; }
+.product-card { border: 1px solid rgba(var(--v-border-color), 0.1); transition: all 0.2s ease; }
+.product-card:hover { border-color: rgb(var(--v-theme-primary)); }
+.product-card--selected { border-color: rgb(var(--v-theme-primary)); background-color: rgba(var(--v-theme-primary), 0.05); }
+.out-of-stock-overlay { position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.4); z-index: 1; }
+.detail-label { font-size: 11px; color: rgba(var(--v-theme-on-surface), 0.6); text-transform: uppercase; letter-spacing: 0.5px; }
+.detail-value { font-size: 14px; font-weight: 600; }
+.success-checkmark { animation: bounceIn 0.8s cubic-bezier(0.68, -0.55, 0.265, 1.55); }
+@keyframes bounceIn {
+  from { opacity: 0; transform: scale(0.3); }
+  50% { opacity: 0.9; transform: scale(1.1); }
+  to { opacity: 1; transform: scale(1); }
 }
 </style>

@@ -1,5 +1,5 @@
 <template>
-  <v-card rounded="lg" elevation="2">
+  <v-card v-if="hasPermission('permissions.manage')" rounded="lg" elevation="2">
     <!-- ── Header ── -->
     <v-card-title class="d-flex align-center py-3 px-4 flex-wrap gap-2">
       <div class="d-flex align-center">
@@ -348,20 +348,32 @@
       </v-window-item>
     </v-window>
 
-    <!-- Snackbar -->
-    <v-snackbar v-model="snackbar.show" :color="snackbar.color" timeout="3000" location="bottom right">
-      {{ snackbar.message }}
-      <template #actions>
-        <v-btn variant="text" icon="mdi-close" @click="snackbar.show = false" />
-      </template>
-    </v-snackbar>
+    <!-- Centralized toast is used instead of local snackbar -->
   </v-card>
+
+  <v-container v-else class="fill-height d-flex align-center justify-center">
+    <v-card rounded="xl" class="pa-12 text-center" max-width="500">
+      <v-avatar color="error-lighten-5" size="120" class="mb-6">
+        <v-icon size="64" color="error">mdi-shield-off-outline</v-icon>
+      </v-avatar>
+      <div class="text-h4 font-weight-black text-grey-darken-3 mb-2">Access Denied</div>
+      <div class="text-body-1 text-medium-emphasis mb-8">
+        You don't have permission to manage system security settings. 
+        Please contact your system administrator if you believe this is an error.
+      </div>
+      <v-btn color="primary" variant="elevated" rounded="pill" size="large" to="/" prepend-icon="mdi-arrow-left">
+        Back to Dashboard
+      </v-btn>
+    </v-card>
+  </v-container>
 </template>
 
 <script setup>
 import { ref, computed, onMounted } from 'vue'
 
 const api = useApi()
+const { hasPermission } = usePermissions()
+const { showToast } = useApi()
 
 // ── Tabs ────────────────────────────────────────────────
 const tab = ref('roles')
@@ -523,9 +535,8 @@ const saveUserPermissions = async () => {
 }
 
 // ── Helpers ─────────────────────────────────────────────
-const snackbar = ref({ show: false, message: '', color: 'success' })
 const notify = (message, color = 'success') => {
-  snackbar.value = { show: true, message, color }
+  showToast(message, color)
 }
 
 const roleColor = (r) => ({ root: 'purple', admin: 'error', manager: 'warning', staff: 'info' }[r] ?? 'grey')
@@ -539,7 +550,7 @@ const moduleIcon = (mod) => ({
   'Purchase Orders':'mdi-truck-delivery-outline',
   'Imports':        'mdi-package-down',
   'Sales':          'mdi-cart-outline',
-  'Returns':        'mdi-keyboard-return',
+  'Refunds':        'mdi-keyboard-return',
   'Customers':      'mdi-account-group',
   'Admin':          'mdi-shield-crown',
   'Settings':       'mdi-cog',

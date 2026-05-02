@@ -21,7 +21,7 @@
         @update:modelValue="debouncedLoad"
       ></v-text-field>
 
-      <v-btn color="primary" prepend-icon="mdi-account-plus" @click="openAddDialog">Add Profile</v-btn>
+      <v-btn v-if="hasPermission('users.manage')" color="primary" prepend-icon="mdi-account-plus" @click="openAddDialog">Add Profile</v-btn>
     </v-card-title>
     <v-divider></v-divider>
 
@@ -82,12 +82,12 @@
       <!-- Actions -->
       <template v-slot:item.actions="{ item }">
         <div class="d-flex align-center justify-end gap-1">
-          <v-tooltip text="Edit Profile" location="top">
+          <v-tooltip v-if="hasPermission('users.manage')" text="Edit Profile" location="top">
             <template #activator="{ props }">
               <v-btn v-bind="props" icon="mdi-pencil" variant="text" size="small" color="primary" @click="openEditDialog(item)"></v-btn>
             </template>
           </v-tooltip>
-          <v-tooltip text="Delete Profile" location="top">
+          <v-tooltip v-if="hasPermission('users.manage')" text="Delete Profile" location="top">
             <template #activator="{ props }">
               <v-btn v-bind="props" icon="mdi-delete" variant="text" size="small" color="error" @click="openDeleteDialog(item)"></v-btn>
             </template>
@@ -262,20 +262,15 @@
       </v-card>
     </v-dialog>
 
-    <!-- ── Snackbar ── -->
-    <v-snackbar v-model="snackbar.show" :color="snackbar.color" timeout="3000" location="bottom right">
-      {{ snackbar.message }}
-      <template v-slot:actions>
-        <v-btn variant="text" icon="mdi-close" @click="snackbar.show = false"></v-btn>
-      </template>
-    </v-snackbar>
   </v-card>
 </template>
 
 <script setup>
 import { ref, onMounted } from 'vue'
+import { showToast } from '~/composables/useToast'
 
 const api = useApi()
+const { hasPermission } = usePermissions()
 
 // ── State ──────────────────────────────────────────────
 const profiles = ref([])
@@ -295,12 +290,7 @@ const availableUsers  = ref([])
 const loadingUsers    = ref(false)
 
 // Delete dialog
-const deleteDialog     = ref(false)
-const deleting         = ref(false)
 const selectedProfile  = ref(null)
-
-// Snackbar
-const snackbar = ref({ show: false, message: '', color: 'success' })
 
 // ── Table headers ──────────────────────────────────────
 const headers = [
@@ -333,7 +323,7 @@ const formatCurrency = (val) =>
   new Intl.NumberFormat('lo-LA', { style: 'currency', currency: 'LAK' }).format(val)
 
 const notify = (message, color = 'success') => {
-  snackbar.value = { show: true, message, color }
+  showToast(message, color)
 }
 
 const roleColor   = (r) => ({ admin: 'error', manager: 'warning', staff: 'info' }[r] ?? 'grey')
@@ -361,8 +351,7 @@ const loadProfiles = async () => {
         .map(u => ({ ...u.profile, user: u }))
     }
   } catch (err) {
-    console.error(err)
-    notify('Failed to load profiles', 'error')
+    // Error handled globally by useApi
   } finally {
     loading.value = false
   }
@@ -377,7 +366,7 @@ const loadAvailableUsers = async () => {
       availableUsers.value = res.data.filter(u => !u.profile)
     }
   } catch (e) {
-    console.error(e)
+    // Error handled globally by useApi
   } finally {
     loadingUsers.value = false
   }
@@ -431,12 +420,9 @@ const submitForm = async () => {
       notify(isEditing.value ? 'Profile updated successfully' : 'Profile created successfully')
       closeFormDialog()
       loadProfiles()
-    } else {
-      notify(res.message || 'Operation failed', 'error')
     }
   } catch (err) {
-    console.error(err)
-    notify('An unexpected error occurred', 'error')
+    // Error handled globally by useApi
   } finally {
     saving.value = false
   }
@@ -461,12 +447,9 @@ const confirmDelete = async () => {
       notify('Profile removed')
       deleteDialog.value = false
       loadProfiles()
-    } else {
-      notify(res.message || 'Failed', 'error')
     }
   } catch (err) {
-    console.error(err)
-    notify('An unexpected error occurred', 'error')
+    // Error handled globally by useApi
   } finally {
     deleting.value = false
   }

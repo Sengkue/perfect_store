@@ -40,7 +40,10 @@ const UserProfile = sequelize.define('user_profile', {
   }
 }, {
   freezeTableName: true,
-  timestamps: false
+  timestamps: false,
+  indexes: [
+    { fields: ['user_id'] }
+  ]
 });
 
 export default UserProfile;

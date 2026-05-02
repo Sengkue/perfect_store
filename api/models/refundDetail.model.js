@@ -1,13 +1,13 @@
 import { DataTypes } from 'sequelize';
 import sequelize from '../config/database.js';
 
-const ReturnDetail = sequelize.define('return_details', {
+const RefundDetail = sequelize.define('refund_details', {
   id: {
     type: DataTypes.INTEGER,
     primaryKey: true,
     autoIncrement: true
   },
-  return_id: {
+  refund_id: {
     type: DataTypes.INTEGER,
     allowNull: false
   },
@@ -15,7 +15,7 @@ const ReturnDetail = sequelize.define('return_details', {
     type: DataTypes.INTEGER,
     allowNull: false
   },
-  quantity_returned: {
+  quantity_refunded: {
     type: DataTypes.INTEGER,
     allowNull: true
   },
@@ -23,6 +23,11 @@ const ReturnDetail = sequelize.define('return_details', {
     type: DataTypes.DECIMAL(10, 2),
     allowNull: true
   }
+}, {
+  indexes: [
+    { fields: ['refund_id'] },
+    { fields: ['sale_detail_id'] }
+  ]
 });
 
-export default ReturnDetail;
+export default RefundDetail;

@@ -53,6 +53,12 @@ const Product = sequelize.define('products', {
     type: DataTypes.DATE,
     defaultValue: DataTypes.NOW
   }
+}, {
+  indexes: [
+    { fields: ['name'] },
+    { fields: ['barcode'] },
+    { fields: ['sku'] }
+  ]
 });
 
 export default Product;

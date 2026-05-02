@@ -1,5 +1,5 @@
 <template>
-  <div class="po-page">
+  <div class="po-page" v-if="hasPermission('purchase_orders.view')">
 
     <!-- ══ Page Header ══════════════════════════════════════════════ -->
     <div class="po-header mb-5">
@@ -16,6 +16,7 @@
         <v-spacer />
         <v-btn-group variant="outlined" density="comfortable" divided rounded="lg">
           <v-btn
+            v-if="hasPermission('purchase_orders.create')"
             :color="activeTab === 'create' ? 'primary' : ''"
             :variant="activeTab === 'create' ? 'flat' : 'outlined'"
             prepend-icon="mdi-plus-circle-outline"
@@ -34,7 +35,7 @@
     <!-- ══════════════════════════════════════════════════════════════
          TAB 1 — CREATE PURCHASE ORDER
     ══════════════════════════════════════════════════════════════ -->
-    <div v-if="activeTab === 'create'">
+    <div v-if="activeTab === 'create' && hasPermission('purchase_orders.create')">
       <v-row>
 
         <!-- ─── LEFT: Product Picker ─────────────────────────────── -->
@@ -579,7 +580,7 @@
               </v-btn>
 
               <!-- Advance status buttons -->
-              <template v-for="action in allowedActions(item)" :key="action.status">
+              <template v-if="hasPermission('purchase_orders.approve')" v-for="action in allowedActions(item)" :key="action.status">
                 <v-btn icon size="small" variant="text" :color="action.color"
                   :loading="updatingId === item.id && updatingStatus === action.status"
                   @click="changeStatus(item, action.status)"
@@ -591,7 +592,7 @@
 
               <!-- Direct to Import (received status only) -->
               <v-btn
-                v-if="item.status === 'received'"
+                v-if="item.status === 'received' && hasPermission('imports.view')"
                 icon size="small" variant="text" color="success"
                 @click="goToImport(item)"
               >
@@ -601,7 +602,7 @@
 
               <!-- Delete (draft / cancelled only) -->
               <v-btn
-                v-if="['draft','cancelled'].includes(item.status)"
+                v-if="['draft','cancelled'].includes(item.status) && hasPermission('purchase_orders.create')"
                 icon size="small" variant="text" color="error"
                 @click="openDeleteConfirm(item)"
               >
@@ -685,6 +686,7 @@
             <div class="d-flex align-center gap-2 flex-wrap">
               <span class="text-body-2 font-weight-medium">ປ່ຽນສະຖານະ:</span>
               <v-btn
+                v-if="hasPermission('purchase_orders.approve')"
                 v-for="action in allowedActions(detailPO)"
                 :key="action.status"
                 :color="action.color"
@@ -792,433 +794,355 @@
         </v-card-actions>
       </v-card>
     </v-dialog>
-
-    <!-- ══ Snackbar ════════════════════════════════════════════════ -->
-    <v-snackbar v-model="snackbar.show" :color="snackbar.color" timeout="3500" location="bottom right">
-      <v-icon :icon="snackbar.color === 'success' ? 'mdi-check-circle-outline' : 'mdi-alert-circle-outline'" class="me-2" />
-      {{ snackbar.message }}
-      <template #actions>
-        <v-btn icon="mdi-close" variant="text" @click="snackbar.show = false" />
-      </template>
-    </v-snackbar>
   </div>
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue'
+import { ref, onMounted, computed } from 'vue'
+import { useRouter } from 'vue-router'
 
 const api = useApi()
+const router = useRouter()
+const { hasPermission } = usePermissions()
+const { showToast } = useApi()
 
-// ── Tab ─────────────────────────────────────────────────────────────
-const activeTab = ref('create')
+// ── STATE ──────────────────────────────────────────
+const activeTab = ref('list')
+const submitting = ref(false)
+const loadingPOs = ref(false)
+const purchaseOrders = ref([])
+const listStats = ref([])
+const listTotal = ref(0)
 
-// ══ PRODUCT PICKERS ═══════════════════════════════════════════════
-const products        = ref([])
-const categories      = ref([])
+const suppliers = ref([])
+const categories = ref([])
+const products = ref([])
 const loadingProducts = ref(false)
-const productSearch   = ref('')
-const categoryFilter  = ref(null)
 
-const loadProducts = async () => {
-  loadingProducts.value = true
-  try {
-    const p = new URLSearchParams({ pageSize: 300 })
-    if (productSearch.value)  p.set('search', productSearch.value)
-    if (categoryFilter.value) p.set('category_id', categoryFilter.value)
-    const res = await api(`/products?${p}`)
-    if (res.success) products.value = res.data
-  } catch (e) { console.error(e) }
-  finally { loadingProducts.value = false }
-}
+const productSearch = ref('')
+const categoryFilter = ref(null)
 
-const loadCategories = async () => {
-  try {
-    const res = await api('/categories?pageSize=200')
-    if (res.success) categories.value = res.data
-  } catch (e) { console.error(e) }
-}
+const listSearch = ref('')
+const listStatusFilter = ref(null)
+const listSupplierFilter = ref(null)
 
-const getProductStock = (product) => {
-  if (product.variants?.length) {
-    return product.variants.reduce((sum, v) => sum + (v.quantity_in_stock || 0), 0);
-  }
-  return product.quantity_in_stock || 0;
-};
-
-// ══ SUPPLIERS ═════════════════════════════════════════════════════
-const suppliers       = ref([])
+// Form state
 const selectedSupplier = ref(null)
-
-const loadSuppliers = async () => {
-  try {
-    const res = await api('/suppliers?pageSize=200')
-    if (res.success) suppliers.value = res.data
-  } catch (e) { console.error(e) }
-}
-
-// ══ CART ══════════════════════════════════════════════════════════
-let _uid = 0
+const invoiceNumber = ref('')
+const receiveDate = ref(new Date().toISOString().split('T')[0])
+const importStatus = ref('draft')
+const poNote = ref('')
 const cart = ref([])
 
-const isInCart   = (id) => cart.value.some(c => c.product.id === id)
-const cartQty    = (id) => cart.value.filter(c => c.product.id === id).reduce((s, c) => s + c.quantity, 0)
-const totalItems = computed(() => cart.value.reduce((s, c) => s + c.quantity, 0))
-const grandTotal = computed(() => cart.value.reduce((s, c) => s + (c.unit_cost || 0) * c.quantity, 0))
+// Dialogs
+const detailDialog = ref(false)
+const detailPO = ref(null)
+const statusDialog = ref(false)
+const statusTarget = ref(null)
+const statusNew = ref('')
+const updatingStatusFlag = ref(false)
+const updatingId = ref(null)
+const updatingStatus = ref(null)
 
-const quickAddToCart = (product) => {
-  // if product has variants, add as generic first; user can pick variant in cart row
-  const existing = cart.value.find(c => c.product.id === product.id && !c.variant_id)
-  if (existing) {
-    existing.quantity++
-    return
-  }
-  cart.value.push({
-    uid:         ++_uid,
-    product,
-    quantity:    1,
-    unit_cost:   Number(product.cost_price || 0),
-    variant_id:  null,
-    variantLabel: null
-  })
-}
+const deleteDialog = ref(false)
+const deleteTarget = ref(null)
+const deleting = ref(false)
 
-const decQty     = (idx) => { const i = cart.value[idx]; if (i.quantity > 1) i.quantity--; else removeItem(idx) }
-const removeItem = (idx) => { cart.value.splice(idx, 1) }
-const clearCart  = () => { cart.value = [] }
-
-const syncVariantLabel = (item, variantId) => {
-  const v = item.product.variants?.find(v => v.id === variantId)
-  item.variantLabel = v ? `${v.color || ''} ${v.size || ''}`.trim() || 'Default' : null
-  if (v?.price) item.unit_cost = Number(v.price)
-}
-
-// ══ FORM FIELDS ══════════════════════════════════════════════════
-const invoiceNumber   = ref('')
-const receiveDate     = ref(new Date().toISOString().slice(0, 10))
-const importStatus    = ref('draft')
-const poNote          = ref('')
-
-const importStatusOptions = [
-  { title: 'ຮ່າງ (Draft)',          value: 'draft'      },
-  { title: 'ໄດ້ຮັບສິນຄ້າ (Received)', value: 'received'   },
-  { title: 'ຍົກເລີກ (Cancelled)',   value: 'cancelled'  }
-]
-
-const resetForm = () => {
-  cart.value           = []
-  selectedSupplier.value = null
-  invoiceNumber.value   = ''
-  receiveDate.value     = new Date().toISOString().slice(0, 10)
-  importStatus.value    = 'draft'
-  poNote.value          = ''
-}
-
-// ══ SUBMIT ════════════════════════════════════════════════════════
-const submitting    = ref(false)
 const successDialog = ref(false)
-const createdPO     = ref(null)
+const createdPO = ref(null)
 
-const submitPO = async () => {
-  if (!cart.value.length || !selectedSupplier.value) return
-  submitting.value = true
-  try {
-    const payload = {
-      supplier_id:     selectedSupplier.value.id,
-      po_number:       invoiceNumber.value || undefined,
-      order_date:      receiveDate.value   || undefined,
-      status:          importStatus.value,
-      notes:           poNote.value       || undefined,
-      items: cart.value.map(c => ({
-        product_id: c.product.id,
-        variant_id: c.variant_id || null,
-        quantity:   c.quantity,
-        unit_cost:  c.unit_cost  || 0
-      }))
-    }
-
-    const res = await api('/purchase-orders', { method: 'POST', body: payload })
-    if (res.success) {
-      createdPO.value  = res.data
-      successDialog.value = true
-    } else {
-      notify(res.message || 'ສ້າງໃບສັ່ງຊື້ບໍ່ສໍາເລັດ', 'error')
-    }
-  } catch (e) {
-    console.error(e)
-    notify('ເກີດຂໍ້ຜິດພາດ', 'error')
-  } finally {
-    submitting.value = false
-  }
-}
-
-// ══ LIST ══════════════════════════════════════════════════════════
-const purchaseOrders    = ref([])
-const loadingPOs        = ref(false)
-const listSearch        = ref('')
-const listStatusFilter  = ref(null)
-const listSupplierFilter = ref(null)
-const updatingId        = ref(null)
-const updatingStatus    = ref(null)
+// ── CONSTANTS ──────────────────────────────────────
+const importStatusOptions = [
+  { title: 'ຮ່າງ (Draft)', value: 'draft' },
+  { title: 'ສັ່ງແລ້ວ (Sent)', value: 'sent' },
+  { title: 'ໄດ້ຮັບແລ້ວ (Received)', value: 'received' },
+  { title: 'ສໍາເລັດ (Completed)', value: 'completed' },
+  { title: 'ຍົກເລີກ (Cancelled)', value: 'cancelled' }
+]
 
 const listHeaders = [
-  { title: 'ເລກທີ',       key: 'po_number' },
-  { title: 'ຜູ້ສະໜອງ',   key: 'supplier',       sortable: false },
-  { title: 'ວັນທີສັ່ງ',   key: 'order_date' },
-  { title: 'ຍອດລວມ',     key: 'total_amount' },
-  { title: 'ສະຖານະ',     key: 'status' },
-  { title: 'ຈັດການ',     key: 'actions',        sortable: false, align: 'end' }
+  { title: 'ເລກທີ PO', key: 'po_number' },
+  { title: 'ຜູ້ສະໜອງ', key: 'supplier', sortable: false },
+  { title: 'ວັນທີສັ່ງ', key: 'order_date' },
+  { title: 'ຍອດລວມ', key: 'total_amount' },
+  { title: 'ສະຖານະ', key: 'status' },
+  { title: 'ຈັດການ', key: 'actions', sortable: false, align: 'end' }
 ]
 
-const listStats = computed(() => [
-  { label: 'ຮ່າງ',           color: 'grey',   icon: 'mdi-file-outline',          count: purchaseOrders.value.filter(p => p.status === 'draft').length },
-  { label: 'ໄດ້ຮັບສິນຄ້າ', color: 'blue',   icon: 'mdi-package-down',           count: purchaseOrders.value.filter(p => p.status === 'received').length },
-  { label: 'ຍົກເລີກ',       color: 'red',    icon: 'mdi-close-circle-outline',  count: purchaseOrders.value.filter(p => p.status === 'cancelled').length }
-])
+// ── COMPUTED ───────────────────────────────────────
+const totalItems = computed(() => cart.value.reduce((sum, item) => sum + item.quantity, 0))
+const grandTotal = computed(() => cart.value.reduce((sum, item) => sum + (item.unit_cost * item.quantity), 0))
 
-const listTotal = computed(() =>
-  purchaseOrders.value.reduce((s, p) => s + Number(p.total_amount || 0), 0)
-)
-
+// ── METHODS ────────────────────────────────────────
 const loadPOs = async () => {
   loadingPOs.value = true
   try {
-    const p = new URLSearchParams({ pageSize: 500 })
-    if (listSearch.value)         p.set('search',      listSearch.value)
-    if (listStatusFilter.value)   p.set('status',      listStatusFilter.value)
-    if (listSupplierFilter.value) p.set('supplier_id', listSupplierFilter.value)
-    const res = await api(`/purchase-orders?${p}`)
-    if (res.success) purchaseOrders.value = res.data
-  } catch (e) {
-    console.error(e)
-    notify('ໂຫຼດລາຍການບໍ່ສໍາເລັດ', 'error')
+    const params = new URLSearchParams({ pageSize: 100 })
+    if (listSearch.value) params.set('search', listSearch.value)
+    if (listStatusFilter.value) params.set('status', listStatusFilter.value)
+    if (listSupplierFilter.value) params.set('supplier_id', listSupplierFilter.value)
+
+    const res = await api(`/purchase-orders?${params}`)
+    if (res.success) {
+      purchaseOrders.value = res.data
+      calculateStats(res.data)
+    }
+  } catch (err) {
+    showToast('Failed to load purchase orders', 'error')
   } finally {
     loadingPOs.value = false
   }
 }
 
-// Status transitions
-const allowedActions = (po) => {
-  const map = {
-    draft:     [
-      { status: 'received',  label: 'ຮັບສິນຄ້າ',       color: 'blue',   icon: 'mdi-package-down'           },
-      { status: 'cancelled', label: 'ຍົກເລີກ',          color: 'error',  icon: 'mdi-close-circle-outline'   }
-    ],
-    received:  [
-      { status: 'cancelled', label: 'ຍົກເລີກ',           color: 'error',   icon: 'mdi-close-circle-outline'  }
-    ],
-    cancelled: []
-  }
-  return map[po?.status] ?? []
+const calculateStats = (data) => {
+  const stats = [
+    { label: 'ທັງໝົດ', icon: 'mdi-file-document-outline', color: 'primary', count: data.length },
+    { label: 'ຮ່າງ', icon: 'mdi-file-edit-outline', color: 'grey', count: data.filter(i => i.status === 'draft').length },
+    { label: 'ສັ່ງແລ້ວ', icon: 'mdi-send-outline', color: 'info', count: data.filter(i => i.status === 'sent').length },
+    { label: 'ໄດ້ຮັບແລ້ວ', icon: 'mdi-package-variant-closed', color: 'blue', count: data.filter(i => i.status === 'received').length }
+  ]
+  listStats.value = stats
+  listTotal.value = data.reduce((sum, i) => sum + Number(i.total_amount), 0)
 }
 
-const statusDialog = ref(false)
-const statusTarget = ref(null)
-const statusNew = ref(null)
-const updatingStatusFlag = ref(false)
+const loadSuppliers = async () => {
+  try {
+    const res = await api('/suppliers?pageSize=1000')
+    if (res.success) suppliers.value = res.data
+  } catch (err) {}
+}
 
-const changeStatus = (po, newStatus) => {
-  statusTarget.value = po
+const loadCategories = async () => {
+  try {
+    const res = await api('/categories?pageSize=1000')
+    if (res.success) categories.value = res.data
+  } catch (err) {}
+}
+
+const loadProducts = async () => {
+  loadingProducts.value = true
+  try {
+    const params = new URLSearchParams({ pageSize: 200 })
+    if (productSearch.value) params.set('search', productSearch.value)
+    if (categoryFilter.value) params.set('category_id', categoryFilter.value)
+    const res = await api(`/products?${params}`)
+    if (res.success) products.value = res.data
+  } catch (err) {}
+  finally { loadingProducts.value = false }
+}
+
+// Cart logic
+const quickAddToCart = (product) => {
+  const uid = `p-${product.id}`
+  const existing = cart.value.find(i => i.uid === uid)
+  if (existing) {
+    existing.quantity++
+  } else {
+    cart.value.push({
+      uid,
+      product_id: product.id,
+      product,
+      quantity: 1,
+      unit_cost: product.cost_price || 0,
+      variant_id: null,
+      variantLabel: ''
+    })
+  }
+}
+
+const isInCart = (id) => cart.value.some(i => i.product_id === id)
+const cartQty = (id) => cart.value.find(i => i.product_id === id)?.quantity || 0
+const getProductStock = (p) => {
+  if (p.variants?.length) return p.variants.reduce((sum, v) => sum + (v.quantity_in_stock || 0), 0)
+  return p.quantity_in_stock || 0
+}
+
+const decQty = (idx) => {
+  if (cart.value[idx].quantity > 1) cart.value[idx].quantity--
+  else removeItem(idx)
+}
+const removeItem = (idx) => cart.value.splice(idx, 1)
+const clearCart = () => cart.value = []
+
+const syncVariantLabel = (item, vId) => {
+  if (!vId) {
+    item.variantLabel = ''
+    return
+  }
+  const variant = item.product.variants.find(v => v.id === vId)
+  if (variant) {
+    item.variantLabel = [variant.color, variant.size].filter(Boolean).join('/') || 'Default'
+    item.unit_cost = variant.cost_price || item.product.cost_price || 0
+  }
+}
+
+// Form Submission
+const submitPO = async () => {
+  if (!selectedSupplier.value || !cart.value.length) return
+  submitting.value = true
+  try {
+    const payload = {
+      supplier_id: selectedSupplier.value.id,
+      po_number: invoiceNumber.value || undefined,
+      order_date: receiveDate.value,
+      status: importStatus.value,
+      notes: poNote.value,
+      items: cart.value.map(i => ({
+        product_id: i.product_id,
+        variant_id: i.variant_id,
+        quantity_ordered: i.quantity,
+        unit_cost: i.unit_cost
+      }))
+    }
+    const res = await api('/purchase-orders', { method: 'POST', body: payload })
+    if (res.success) {
+      createdPO.value = res.data
+      successDialog.value = true
+    } else {
+      showToast(res.message || 'Error creating PO', 'error')
+    }
+  } catch (err) {
+    showToast('A server error occurred', 'error')
+  } finally {
+    submitting.value = false
+  }
+}
+
+const resetForm = () => {
+  selectedSupplier.value = null
+  invoiceNumber.value = ''
+  receiveDate.value = new Date().toISOString().split('T')[0]
+  importStatus.value = 'draft'
+  poNote.value = ''
+  cart.value = []
+  activeTab.value = 'list'
+  loadPOs()
+}
+
+// Status Management
+const allowedActions = (item) => {
+  if (item.status === 'draft') return [
+    { label: 'ຢືນຢັນການສັ່ງ', status: 'sent', icon: 'mdi-send-outline', color: 'info' },
+    { label: 'ຍົກເລີກ', status: 'cancelled', icon: 'mdi-close-circle-outline', color: 'error' }
+  ]
+  if (item.status === 'sent') return [
+    { label: 'ໄດ້ຮັບສິນຄ້າແລ້ວ', status: 'received', icon: 'mdi-package-variant-closed', color: 'blue' },
+    { label: 'ຍົກເລີກ', status: 'cancelled', icon: 'mdi-close-circle-outline', color: 'error' }
+  ]
+  return []
+}
+
+const changeStatus = (item, newStatus) => {
+  statusTarget.value = item
   statusNew.value = newStatus
   statusDialog.value = true
 }
 
 const confirmChangeStatus = async () => {
-  if (!statusTarget.value || !statusNew.value) return
-  const po = statusTarget.value
-  const newStatus = statusNew.value
-
-  updatingId.value     = po.id
-  updatingStatus.value = newStatus
+  if (!statusTarget.value) return
   updatingStatusFlag.value = true
-
+  updatingId.value = statusTarget.value.id
+  updatingStatus.value = statusNew.value
   try {
-    const res = await api(`/purchase-orders/${po.id}/status`, { method: 'PUT', body: { status: newStatus } })
+    const res = await api(`/purchase-orders/${statusTarget.value.id}/status`, {
+      method: 'PUT',
+      body: { status: statusNew.value }
+    })
     if (res.success) {
-      notify('ອັບເດດສະຖານະສໍາເລັດ', 'success')
-      po.status = newStatus
-      if (detailPO.value?.id === po.id) detailPO.value.status = newStatus
+      showToast(`Updated to ${importStatusLabel(statusNew.value)}`, 'success')
+      loadPOs()
+      if (detailDialog.value && detailPO.value?.id === statusTarget.value.id) {
+        detailPO.value = { ...detailPO.value, status: statusNew.value }
+      }
       statusDialog.value = false
-    } else {
-      notify(res.message || 'ອັບເດດບໍ່ສໍາເລັດ', 'error')
     }
-  } catch (e) {
-    console.error(e)
-    notify('ເກີດຂໍ້ຜິດພາດ', 'error')
+  } catch (err) {
+    showToast('Failed to update status', 'error')
   } finally {
-    updatingId.value     = null
-    updatingStatus.value = null
     updatingStatusFlag.value = false
+    updatingId.value = null
+    updatingStatus.value = null
   }
 }
 
-// Detail dialog
-const detailDialog = ref(false)
-const detailPO     = ref(null)
-
-const openDetail = async (po) => {
-  detailPO.value  = null
-  detailDialog.value = true
-  try {
-    const res = await api(`/purchase-orders/${po.id}`)
-    if (res.success) detailPO.value = res.data
-    else detailPO.value = po
-  } catch (e) { detailPO.value = po }
+// Delete Logic
+const openDeleteConfirm = (item) => {
+  deleteTarget.value = item
+  deleteDialog.value = true
 }
-
-// Delete
-const deleteDialog = ref(false)
-const deleteTarget = ref(null)
-const deleting     = ref(false)
-
-const openDeleteConfirm = (po) => { deleteTarget.value = po; deleteDialog.value = true }
-
 const confirmDelete = async () => {
+  if (!deleteTarget.value) return
   deleting.value = true
   try {
     const res = await api(`/purchase-orders/${deleteTarget.value.id}`, { method: 'DELETE' })
     if (res.success) {
-      notify('ລົບໃບສັ່ງຊື້ສໍາເລັດ', 'success')
+      showToast('Deleted successfully', 'success')
+      loadPOs()
       deleteDialog.value = false
-      purchaseOrders.value = purchaseOrders.value.filter(p => p.id !== deleteTarget.value.id)
-    } else {
-      notify(res.message || 'ລົບບໍ່ສໍາເລັດ', 'error')
     }
-  } catch (e) {
-    console.error(e)
-    notify('ເກີດຂໍ້ຜິດພາດ', 'error')
+  } catch (err) {
+    showToast('Failed to delete', 'error')
   } finally {
     deleting.value = false
   }
 }
 
-// ══ HELPERS ═══════════════════════════════════════════════════════
-const formatCurrency = (val) =>
-  val != null
-    ? new Intl.NumberFormat('lo-LA', { style: 'currency', currency: 'LAK' }).format(val)
-    : '—'
-
-const formatDateOnly = (val) =>
-  val ? new Date(val).toLocaleDateString('lo-LA', { day: '2-digit', month: 'short', year: 'numeric' }) : '—'
-
-const importStatusColor = (s) => ({
-  draft: 'grey', received: 'blue', completed: 'green', cancelled: 'red'
-}[s] ?? 'grey')
-
-const importStatusIcon = (s) => ({
-  draft: 'mdi-file-outline', received: 'mdi-package-down',
-  completed: 'mdi-check-circle-outline', cancelled: 'mdi-close-circle-outline'
-}[s] ?? '')
-
-const importStatusLabel = (s) => ({
-  draft: 'ຮ່າງ', received: 'ໄດ້ຮັບສິນຄ້າ', cancelled: 'ຍົກເລີກ'
-}[s] ?? s)
-
-// Print
-const printPO = (id) => {
-  if (!id) return
-  window.open(`/purchase-orders/print?id=${id}`, '_blank')
+const openDetail = async (item) => {
+  try {
+    const res = await api(`/purchase-orders/${item.id}`)
+    if (res.success) {
+      detailPO.value = res.data
+      detailDialog.value = true
+    }
+  } catch (err) {
+    showToast('Failed to load detail', 'error')
+  }
 }
 
-// Navigation to Import Page
-const router = useRouter()
 const goToImport = (item) => {
-  if (!item.po_number) return
   router.push({ path: '/imports', query: { search: item.po_number } })
 }
 
-// Snackbar
-const snackbar = ref({ show: false, message: '', color: 'success' })
-const notify   = (message, color = 'success') => { snackbar.value = { show: true, message, color } }
+const printPO = (id) => {
+  window.open(`/purchase-orders/print?id=${id}`, '_blank')
+}
 
-// ══ INIT ═════════════════════════════════════════════════════════
+// Display helpers
+const formatCurrency = (v) => v != null ? new Intl.NumberFormat('lo-LA', { style: 'currency', currency: 'LAK' }).format(v) : '—'
+const formatDateOnly = (v) => v ? new Date(v).toLocaleDateString('lo-LA', { day: '2-digit', month: 'short', year: 'numeric' }) : '—'
+const importStatusColor = (s) => ({ draft: 'grey', sent: 'info', received: 'blue', completed: 'success', cancelled: 'error' }[s] ?? 'grey')
+const importStatusIcon = (s) => ({ draft: 'mdi-file-edit-outline', sent: 'mdi-send-outline', received: 'mdi-package-variant-closed', completed: 'mdi-check-circle-outline', cancelled: 'mdi-close-circle-outline' }[s] ?? 'mdi-help-circle-outline')
+const importStatusLabel = (s) => ({ draft: 'ຮ່າງ', sent: 'ສັ່ງແລ້ວ', received: 'ໄດ້ຮັບແລ້ວ', completed: 'ສໍາເລັດ', cancelled: 'ຍົກເລີກ' }[s] ?? s)
+
 onMounted(() => {
-  Promise.all([loadProducts(), loadCategories(), loadSuppliers()])
+  loadPOs()
+  loadSuppliers()
+  loadCategories()
+  loadProducts()
 })
 </script>
 
 <style scoped>
 .po-page { width: 100%; }
-
-.po-header {
-  border-bottom: 1px solid rgba(var(--v-border-color), var(--v-border-opacity));
-  padding-bottom: 16px;
-}
-
 .header-icon-wrap {
-  width: 48px;
-  height: 48px;
+  width: 48px; height: 48px;
+  background: linear-gradient(135deg, #1976D2, #64B5F6);
   border-radius: 12px;
-  background: linear-gradient(135deg, #1565C0, #1976D2);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center;
 }
-
-/* Product picker */
-.product-scroll-area {
-  max-height: calc(100vh - 270px);
-  overflow-y: auto;
-  min-height: 300px;
+.product-scroll-area { max-height: 520px; overflow-y: auto; }
+.product-card { border: 1px solid rgba(var(--v-border-color), 0.1); transition: all 0.2s ease; }
+.product-card--active { border-color: rgb(var(--v-theme-primary)); background-color: rgba(var(--v-theme-primary), 0.03); }
+.cart-item--bordered { border-bottom: 1px dashed rgba(var(--v-border-color), 0.2); }
+.qty-control { border: 1px solid rgba(var(--v-border-color), 0.3); border-radius: 8px; padding: 2px; }
+.qty-input { width: 40px; text-align: center; border: none; font-size: 13px; font-weight: bold; background: transparent; }
+.qty-input:focus { outline: none; }
+.detail-label { font-size: 11px; color: rgba(var(--v-theme-on-surface), 0.6); text-transform: uppercase; letter-spacing: 0.5px; }
+.detail-value { font-size: 14px; font-weight: 600; }
+.success-anim { animation: bounceIn 0.8s cubic-bezier(0.68, -0.55, 0.265, 1.55); }
+@keyframes bounceIn {
+  from { opacity: 0; transform: scale(0.3); }
+  50% { opacity: 0.9; transform: scale(1.1); }
+  to { opacity: 1; transform: scale(1); }
 }
-
-.product-card {
-  cursor: pointer;
-  border: 2px solid transparent;
-  transition: transform 0.15s ease, box-shadow 0.15s ease, border-color 0.15s ease;
-}
-.product-card:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 6px 18px rgba(0,0,0,0.10) !important;
-}
-.product-card--active {
-  border-color: rgb(var(--v-theme-primary));
-  background: rgba(var(--v-theme-primary), 0.04);
-}
-
-.cursor-pointer { cursor: pointer; }
-
-/* Cart items */
-.cart-item { transition: background 0.12s; }
-.cart-item--bordered {
-  border-bottom: 1px solid rgba(var(--v-border-color), var(--v-border-opacity));
-}
-
-.qty-control {
-  border: 1px solid rgba(var(--v-border-color), 0.5);
-  border-radius: 8px;
-  overflow: hidden;
-}
-.qty-input {
-  width: 42px;
-  text-align: center;
-  border: none;
-  outline: none;
-  font-size: 13px;
-  font-weight: 600;
-  background: transparent;
-  padding: 4px 2px;
-  color: inherit;
-}
-.qty-input::-webkit-inner-spin-button,
-.qty-input::-webkit-outer-spin-button { -webkit-appearance: none; }
-
-/* Detail */
-.detail-label {
-  font-size: 11px;
-  color: rgba(var(--v-theme-on-surface), 0.55);
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-  margin-bottom: 2px;
-}
-.detail-value { font-size: 14px; font-weight: 500; }
-
-/* Success animation */
-.success-anim { animation: pop 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
-@keyframes pop {
-  0%   { transform: scale(0.4); opacity: 0; }
-  100% { transform: scale(1);   opacity: 1; }
-}
-
-.border { border: 1px solid rgba(var(--v-border-color), var(--v-border-opacity)) !important; }
 </style>

@@ -1,10 +1,10 @@
 <template>
-  <v-card rounded="lg" elevation="2">
+  <v-card rounded="lg" elevation="2" v-if="hasPermission('categories.view')">
     <!-- Header -->
     <v-card-title class="d-flex align-center py-3 px-4">
       <span class="text-h6 font-weight-bold">Categories</span>
       <v-spacer></v-spacer>
-      <v-btn color="primary" prepend-icon="mdi-plus" @click="openAddDialog">Add Category</v-btn>
+      <v-btn v-if="hasPermission('categories.create')" color="primary" prepend-icon="mdi-plus" @click="openAddDialog">Add Category</v-btn>
     </v-card-title>
     <v-divider></v-divider>
 
@@ -23,8 +23,8 @@
       </template>
 
       <template v-slot:item.actions="{ item }">
-        <v-btn icon="mdi-pencil" variant="text" size="small" color="primary" @click="openEditDialog(item)"></v-btn>
-        <v-btn icon="mdi-delete" variant="text" size="small" color="error" @click="openDeleteDialog(item)"></v-btn>
+        <v-btn v-if="hasPermission('categories.edit')" icon="mdi-pencil" variant="text" size="small" color="primary" @click="openEditDialog(item)"></v-btn>
+        <v-btn v-if="hasPermission('categories.delete')" icon="mdi-delete" variant="text" size="small" color="error" @click="openDeleteDialog(item)"></v-btn>
       </template>
     </v-data-table>
 
@@ -112,21 +112,16 @@
         </v-card-actions>
       </v-card>
     </v-dialog>
-
-    <!-- ── Snackbar ── -->
-    <v-snackbar v-model="snackbar.show" :color="snackbar.color" timeout="3000" location="bottom right">
-      {{ snackbar.message }}
-      <template v-slot:actions>
-        <v-btn variant="text" icon="mdi-close" @click="snackbar.show = false"></v-btn>
-      </template>
-    </v-snackbar>
   </v-card>
 </template>
 
 <script setup>
 import { ref, computed, onMounted } from 'vue'
+import { showToast } from '~/composables/useToast'
 
 const api = useApi()
+const { hasPermission } = usePermissions()
+const { showToast } = useApi()
 
 // ── State ──────────────────────────────────────────────
 const categories = ref([])
@@ -145,9 +140,6 @@ const deleteDialog     = ref(false)
 const deleting         = ref(false)
 const selectedCategory = ref(null)
 
-// Snackbar
-const snackbar = ref({ show: false, message: '', color: 'success' })
-
 // ── Table headers ──────────────────────────────────────
 const headers = [
   { title: 'ID',      key: 'id',                  width: 80 },
@@ -164,7 +156,7 @@ const parentOptions = computed(() =>
 
 // ── Helpers ────────────────────────────────────────────
 const notify = (message, color = 'success') => {
-  snackbar.value = { show: true, message, color }
+  showToast(message, color)
 }
 
 const resetForm = () => {
@@ -180,8 +172,7 @@ const loadCategories = async () => {
     const res = await api('/categories')
     if (res.success) categories.value = res.data
   } catch (err) {
-    console.error(err)
-    notify('Failed to load categories', 'error')
+    // Error is handled globally by useApi
   } finally {
     loading.value = false
   }
@@ -228,15 +219,12 @@ const submitForm = async () => {
     }
 
     if (res.success) {
-      notify(isEditing.value ? 'Category updated successfully' : 'Category created successfully')
+      notify(isEditing.value ? 'Category updated' : 'Category added')
       closeFormDialog()
       loadCategories()
-    } else {
-      notify(res.message || 'Operation failed', 'error')
     }
   } catch (err) {
-    console.error(err)
-    notify('An unexpected error occurred', 'error')
+    // Error is handled globally by useApi
   } finally {
     saving.value = false
   }
@@ -252,15 +240,12 @@ const confirmDelete = async () => {
   try {
     const res = await api(`/categories/${selectedCategory.value.id}`, { method: 'DELETE' })
     if (res.success) {
-      notify('Category deleted successfully')
+      notify('Category deleted')
       deleteDialog.value = false
       loadCategories()
-    } else {
-      notify(res.message || 'Failed to delete category', 'error')
     }
   } catch (err) {
-    console.error(err)
-    notify('An unexpected error occurred', 'error')
+    // Error is handled globally by useApi
   } finally {
     deleting.value = false
   }

@@ -13,11 +13,17 @@ import purchaseOrderRoutes from './purchaseOrder.routes.js';
 import importRoutes from './import.routes.js';
 import promotionRoutes from './promotion.routes.js';
 import saleRoutes from './sale.routes.js';
-import returnRoutes from './return.routes.js';
+import refundRoutes from './refund.routes.js';
 import paymentRoutes from './payment.routes.js';
 
 const router = Router();
 
+// --- Basic Routes ---
+router.get('/', (req, res) => {
+  res.json({ message: 'Welcome to Perfect Store API' });
+});
+
+// --- Feature Routes ---
 router.use('/auth', authRoutes);
 router.use('/users', userRoutes);
 router.use('/users', userProfileRoutes); // mounts at /users/:userId/profile
@@ -31,7 +37,7 @@ router.use('/purchase-orders', purchaseOrderRoutes);
 router.use('/imports', importRoutes);
 router.use('/promotions', promotionRoutes);
 router.use('/sales', saleRoutes);
-router.use('/returns', returnRoutes);
 router.use('/payments', paymentRoutes);
+router.use('/refunds', refundRoutes);
 
 export default router;

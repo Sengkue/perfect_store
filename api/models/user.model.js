@@ -28,6 +28,11 @@ const User = sequelize.define('users', {
     type: DataTypes.BOOLEAN,
     defaultValue: true
   }
+}, {
+  indexes: [
+    { fields: ['username'] },
+    { fields: ['role'] }
+  ]
 });
 
 export default User;

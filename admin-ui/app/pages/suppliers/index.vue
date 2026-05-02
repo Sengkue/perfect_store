@@ -1,5 +1,5 @@
 <template>
-  <v-card rounded="lg" elevation="2">
+  <v-card rounded="lg" elevation="2" v-if="hasPermission('suppliers.view')">
     <!-- ── Header ── -->
     <v-card-title class="d-flex align-center py-3 px-4 flex-wrap gap-2">
       <div class="d-flex align-center">
@@ -19,7 +19,7 @@
         style="max-width:220px"
         @update:model-value="debouncedLoad"
       />
-      <v-btn color="primary" prepend-icon="mdi-plus" @click="openAddDialog">
+      <v-btn v-if="hasPermission('suppliers.create')" color="primary" prepend-icon="mdi-plus" @click="openAddDialog">
         Add Supplier
       </v-btn>
     </v-card-title>
@@ -77,12 +77,12 @@
         <div class="d-flex align-center justify-end gap-1">
           <v-tooltip text="Edit Supplier" location="top">
             <template #activator="{ props }">
-              <v-btn v-bind="props" icon="mdi-pencil" variant="text" size="small" color="primary" @click="openEditDialog(item)" />
-            </template>
-          </v-tooltip>
-          <v-tooltip text="Delete Supplier" location="top">
-            <template #activator="{ props }">
-              <v-btn v-bind="props" icon="mdi-delete" variant="text" size="small" color="error" @click="openDeleteDialog(item)" />
+            <v-btn v-if="hasPermission('suppliers.edit')" v-bind="props" icon="mdi-pencil" variant="text" size="small" color="primary" @click="openEditDialog(item)" />
+          </template>
+        </v-tooltip>
+        <v-tooltip v-if="hasPermission('suppliers.delete')" text="Delete Supplier" location="top">
+          <template #activator="{ props }">
+            <v-btn v-bind="props" icon="mdi-delete" variant="text" size="small" color="error" @click="openDeleteDialog(item)" />
             </template>
           </v-tooltip>
         </div>
@@ -94,7 +94,7 @@
           <v-icon size="64" color="grey-lighten-2">mdi-handshake</v-icon>
           <div class="text-h6 text-grey mt-3">No suppliers found</div>
           <div class="text-body-2 text-medium-emphasis mb-4">Add your first supplier to get started</div>
-          <v-btn color="primary" prepend-icon="mdi-plus" @click="openAddDialog">Add Supplier</v-btn>
+          <v-btn v-if="hasPermission('suppliers.create')" color="primary" prepend-icon="mdi-plus" @click="openAddDialog">Add Supplier</v-btn>
         </div>
       </template>
     </v-data-table>
@@ -237,20 +237,16 @@
       </v-card>
     </v-dialog>
 
-    <!-- Snackbar -->
-    <v-snackbar v-model="snackbar.show" :color="snackbar.color" timeout="3000" location="bottom right">
-      {{ snackbar.message }}
-      <template #actions>
-        <v-btn variant="text" icon="mdi-close" @click="snackbar.show = false" />
-      </template>
-    </v-snackbar>
   </v-card>
 </template>
 
 <script setup>
 import { ref, onMounted } from 'vue'
+import { showToast } from '~/composables/useToast'
 
 const api = useApi()
+const { hasPermission } = usePermissions()
+const { showToast } = useApi()
 
 // ── State ──────────────────────────────────────────────
 const suppliers  = ref([])
@@ -267,12 +263,7 @@ const editingId  = ref(null)
 const form       = ref(emptyForm())
 
 // Delete dialog
-const deleteDialog      = ref(false)
-const deleting          = ref(false)
 const selectedSupplier  = ref(null)
-
-// Snackbar
-const snackbar = ref({ show: false, message: '', color: 'success' })
 
 // ── Table headers ──────────────────────────────────────
 const headers = [
@@ -292,7 +283,7 @@ function emptyForm () {
 }
 
 const notify = (message, color = 'success') => {
-  snackbar.value = { show: true, message, color }
+  showToast(message, color)
 }
 
 let searchTimer = null
@@ -314,8 +305,7 @@ const loadSuppliers = async () => {
       if (res.pagination) pagination.value = res.pagination
     }
   } catch (err) {
-    console.error(err)
-    notify('Failed to load suppliers', 'error')
+    // Error is handled globally by useApi
   } finally {
     loading.value = false
   }
@@ -370,12 +360,9 @@ const submitForm = async () => {
       notify(isEditing.value ? 'Supplier updated successfully' : 'Supplier added successfully')
       closeFormDialog()
       loadSuppliers()
-    } else {
-      notify(res.message || 'Operation failed', 'error')
     }
   } catch (err) {
-    console.error(err)
-    notify('An unexpected error occurred', 'error')
+    // Error is handled globally by useApi
   } finally {
     saving.value = false
   }
@@ -394,12 +381,9 @@ const confirmDelete = async () => {
       notify('Supplier deleted successfully')
       deleteDialog.value = false
       loadSuppliers()
-    } else {
-      notify(res.message || 'Delete failed', 'error')
     }
   } catch (err) {
-    console.error(err)
-    notify('An unexpected error occurred', 'error')
+    // Error is handled globally by useApi
   } finally {
     deleting.value = false
   }

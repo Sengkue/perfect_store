@@ -40,6 +40,13 @@ const Import = sequelize.define('imports', {
     type: DataTypes.ENUM('draft', 'received', 'completed', 'cancelled'),
     defaultValue: 'draft'
   }
+}, {
+  indexes: [
+    { fields: ['purchase_order_id'] },
+    { fields: ['supplier_id'] },
+    { fields: ['status'] },
+    { fields: ['invoice_number'] }
+  ]
 });
 
 export default Import;

@@ -34,9 +34,9 @@ const defaultPermissions = [
   { name: 'sales.create', display_name: 'ເຮັດການຂາຍ', module: 'Sales', description: 'ດຳເນີນການຂາຍສິນຄ້າ (POS)' },
   { name: 'sales.delete', display_name: 'ລຶບລາຍການຂາຍ', module: 'Sales', description: 'ລຶບບັນທຶກການຂາຍທີ່ຍັງບໍ່ທຳສຳເລັດ' },
   { name: 'sales.report', display_name: 'ເບິ່ງລາຍງານການຂາຍ', module: 'Sales', description: 'ເບິ່ງລາຍງານລາຍຮັບ ແລະ ວິເຄາະການຂາຍ' },
-  // Returns
-  { name: 'returns.view', display_name: 'ເບິ່ງການຄືນສິນຄ້າ', module: 'Returns', description: 'ເບິ່ງລາຍການຄືນສິນຄ້າ ແລະ ສົ່ງເງິນຄືນ' },
-  { name: 'returns.create', display_name: 'ດຳເນີນການຄືນສິນຄ້າ', module: 'Returns', description: 'ສ້າງລາຍການຄືນສິນຄ້າ ແລະ ຄືນເງິນ' },
+  // Refunds
+  { name: 'refunds.view', display_name: 'ເບິ່ງການຄືນສິນຄ້າ', module: 'Refunds', description: 'ເບິ່ງລາຍການຄືນສິນຄ້າ ແລະ ສົ່ງເງິນຄືນ' },
+  { name: 'refunds.create', display_name: 'ດຳເນີນການຄືນສິນຄ້າ', module: 'Refunds', description: 'ສ້າງລາຍການຄືນສິນຄ້າ ແລະ ຄືນເງິນ' },
   // Customers
   { name: 'customers.view', display_name: 'ເບິ່ງລູກຄ້າ', module: 'Customers', description: 'ເບິ່ງລາຍຊື່ລູກຄ້າທັງໝົດ' },
   { name: 'customers.manage', display_name: 'ຈັດການລູກຄ້າ', module: 'Customers', description: 'ສ້າງ, ແກ້ໄຂ, ແລະ ລຶບຂໍ້ມູນລູກຄ້າ' },
@@ -62,14 +62,14 @@ const roleDefaults = {
     'purchase_orders.view', 'purchase_orders.create', 'purchase_orders.approve',
     'imports.view', 'imports.create', 'imports.complete',
     'sales.view', 'sales.create', 'sales.report',
-    'returns.view', 'returns.create',
+    'refunds.view', 'refunds.create',
     'customers.view', 'customers.manage',
   ],
   staff: [
     'dashboard.view',
     'pos.access',
     'sales.view', 'sales.create',
-    'returns.view',
+    'refunds.view',
     'customers.view',
   ]
 };
