@@ -1,5 +1,9 @@
 import { Router } from 'express';
-import { getDashboardSummary, getSalesChart, getInventoryStatus, getCustomerReport, getStaffReport, getTopProducts, getExpenseReport } from '../controllers/report.controller.js';
+import { 
+  getDashboardSummary, getSalesChart, getInventoryStatus, 
+  getCustomerReport, getStaffReport, getTopProducts, 
+  getExpenseReport, getShiftReport, getTaxReport, getRefundReport 
+} from '../controllers/report.controller.js';
 import auth from '../middleware/auth.js';
 import permissionCheck from '../middleware/permissionCheck.js';
 
@@ -14,5 +18,8 @@ router.get('/customers', permissionCheck('sales.report'), getCustomerReport);
 router.get('/staff', permissionCheck('sales.report'), getStaffReport);
 router.get('/top-products', permissionCheck('sales.report'), getTopProducts);
 router.get('/expenses', permissionCheck('sales.report'), getExpenseReport);
+router.get('/shift', permissionCheck('reports.shift'), getShiftReport);
+router.get('/tax', permissionCheck('reports.tax'), getTaxReport);
+router.get('/refunds', permissionCheck('reports.refunds'), getRefundReport);
 
 export default router;

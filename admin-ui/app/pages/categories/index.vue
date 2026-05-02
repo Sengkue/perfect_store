@@ -1,42 +1,62 @@
 <template>
-  <v-card rounded="lg" elevation="2" v-if="hasPermission('categories.view')">
-    <!-- Header -->
-    <v-card-title class="d-flex align-center py-3 px-4 bg-primary text-white">
-      <v-icon icon="mdi-format-list-bulleted" class="me-2"></v-icon>
-      <span class="text-h6 font-weight-bold">ໝວດໝູ່ສິນຄ້າ</span>
-      <v-spacer></v-spacer>
-      <v-btn 
-        v-if="hasPermission('categories.create')" 
-        color="white" 
-        variant="elevated" 
-        class="text-primary font-weight-bold" 
-        prepend-icon="mdi-plus" 
-        @click="openAddDialog"
+  <v-container fluid class="pa-6" v-if="hasPermission('categories.view')">
+    <!-- ── Header Section ── -->
+    <v-row class="mb-6">
+      <v-col cols="12" class="d-flex align-center flex-wrap gap-3">
+        <div class="header-icon-container rounded-lg pa-3 me-3">
+          <v-icon color="primary" size="32">mdi-format-list-bulleted</v-icon>
+        </div>
+        <div>
+          <h1 class="text-h4 font-weight-black mb-1">ໝວດໝູ່ສິນຄ້າ</h1>
+          <p class="text-subtitle-1 text-medium-emphasis">ຈັດການ ແລະ ແບ່ງປະເພດສິນຄ້າພາຍໃນຮ້ານ</p>
+        </div>
+        <v-spacer></v-spacer>
+        <v-btn 
+          v-if="hasPermission('categories.create')" 
+          color="primary" 
+          variant="elevated" 
+          size="large"
+          class="rounded-lg px-6 font-weight-bold shadow-soft" 
+          prepend-icon="mdi-plus" 
+          @click="openAddDialog"
+        >
+          ເພີ່ມໝວດໝູ່ໃໝ່
+        </v-btn>
+      </v-col>
+    </v-row>
+
+    <!-- ── Data Table Section ── -->
+    <v-card border elevation="0" class="rounded-lg overflow-hidden shadow-soft">
+      <v-data-table
+        :headers="headers"
+        :items="categories"
+        :loading="loading"
+        hover
+        class="custom-table"
       >
-        ເພີ່ມໝວດໝູ່
-      </v-btn>
-    </v-card-title>
-    <v-divider></v-divider>
+        <template v-slot:item.id="{ item }">
+          <span class="text-caption text-medium-emphasis">#{{ item.id }}</span>
+        </template>
 
-    <!-- Data Table -->
-    <v-data-table
-      :headers="headers"
-      :items="categories"
-      :loading="loading"
-      hover
-    >
-      <template v-slot:item.parent="{ item }">
-        <v-chip v-if="item.parent" size="small" color="secondary" variant="tonal">
-          {{ item.parent.category_name }}
-        </v-chip>
-        <span v-else class="text-medium-emphasis text-caption">—</span>
-      </template>
+        <template v-slot:item.category_name="{ item }">
+          <span class="font-weight-bold text-primary">{{ item.category_name }}</span>
+        </template>
 
-      <template v-slot:item.actions="{ item }">
-        <v-btn v-if="hasPermission('categories.edit')" icon="mdi-pencil" variant="text" size="small" color="primary" @click="openEditDialog(item)"></v-btn>
-        <v-btn v-if="hasPermission('categories.delete')" icon="mdi-delete" variant="text" size="small" color="error" @click="openDeleteDialog(item)"></v-btn>
-      </template>
-    </v-data-table>
+        <template v-slot:item.parent="{ item }">
+          <v-chip v-if="item.parent" size="small" color="secondary" variant="tonal" class="font-weight-medium">
+            {{ item.parent.category_name }}
+          </v-chip>
+          <span v-else class="text-medium-emphasis text-caption">ໝວດໝູ່ຫຼັກ</span>
+        </template>
+
+        <template v-slot:item.actions="{ item }">
+          <div class="d-flex justify-end gap-2">
+            <v-btn v-if="hasPermission('categories.edit')" icon="mdi-pencil-outline" variant="tonal" size="small" color="primary" class="rounded-lg" @click="openEditDialog(item)"></v-btn>
+            <v-btn v-if="hasPermission('categories.delete')" icon="mdi-delete-outline" variant="tonal" size="small" color="error" class="rounded-lg" @click="openDeleteDialog(item)"></v-btn>
+          </div>
+        </template>
+      </v-data-table>
+    </v-card>
 
     <!-- ── Add / Edit Dialog ── -->
     <v-dialog v-model="formDialog" max-width="480" persistent>
@@ -122,7 +142,7 @@
         </v-card-actions>
       </v-card>
     </v-dialog>
-  </v-card>
+  </v-container>
 </template>
 
 <script setup>
@@ -263,3 +283,22 @@ const confirmDelete = async () => {
 // ── Init ───────────────────────────────────────────────
 onMounted(loadCategories)
 </script>
+
+<style scoped>
+.header-icon-container {
+  background-color: rgba(var(--v-theme-primary), 0.1);
+}
+
+.shadow-soft {
+  box-shadow: 0 4px 20px rgba(0,0,0,0.04) !important;
+}
+
+.custom-table :deep(th) {
+  font-weight: bold !important;
+  color: #555 !important;
+  background-color: #FAFAFA !important;
+  text-transform: uppercase;
+  font-size: 0.75rem !important;
+  letter-spacing: 0.05em;
+}
+</style>

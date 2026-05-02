@@ -1,47 +1,81 @@
 <template>
-  <v-card rounded="lg" elevation="2">
-    <!-- Header -->
-    <v-card-title class="d-flex align-center py-3 px-4 flex-wrap gap-2">
-      <span class="text-h6 font-weight-bold">Customers</span>
-      <v-spacer></v-spacer>
+  <v-container fluid class="pa-6">
+    <!-- ── Header Section ── -->
+    <v-row class="mb-6">
+      <v-col cols="12" class="d-flex align-center flex-wrap gap-3">
+        <div class="header-icon-container rounded-xl pa-3 me-3">
+          <v-icon color="primary" size="32">mdi-account-group</v-icon>
+        </div>
+        <div>
+          <h1 class="text-h4 font-weight-black mb-1">ຈັດການລູກຄ້າ</h1>
+          <p class="text-subtitle-1 text-medium-emphasis">ລາຍຊື່ລູກຄ້າ, ລະດັບສະມາຊິກ ແລະ ຄະແນນສະສົມ</p>
+        </div>
+        <v-spacer></v-spacer>
+        <v-btn 
+          v-if="hasPermission('customers.manage')" 
+          color="primary" 
+          variant="elevated" 
+          size="large"
+          class="rounded-xl px-6 font-weight-bold shadow-soft" 
+          prepend-icon="mdi-account-plus" 
+          @click="openAddDialog"
+        >
+          ເພີ່ມລູກຄ້າໃໝ່
+        </v-btn>
+      </v-col>
+    </v-row>
 
-      <!-- Search -->
-      <v-text-field
-        v-model="search"
-        prepend-inner-icon="mdi-magnify"
-        label="Search"
-        variant="outlined"
-        density="compact"
-        hide-details
-        style="max-width: 240px"
-        clearable
-        @update:modelValue="loadCustomers"
-      ></v-text-field>
+    <!-- ── Search & Filters Section ── -->
+    <v-card border elevation="0" class="rounded-xl mb-6 shadow-soft pa-4">
+      <v-row dense align="center">
+        <v-col cols="12" md="4">
+          <v-text-field
+            v-model="search"
+            placeholder="ຄົ້ນຫາຊື່, ເບີໂທ, ອີເມວ..."
+            prepend-inner-icon="mdi-magnify"
+            variant="outlined"
+            density="comfortable"
+            hide-details
+            rounded="lg"
+            clearable
+            @update:model-value="loadCustomers"
+          />
+        </v-col>
+        <v-col cols="12" md="3">
+          <v-select
+            v-model="tierFilter"
+            :items="tierOptions"
+            label="ລະດັບສະມາຊິກ"
+            variant="outlined"
+            density="comfortable"
+            hide-details
+            rounded="lg"
+            clearable
+            @update:model-value="loadCustomers"
+          />
+        </v-col>
+        <v-spacer></v-spacer>
+        <v-col cols="12" md="auto">
+          <div class="d-flex align-center gap-2 px-4 py-2 rounded-lg bg-grey-lighten-4">
+            <v-icon icon="mdi-account-star" color="amber-darken-1" size="20"></v-icon>
+            <span class="text-caption font-weight-bold text-grey-darken-2">ລູກຄ້າທັງໝົດ:</span>
+            <v-chip color="primary" size="small" variant="flat" class="font-weight-black">
+              {{ customers.length }}
+            </v-chip>
+          </div>
+        </v-col>
+      </v-row>
+    </v-card>
 
-      <!-- Tier filter -->
-      <v-select
-        v-model="tierFilter"
-        :items="tierOptions"
-        label="Tier"
-        variant="outlined"
-        density="compact"
-        hide-details
-        clearable
-        style="max-width: 150px"
-        @update:modelValue="loadCustomers"
-      ></v-select>
-
-      <v-btn v-if="hasPermission('customers.manage')" color="primary" prepend-icon="mdi-plus" @click="openAddDialog">Add Customer</v-btn>
-    </v-card-title>
-    <v-divider></v-divider>
-
-    <!-- Data Table -->
-    <v-data-table
-      :headers="headers"
-      :items="customers"
-      :loading="loading"
-      hover
-    >
+    <!-- ── Data Table Section ── -->
+    <v-card border elevation="0" class="rounded-xl overflow-hidden shadow-soft">
+      <v-data-table
+        :headers="headers"
+        :items="customers"
+        :loading="loading"
+        hover
+        class="custom-table"
+      >
       <!-- Tier chip -->
       <template v-slot:item.customer_tier="{ item }">
         <v-chip
@@ -66,8 +100,9 @@
         <v-btn v-if="hasPermission('customers.manage')" icon="mdi-delete" variant="text" size="small" color="error" @click="openDeleteDialog(item)"></v-btn>
       </template>
     </v-data-table>
+  </v-card>
 
-    <!-- ── Add / Edit Dialog ── -->
+  <!-- ── Add / Edit Dialog ── -->
     <v-dialog v-model="formDialog" max-width="560" persistent>
       <v-card rounded="lg">
         <v-card-title class="d-flex align-center pa-4">
@@ -190,7 +225,7 @@
       </v-card>
     </v-dialog>
 
-  </v-card>
+  </v-container>
 </template>
 
 <script setup>
@@ -366,3 +401,22 @@ const confirmDelete = async () => {
 // ── Init ───────────────────────────────────────────────
 onMounted(loadCustomers)
 </script>
+
+<style scoped>
+.header-icon-container {
+  background-color: rgba(var(--v-theme-primary), 0.1);
+}
+
+.shadow-soft {
+  box-shadow: 0 4px 20px rgba(0,0,0,0.04) !important;
+}
+
+.custom-table :deep(th) {
+  font-weight: bold !important;
+  color: #555 !important;
+  background-color: #FAFAFA !important;
+  text-transform: uppercase;
+  font-size: 0.75rem !important;
+  letter-spacing: 0.05em;
+}
+</style>

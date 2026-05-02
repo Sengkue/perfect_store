@@ -1,47 +1,69 @@
 <template>
-  <v-card rounded="lg" elevation="2" v-if="hasPermission('suppliers.view')">
-    <!-- ── Header ── -->
-    <v-card-title class="d-flex align-center py-3 px-4 flex-wrap gap-2">
-      <div class="d-flex align-center">
-        <v-icon icon="mdi-handshake" color="primary" class="me-2" />
-        <span class="text-h6 font-weight-bold">Suppliers</span>
-      </div>
-      <v-spacer />
+  <v-container fluid class="pa-6" v-if="hasPermission('suppliers.view')">
+    <!-- ── Header Section ── -->
+    <v-row class="mb-6">
+      <v-col cols="12" class="d-flex align-center flex-wrap gap-3">
+        <div class="header-icon-container rounded-xl pa-3 me-3">
+          <v-icon color="primary" size="32">mdi-handshake</v-icon>
+        </div>
+        <div>
+          <h1 class="text-h4 font-weight-black mb-1">ຈັດການຜູ້ສະໜອງ</h1>
+          <p class="text-subtitle-1 text-medium-emphasis">ລາຍຊື່ ແລະ ຂໍ້ມູນຕິດຕໍ່ຂອງບໍລິສັດຜູ້ສະໜອງສິນຄ້າ</p>
+        </div>
+        <v-spacer></v-spacer>
+        <v-btn 
+          v-if="hasPermission('suppliers.create')" 
+          color="primary" 
+          variant="elevated" 
+          size="large"
+          class="rounded-xl px-6 font-weight-bold shadow-soft" 
+          prepend-icon="mdi-plus" 
+          @click="openAddDialog"
+        >
+          ເພີ່ມຜູ້ສະໜອງໃໝ່
+        </v-btn>
+      </v-col>
+    </v-row>
 
-      <v-text-field
-        v-model="search"
-        placeholder="Search suppliers…"
-        prepend-inner-icon="mdi-magnify"
-        variant="outlined"
-        density="compact"
-        hide-details
-        clearable
-        style="max-width:220px"
-        @update:model-value="debouncedLoad"
-      />
-      <v-btn v-if="hasPermission('suppliers.create')" color="primary" prepend-icon="mdi-plus" @click="openAddDialog">
-        Add Supplier
-      </v-btn>
-    </v-card-title>
-    <v-divider />
+    <!-- ── Search & Stats Section ── -->
+    <v-card border elevation="0" class="rounded-xl mb-6 shadow-soft pa-4">
+      <v-row dense align="center">
+        <v-col cols="12" md="4">
+          <v-text-field
+            v-model="search"
+            placeholder="ຄົ້ນຫາຜູ້ສະໜອງ..."
+            prepend-inner-icon="mdi-magnify"
+            variant="outlined"
+            density="comfortable"
+            hide-details
+            rounded="lg"
+            clearable
+            @update:model-value="debouncedLoad"
+          />
+        </v-col>
+        <v-spacer></v-spacer>
+        <v-col cols="12" md="auto">
+          <div class="d-flex align-center gap-2 px-4 py-2 rounded-lg bg-grey-lighten-4">
+            <v-icon icon="mdi-account-group" color="grey-darken-1" size="20"></v-icon>
+            <span class="text-caption font-weight-bold text-grey-darken-2">ຜູ້ສະໜອງທັງໝົດ:</span>
+            <v-chip color="primary" size="small" variant="flat" class="font-weight-black">
+              {{ pagination.total || suppliers.length }}
+            </v-chip>
+          </div>
+        </v-col>
+      </v-row>
+    </v-card>
 
-    <!-- ── Stats strip ── -->
-    <div class="d-flex px-4 py-2 gap-6" style="background:rgba(var(--v-theme-surface-variant),.25)">
-      <div class="d-flex align-center gap-2">
-        <v-icon icon="mdi-handshake" color="primary" size="18" />
-        <span class="text-caption font-weight-medium">Total Suppliers:</span>
-        <v-chip color="primary" size="x-small" variant="tonal">{{ pagination.total || suppliers.length }}</v-chip>
-      </div>
-    </div>
-
-    <!-- ── Data Table ── -->
-    <v-data-table
-      :headers="headers"
-      :items="suppliers"
-      :loading="loading"
-      hover
-      items-per-page="15"
-    >
+    <!-- ── Data Table Section ── -->
+    <v-card border elevation="0" class="rounded-xl overflow-hidden shadow-soft">
+      <v-data-table
+        :headers="headers"
+        :items="suppliers"
+        :loading="loading"
+        hover
+        items-per-page="15"
+        class="custom-table"
+      >
       <!-- Supplier name with initial avatar -->
       <template #item.name="{ item }">
         <div class="d-flex align-center gap-3 py-1">
@@ -98,8 +120,9 @@
         </div>
       </template>
     </v-data-table>
+  </v-card>
 
-    <!-- ══════════════ ADD / EDIT DIALOG ══════════════ -->
+  <!-- ══════════════ ADD / EDIT DIALOG ══════════════ -->
     <v-dialog v-model="formDialog" max-width="560" persistent>
       <v-card rounded="lg">
         <v-card-title class="d-flex align-center pa-4">
@@ -237,7 +260,7 @@
       </v-card>
     </v-dialog>
 
-  </v-card>
+  </v-container>
 </template>
 
 <script setup>
@@ -393,3 +416,22 @@ const confirmDelete = async () => {
 // ── Init ───────────────────────────────────────────────
 onMounted(loadSuppliers)
 </script>
+
+<style scoped>
+.header-icon-container {
+  background-color: rgba(var(--v-theme-primary), 0.1);
+}
+
+.shadow-soft {
+  box-shadow: 0 4px 20px rgba(0,0,0,0.04) !important;
+}
+
+.custom-table :deep(th) {
+  font-weight: bold !important;
+  color: #555 !important;
+  background-color: #FAFAFA !important;
+  text-transform: uppercase;
+  font-size: 0.75rem !important;
+  letter-spacing: 0.05em;
+}
+</style>

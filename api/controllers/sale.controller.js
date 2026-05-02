@@ -1,5 +1,5 @@
 import {
-  Sale, SaleDetail, Customer, User, Promotion,
+  Sale, SaleDetail, Customer, User, UserProfile, Promotion,
   CustomerAddress, Product, ProductVariant, Payment
 } from '../models/index.js';
 import { getPagination, getPaginatedResponse, generateSaleNumber } from '../utils/helpers.js';
@@ -42,7 +42,12 @@ export const getAll = async (req, res, next) => {
       order: [['id', 'DESC']],
       include: [
         { model: Customer, as: 'customer', attributes: ['id', 'first_name', 'last_name', 'phone'] },
-        { model: User, as: 'user', attributes: ['id', 'username'] }
+        { 
+          model: User, 
+          as: 'user', 
+          attributes: ['id', 'username', 'role'],
+          include: [{ model: UserProfile, as: 'profile', attributes: ['first_name', 'last_name'] }]
+        }
       ]
     });
 
@@ -65,7 +70,12 @@ export const getById = async (req, res, next) => {
           as: 'customer',
           attributes: { exclude: ['password_hash'] }
         },
-        { model: User, as: 'user' },
+        { 
+          model: User, 
+          as: 'user',
+          attributes: ['id', 'username', 'role'],
+          include: [{ model: UserProfile, as: 'profile', attributes: ['first_name', 'last_name'] }]
+        },
         { model: Promotion, as: 'promotion' },
         {
           model: CustomerAddress,

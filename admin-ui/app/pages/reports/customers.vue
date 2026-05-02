@@ -2,7 +2,6 @@
   <v-container fluid class="pa-6">
     <v-row class="mb-6">
       <v-col cols="12" class="d-flex align-center">
-        <v-btn icon="mdi-arrow-left" variant="tonal" class="rounded-lg me-4" to="/reports"></v-btn>
         <div class="header-icon-container rounded-xl pa-3 me-4">
           <v-icon color="orange-darken-2" size="32">mdi-account-star</v-icon>
         </div>
@@ -13,13 +12,22 @@
         <v-spacer></v-spacer>
         <v-btn
           color="orange-darken-2"
-          variant="elevated"
+          variant="tonal"
           prepend-icon="mdi-refresh"
           @click="fetchCustomers"
           :loading="loading"
-          class="rounded-lg px-6"
+          class="rounded-lg px-6 mr-2"
         >
           ໂຫຼດໃໝ່
+        </v-btn>
+        <v-btn
+          color="success"
+          variant="elevated"
+          prepend-icon="mdi-file-excel"
+          @click="exportToExcel"
+          class="rounded-lg px-6"
+        >
+          Export
         </v-btn>
       </v-col>
     </v-row>
@@ -102,6 +110,8 @@
 
 <script setup>
 import { ref, computed, onMounted } from 'vue'
+import * as XLSX from 'xlsx'
+import { showToast } from '~/composables/useToast'
 
 const api = useApi()
 const loading = ref(false)
@@ -142,6 +152,35 @@ const rankColor = (i) => {
   if (i === 1) return 'grey-darken-1'  // Silver
   if (i === 2) return 'brown-darken-1' // Bronze
   return 'grey'
+}
+
+const exportToExcel = () => {
+  if (!customers.value.length) return
+  try {
+    const wsData = [
+      ['ລາຍງານລູກຄ້າ'],
+      ['ວັນທີ:', new Date().toLocaleString()],
+      [''],
+      ['ອັນດັບ', 'ລູກຄ້າ', 'ເບີໂທລະສັບ', 'ຈຳນວນອໍເດີ', 'ຍອດຊື້ທັງໝົດ', 'ສະເລ່ຍຕໍ່ອໍເດີ']
+    ]
+    customers.value.forEach((c, i) => {
+      wsData.push([
+        i + 1,
+        getCustomerName(c.customer),
+        c.customer?.phone || '-',
+        c.totalOrders,
+        c.totalSpent,
+        c.totalSpent / c.totalOrders
+      ])
+    })
+    const ws = XLSX.utils.aoa_to_sheet(wsData)
+    const wb = XLSX.utils.book_new()
+    XLSX.utils.book_append_sheet(wb, ws, 'Customers')
+    XLSX.writeFile(wb, `customer_report_${new Date().toISOString().slice(0, 10)}.xlsx`)
+    showToast('ສົ່ງອອກຂໍ້ມູນສຳເລັດ', 'success')
+  } catch (e) {
+    showToast('ສົ່ງອອກຂໍ້ມູນຫຼົ້ມເຫຼວ', 'error')
+  }
 }
 
 onMounted(() => {

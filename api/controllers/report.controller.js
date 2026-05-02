@@ -1,5 +1,5 @@
 import { Op, fn, col } from 'sequelize';
-import { Sale, SaleDetail, Product, ProductVariant, Customer, User, Supplier, PurchaseOrder, Import } from '../models/index.js';
+import { Sale, SaleDetail, Product, ProductVariant, Customer, User, Supplier, PurchaseOrder, Import, Refund } from '../models/index.js';
 
 export const getDashboardSummary = async (req, res, next) => {
   try {
@@ -267,4 +267,132 @@ export const getExpenseReport = async (req, res, next) => {
   } catch (error) {
     next(error);
   }
+};
+
+export const getShiftReport = async (req, res, next) => {
+  try {
+    const { date } = req.query;
+    const targetDate = date ? new Date(date) : new Date();
+    const start = new Date(targetDate);
+    start.setHours(0, 0, 0, 0);
+    const end = new Date(targetDate);
+    end.setHours(23, 59, 59, 999);
+
+    const where = {
+      sale_date: { [Op.between]: [start, end] },
+      sale_status: 'completed'
+    };
+
+    const paymentSummary = await Sale.findAll({
+      where,
+      attributes: [
+        'payment_method',
+        [fn('COUNT', col('id')), 'transactions'],
+        [fn('SUM', col('total_amount')), 'total']
+      ],
+      group: ['payment_method'],
+      raw: true
+    });
+
+    const overall = await Sale.findOne({
+      where,
+      attributes: [
+        [fn('COUNT', col('id')), 'totalTransactions'],
+        [fn('SUM', col('total_amount')), 'totalRevenue'],
+        [fn('AVG', col('total_amount')), 'avgTransaction']
+      ],
+      raw: true
+    });
+
+    res.json({
+      success: true,
+      data: {
+        date: formatDateToISO(targetDate),
+        paymentSummary,
+        overall
+      }
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const getTaxReport = async (req, res, next) => {
+  try {
+    const { startDate, endDate } = req.query;
+    const where = { sale_status: 'completed' };
+
+    if (startDate && endDate) {
+      const start = new Date(startDate);
+      start.setHours(0, 0, 0, 0);
+      const end = new Date(endDate);
+      end.setHours(23, 59, 59, 999);
+      where.sale_date = { [Op.between]: [start, end] };
+    }
+
+    const taxData = await Sale.findOne({
+      where,
+      attributes: [
+        [fn('SUM', col('subtotal')), 'netSales'],
+        [fn('SUM', col('tax_amount')), 'totalTax'],
+        [fn('SUM', col('total_amount')), 'grossSales']
+      ],
+      raw: true
+    });
+
+    res.json({
+      success: true,
+      data: taxData
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const getRefundReport = async (req, res, next) => {
+  try {
+    const { startDate, endDate } = req.query;
+    const where = {};
+
+    if (startDate && endDate) {
+      const start = new Date(startDate);
+      start.setHours(0, 0, 0, 0);
+      const end = new Date(endDate);
+      end.setHours(23, 59, 59, 999);
+      where.refund_date = { [Op.between]: [start, end] };
+    }
+
+    const refunds = await Refund.findAll({
+      where,
+      include: [
+        { model: Sale, as: 'sale', attributes: ['sale_number', 'total_amount'] },
+        { model: User, as: 'user', attributes: ['username'] }
+      ],
+      order: [['refund_date', 'DESC']]
+    });
+
+    const summary = await Refund.findOne({
+      where: { ...where, refund_status: 'completed' },
+      attributes: [
+        [fn('COUNT', col('id')), 'count'],
+        [fn('SUM', col('refund_amount')), 'totalAmount']
+      ],
+      raw: true
+    });
+
+    res.json({
+      success: true,
+      data: { refunds, summary }
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+// Helper for date formatting in backend
+const formatDateToISO = (date) => {
+  const y = date.getFullYear();
+  const m = String(date.getMonth() + 1).padStart(2, '0');
+  const d = String(date.getDate()).padStart(2, '0');
+  return `${y}-${m}-${d}`;
 };

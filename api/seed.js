@@ -84,8 +84,9 @@ const seedDatabase = async () => {
   try {
     console.log('--- Database Seeding Started ---');
     await sequelize.authenticate();
-    await sequelize.sync({ alter: true }); // Ensure schema is up to date
-    console.log('✅ Database connected and synced.');
+    // REMOVED: await sequelize.sync({ alter: true }); 
+    // Manual sync is risky in production. Run migrations first!
+    console.log('✅ Database connected.');
 
     // 1. Seed Shop Settings
     console.log('Seeding shop settings...');

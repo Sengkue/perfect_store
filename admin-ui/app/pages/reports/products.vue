@@ -2,7 +2,6 @@
   <v-container fluid class="pa-6">
     <v-row class="mb-6">
       <v-col cols="12" class="d-flex align-center">
-        <v-btn icon="mdi-arrow-left" variant="tonal" class="rounded-lg me-4" to="/reports"></v-btn>
         <div class="header-icon-container rounded-xl pa-3 me-4">
           <v-icon color="orange-darken-3" size="32">mdi-fire</v-icon>
         </div>
@@ -13,13 +12,22 @@
         <v-spacer></v-spacer>
         <v-btn
           color="orange-darken-3"
-          variant="elevated"
+          variant="tonal"
           prepend-icon="mdi-refresh"
           @click="fetchProducts"
           :loading="loading"
-          class="rounded-lg px-6"
+          class="rounded-lg px-6 mr-2"
         >
           ໂຫຼດໃໝ່
+        </v-btn>
+        <v-btn
+          color="success"
+          variant="elevated"
+          prepend-icon="mdi-file-excel"
+          @click="exportToExcel"
+          class="rounded-lg px-6"
+        >
+          Export
         </v-btn>
       </v-col>
     </v-row>
@@ -142,6 +150,8 @@
 
 <script setup>
 import { ref, computed, onMounted } from 'vue'
+import * as XLSX from 'xlsx'
+import { showToast } from '~/composables/useToast'
 
 const api = useApi()
 const loading = ref(false)
@@ -168,6 +178,35 @@ const fetchProducts = async () => {
 
 const formatCurrency = (val) => {
   return new Intl.NumberFormat('lo-LA', { style: 'currency', currency: 'LAK', maximumFractionDigits: 0 }).format(val)
+}
+
+const exportToExcel = () => {
+  if (!products.value.length) return
+  try {
+    const wsData = [
+      ['ລາຍງານສິນຄ້າຂາຍດີ'],
+      ['ວັນທີ:', new Date().toLocaleString()],
+      [''],
+      ['ອັນດັບ', 'ສິນຄ້າ', 'Barcode', 'ຈຳນວນທີ່ຂາຍໄດ້', 'ລາຄາຂາຍ/ໜ່ວຍ', 'ລາຍຮັບລວມ']
+    ]
+    products.value.forEach((p, i) => {
+      wsData.push([
+        i + 1,
+        p.product?.name,
+        p.product?.barcode || '-',
+        p.totalQuantity,
+        p.product?.selling_price,
+        p.totalRevenue
+      ])
+    })
+    const ws = XLSX.utils.aoa_to_sheet(wsData)
+    const wb = XLSX.utils.book_new()
+    XLSX.utils.book_append_sheet(wb, ws, 'TopProducts')
+    XLSX.writeFile(wb, `top_products_report_${new Date().toISOString().slice(0, 10)}.xlsx`)
+    showToast('ສົ່ງອອກຂໍ້ມູນສຳເລັດ', 'success')
+  } catch (e) {
+    showToast('ສົ່ງອອກຂໍ້ມູນຫຼົ້ມເຫຼວ', 'error')
+  }
 }
 
 onMounted(fetchProducts)

@@ -1,70 +1,100 @@
 <template>
-  <v-card rounded="lg" elevation="2" v-if="hasPermission('users.view')">
-    <!-- ── Header ── -->
-    <v-card-title class="d-flex align-center py-3 px-4 flex-wrap gap-2">
-      <div class="d-flex align-center">
-        <v-icon icon="mdi-shield-account" color="primary" class="me-2" />
-        <span class="text-h6 font-weight-bold">User Management</span>
-      </div>
-      <v-spacer />
+  <v-container fluid class="pa-6" v-if="hasPermission('users.view')">
+    <!-- ── Header Section ── -->
+    <v-row class="mb-6">
+      <v-col cols="12" class="d-flex align-center flex-wrap gap-3">
+        <div class="header-icon-container rounded-lg pa-3 me-3">
+          <v-icon color="primary" size="32">mdi-shield-account</v-icon>
+        </div>
+        <div>
+          <h1 class="text-h4 font-weight-black mb-1">ຈັດການຜູ້ໃຊ້ງານ</h1>
+          <p class="text-subtitle-1 text-medium-emphasis">ກວດສອບ ແລະ ຕັ້ງຄ່າສິດການເຂົ້າເຖິງຂອງພະນັກງານ</p>
+        </div>
+        <v-spacer></v-spacer>
+        <v-btn 
+          v-if="hasPermission('users.create')" 
+          color="primary" 
+          variant="elevated" 
+          size="large"
+          class="rounded-lg px-6 font-weight-bold shadow-soft" 
+          prepend-icon="mdi-account-plus" 
+          @click="openAddDialog"
+        >
+          ເພີ່ມຜູ້ໃຊ້ໃໝ່
+        </v-btn>
+      </v-col>
+    </v-row>
 
-      <!-- Filters -->
-      <v-text-field
-        v-model="filters.search"
-        placeholder="Search username…"
-        prepend-inner-icon="mdi-magnify"
-        variant="outlined"
-        density="compact"
-        hide-details
-        clearable
-        style="max-width:200px"
-        @update:model-value="debouncedLoad"
-      />
-      <v-select
-        v-model="filters.role"
-        :items="roleFilterOptions"
-        label="Role"
-        variant="outlined"
-        density="compact"
-        hide-details
-        clearable
-        style="max-width:140px"
-        @update:model-value="loadUsers"
-      />
-      <v-select
-        v-model="filters.is_active"
-        :items="activeFilterOptions"
-        label="Status"
-        variant="outlined"
-        density="compact"
-        hide-details
-        clearable
-        style="max-width:130px"
-        @update:model-value="loadUsers"
-      />
-      <v-btn v-if="hasPermission('users.create')" color="primary" prepend-icon="mdi-account-plus" @click="openAddDialog">
-        Add User
-      </v-btn>
-    </v-card-title>
-    <v-divider />
+    <!-- ── Stats Grid ── -->
+    <v-row class="mb-6">
+      <v-col v-for="s in stats" :key="s.label" cols="12" sm="6" md="2" class="flex-grow-1">
+        <v-card border elevation="0" class="rounded-lg pa-4 h-100 shadow-soft">
+          <div class="d-flex align-center mb-2">
+            <v-avatar :color="s.color + '-lighten-5'" size="36" rounded="lg" class="me-2">
+              <v-icon :icon="s.icon" :color="s.color" size="20"></v-icon>
+            </v-avatar>
+            <span class="text-caption font-weight-bold text-grey-darken-1 text-uppercase">{{ s.label }}</span>
+          </div>
+          <div class="text-h4 font-weight-black" :class="'text-' + s.color">{{ s.value }}</div>
+        </v-card>
+      </v-col>
+    </v-row>
 
-    <!-- ── Stats strip ── -->
-    <div class="d-flex px-4 py-2 gap-4 border-b" style="background:rgba(var(--v-theme-surface-variant),.25)">
-      <div v-for="s in stats" :key="s.label" class="d-flex align-center gap-2">
-        <v-icon :icon="s.icon" :color="s.color" size="18" />
-        <span class="text-caption font-weight-medium">{{ s.label }}:</span>
-        <v-chip :color="s.color" size="x-small" variant="tonal">{{ s.value }}</v-chip>
-      </div>
-    </div>
+    <!-- ── Search & Filters Section ── -->
+    <v-card border elevation="0" class="rounded-lg mb-6 shadow-soft pa-4">
+      <v-row dense align="center">
+        <v-col cols="12" md="4">
+          <v-text-field
+            v-model="filters.search"
+            placeholder="ຄົ້ນຫາຊື່ຜູ້ໃຊ້..."
+            prepend-inner-icon="mdi-magnify"
+            variant="outlined"
+            density="comfortable"
+            hide-details
+            rounded="lg"
+            clearable
+            @update:model-value="debouncedLoad"
+          />
+        </v-col>
+        <v-col cols="12" md="3">
+          <v-select
+            v-model="filters.role"
+            :items="roleFilterOptions"
+            label="ຕຳແໜ່ງ"
+            variant="outlined"
+            density="comfortable"
+            hide-details
+            rounded="lg"
+            clearable
+            @update:model-value="loadUsers"
+          />
+        </v-col>
+        <v-col cols="12" md="3">
+          <v-select
+            v-model="filters.is_active"
+            :items="activeFilterOptions"
+            label="ສະຖານະ"
+            variant="outlined"
+            density="comfortable"
+            hide-details
+            rounded="lg"
+            clearable
+            @update:model-value="loadUsers"
+          />
+        </v-col>
+      </v-row>
+    </v-card>
 
-    <!-- ── Data Table ── -->
-    <v-data-table
-      :headers="headers"
-      :items="users"
-      :loading="loading"
-      hover
-      items-per-page="15"
-    >
+    <!-- ── Data Table Section ── -->
+    <v-card border elevation="0" class="rounded-lg overflow-hidden shadow-soft">
+      <v-data-table
+        :headers="headers"
+        :items="users"
+        :loading="loading"
+        hover
+        items-per-page="15"
+        class="custom-table"
+      >
       <!-- Avatar + username -->
       <template #item.username="{ item }">
         <div class="d-flex align-center gap-3 py-1">
@@ -160,9 +190,10 @@
         </div>
       </template>
     </v-data-table>
+  </v-card>
 
-    <!-- ══════════════ ADD / EDIT DIALOG ══════════════ -->
-    <v-dialog v-model="formDialog" max-width="560" persistent>
+  <!-- ══════════════ ADD / EDIT DIALOG ══════════════ -->
+  <v-dialog v-model="formDialog" max-width="560" persistent>
       <v-card rounded="lg">
         <v-card-title class="d-flex align-center pa-4">
           <v-icon :icon="isEditing ? 'mdi-account-edit' : 'mdi-account-plus'" class="me-2" color="primary" />
@@ -388,7 +419,7 @@
       </v-card>
     </v-dialog>
 
-  </v-card>
+  </v-container>
 </template>
 
 <script setup>
@@ -701,3 +732,26 @@ onMounted(() => {
   loadUsers()
 })
 </script>
+
+<style scoped>
+.header-icon-container {
+  background-color: rgba(var(--v-theme-primary), 0.1);
+}
+
+.shadow-soft {
+  box-shadow: 0 4px 20px rgba(0,0,0,0.04) !important;
+}
+
+.custom-table :deep(th) {
+  font-weight: bold !important;
+  color: #555 !important;
+  background-color: #FAFAFA !important;
+  text-transform: uppercase;
+  font-size: 0.75rem !important;
+  letter-spacing: 0.05em;
+}
+
+.flex-grow-1 {
+  flex: 1;
+}
+</style>

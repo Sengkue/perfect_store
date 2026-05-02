@@ -6,6 +6,7 @@ import rateLimit from 'express-rate-limit';
 import dotenv from 'dotenv';
 import path from 'path';
 import { fileURLToPath } from 'url';
+import fs from 'fs';
 
 import { sequelize } from './models/index.js';
 import routes from './routes/index.js';
@@ -92,6 +93,7 @@ app.get('/api/health', (req, res) => {
     timestamp: new Date().toISOString(),
     environment: process.env.NODE_ENV || 'development'
   });
+
 });
 
 // API routes
@@ -114,13 +116,25 @@ app.use(errorHandler);
 
 const startServer = async () => {
   try {
+    // Ensure uploads directory exists
+    const uploadsDir = path.join(__dirname, 'uploads');
+    if (!fs.existsSync(uploadsDir)) {
+      fs.mkdirSync(uploadsDir, { recursive: true });
+      logger.info('📁 Created uploads directory');
+    }
+
     // Test database connection
     await sequelize.authenticate();
     logger.info('✅ Database connection established successfully.');
 
     // Sync all models (alter: true will add missing columns without dropping)
-    await sequelize.sync({ alter: true });
-    logger.info('✅ Database models synchronized.');
+    // ONLY in development/test. In production, use migrations!
+    if (process.env.NODE_ENV !== 'production') {
+      await sequelize.sync({ alter: true });
+      logger.info('✅ Database models synchronized.');
+    } else {
+      logger.info('ℹ️  Production mode: skipping auto-sync. Please run migrations.');
+    }
 
     // Start server
     app.listen(PORT, () => {

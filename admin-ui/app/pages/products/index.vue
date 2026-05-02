@@ -1,76 +1,94 @@
 <template>
-  <div v-if="hasPermission('products.view')">
-    <!-- ── Page Header with Tabs ── -->
-    <v-card rounded="lg" elevation="2">
-      <v-card-title class="d-flex align-center py-3 px-4 flex-wrap gap-2">
-        <div class="d-flex align-center">
-          <v-icon icon="mdi-package-variant-closed" color="primary" class="me-2" />
-          <span class="text-h6 font-weight-bold">Products & Stock</span>
+  <v-container fluid class="pa-6" v-if="hasPermission('products.view')">
+    <!-- ── Header Section ── -->
+    <v-row class="mb-6">
+      <v-col cols="12" class="d-flex align-center flex-wrap gap-3">
+        <div class="header-icon-container rounded-lg pa-3 me-3">
+          <v-icon color="primary" size="32">mdi-package-variant-closed</v-icon>
         </div>
-        <v-spacer />
-
-        <v-text-field
-          v-model="search"
-          placeholder="Search name, barcode, SKU…"
-          prepend-inner-icon="mdi-magnify"
-          variant="outlined"
-          density="compact"
-          hide-details
-          clearable
-          style="max-width:250px"
-          @update:model-value="debouncedLoad"
-        />
-        <v-select
-          v-model="filterCategory"
-          :items="categories"
-          item-title="category_name"
-          item-value="id"
-          label="Category"
-          variant="outlined"
-          density="compact"
-          hide-details
-          clearable
-          style="max-width:160px"
-          @update:model-value="loadProducts"
-        />
-        <v-btn v-if="hasPermission('products.create')" color="primary" prepend-icon="mdi-plus" @click="openAddDialog">
-          Add Product
-        </v-btn>
-      </v-card-title>
-
-      <!-- ── Stock Summary Cards ── -->
-      <v-divider />
-      <div class="d-flex flex-wrap gap-0">
-        <v-card
-          v-for="s in stockStats"
-          :key="s.label"
-          flat
-          class="flex-1 pa-4 text-center border-e"
-          :class="{ 'border-0': s === stockStats[stockStats.length - 1] }"
-          min-width="140"
+        <div>
+          <h1 class="text-h4 font-weight-black mb-1">ຈັດການສິນຄ້າ & ຄັງສິນຄ້າ</h1>
+          <p class="text-subtitle-1 text-medium-emphasis">ກວດສອບຈຳນວນສິນຄ້າ, ລາຄາ ແລະ ສະຖານະສະຕັອກ</p>
+        </div>
+        <v-spacer></v-spacer>
+        <v-btn 
+          v-if="hasPermission('products.create')" 
+          color="primary" 
+          variant="elevated" 
+          size="large"
+          class="rounded-lg px-6 font-weight-bold shadow-soft" 
+          prepend-icon="mdi-plus" 
+          @click="openAddDialog"
         >
-          <v-icon :icon="s.icon" :color="s.color" size="28" class="mb-1" />
-          <div class="text-h5 font-weight-bold mt-1" :class="`text-${s.color}`">{{ s.value }}</div>
-          <div class="text-caption text-medium-emphasis">{{ s.label }}</div>
+          ເພີ່ມສິນຄ້າໃໝ່
+        </v-btn>
+      </v-col>
+    </v-row>
+
+    <!-- ── Stock Summary Stats ── -->
+    <v-row class="mb-6">
+      <v-col v-for="s in stockStats" :key="s.label" cols="12" sm="6" md="2" lg="2" class="flex-grow-1">
+        <v-card border elevation="0" class="rounded-lg pa-4 h-100 shadow-soft">
+          <div class="d-flex align-center mb-2">
+            <v-avatar :color="s.color + '-lighten-5'" size="36" rounded="lg" class="me-2">
+              <v-icon :icon="s.icon" :color="s.color" size="20"></v-icon>
+            </v-avatar>
+            <span class="text-caption font-weight-bold text-grey-darken-1 text-uppercase">{{ s.label }}</span>
+          </div>
+          <div class="text-h4 font-weight-black" :class="'text-' + s.color">{{ s.value }}</div>
         </v-card>
-      </div>
-      <v-divider />
+      </v-col>
+    </v-row>
 
-      <!-- ── View Toggle ── -->
-      <div class="d-flex align-center px-4 py-2 gap-2" style="background:rgba(var(--v-theme-surface-variant),.2)">
-        <v-btn-toggle v-model="viewMode" density="compact" variant="outlined" color="primary">
-          <v-btn value="products" prepend-icon="mdi-view-list">Products</v-btn>
-          <v-btn value="stock" prepend-icon="mdi-warehouse">Stock by Variant</v-btn>
-        </v-btn-toggle>
-        <v-spacer />
-        <v-chip v-if="lowStockCount > 0" color="error" size="small" prepend-icon="mdi-alert" class="font-weight-medium">
-          {{ lowStockCount }} Low Stock Items
-        </v-chip>
-      </div>
+    <!-- ── Search & Filters Section ── -->
+    <v-card border elevation="0" class="rounded-lg mb-6 shadow-soft pa-4">
+      <v-row dense align="center">
+        <v-col cols="12" md="4">
+          <v-text-field
+            v-model="search"
+            placeholder="ຄົ້ນຫາຊື່, ບາໂຄດ, SKU..."
+            prepend-inner-icon="mdi-magnify"
+            variant="outlined"
+            density="comfortable"
+            hide-details
+            rounded="lg"
+            clearable
+            @update:model-value="debouncedLoad"
+          />
+        </v-col>
+        <v-col cols="12" md="3">
+          <v-select
+            v-model="filterCategory"
+            :items="categories"
+            item-title="category_name"
+            item-value="id"
+            label="ໝວດໝູ່"
+            variant="outlined"
+            density="comfortable"
+            hide-details
+            rounded="lg"
+            clearable
+            @update:model-value="loadProducts"
+          />
+        </v-col>
+        <v-spacer></v-spacer>
+        <v-col cols="12" md="auto">
+          <v-btn-toggle v-model="viewMode" density="comfortable" variant="outlined" color="primary" rounded="lg" mandatory>
+            <v-btn value="products" prepend-icon="mdi-view-list">ສິນຄ້າ</v-btn>
+            <v-btn value="stock" prepend-icon="mdi-warehouse">ສະຕັອກ</v-btn>
+          </v-btn-toggle>
+        </v-col>
+      </v-row>
+    </v-card>
 
-      <!-- ════════════════════════════════════ -->
-      <!-- VIEW: PRODUCTS LIST                  -->
-      <!-- ════════════════════════════════════ -->
+    <!-- ── Data Table Section ── -->
+    <v-card border elevation="0" class="rounded-lg overflow-hidden shadow-soft">
+      <div v-if="lowStockCount > 0 && viewMode === 'products'" class="bg-error-lighten-5 pa-3 d-flex align-center">
+        <v-icon color="error" class="me-2">mdi-alert-circle</v-icon>
+        <span class="text-error font-weight-bold">ມີ {{ lowStockCount }} ລາຍການທີ່ສິນຄ້າໃກ້ຈະໝົດ!</span>
+        <v-spacer></v-spacer>
+        <v-btn color="error" variant="text" size="small" class="font-weight-bold" @click="viewMode = 'stock'">ເບິ່ງລາຍລະອຽດ</v-btn>
+      </div>
       <v-data-table
         v-if="viewMode === 'products'"
         :headers="productHeaders"
@@ -78,19 +96,19 @@
         :loading="loading"
         hover
         items-per-page="20"
+        class="custom-table"
       >
         <!-- Product name + SKU + Barcode -->
         <template #item.name="{ item }">
-          <div class="py-1">
-            <div class="font-weight-medium">{{ item.name }}</div>
+          <div class="py-2">
+            <div class="font-weight-bold text-primary text-subtitle-1">{{ item.name }}</div>
             <div class="d-flex align-center flex-wrap gap-2 mt-1">
-              <v-chip v-if="item.sku" size="x-small" variant="tonal" color="primary" class="px-2">
-                <v-icon start size="12">mdi-identifier</v-icon>{{ item.sku }}
+              <v-chip v-if="item.sku" size="x-small" variant="flat" color="blue-lighten-5" class="text-blue-darken-4 font-weight-bold px-2">
+                SKU: {{ item.sku }}
               </v-chip>
-              <v-chip v-if="item.barcode" size="x-small" variant="tonal" color="secondary" class="px-2">
+              <v-chip v-if="item.barcode" size="x-small" variant="flat" color="grey-lighten-4" class="px-2">
                 <v-icon start size="12">mdi-barcode</v-icon>{{ item.barcode }}
               </v-chip>
-              <span v-if="!item.sku && !item.barcode" class="text-caption text-grey">—</span>
             </div>
           </div>
         </template>
@@ -168,12 +186,11 @@
           </div>
         </template>
 
-        <!-- Empty state -->
         <template #no-data>
-          <div class="text-center py-8">
-            <v-icon size="64" color="grey-lighten-2">mdi-package-variant</v-icon>
-            <div class="text-h6 text-grey mt-3">No products found</div>
-            <v-btn v-if="hasPermission('products.create')" color="primary" prepend-icon="mdi-plus" class="mt-3" @click="openAddDialog">Add Product</v-btn>
+          <div class="text-center py-12">
+            <v-icon size="80" color="grey-lighten-2">mdi-package-variant-closed</v-icon>
+            <div class="text-h6 text-grey-darken-1 mt-4">ບໍ່ພົບຂໍ້ມູນສິນຄ້າ</div>
+            <v-btn v-if="hasPermission('products.create')" color="primary" variant="tonal" prepend-icon="mdi-plus" class="mt-4 rounded-lg" @click="openAddDialog">ເພີ່ມສິນຄ້າ</v-btn>
           </div>
         </template>
       </v-data-table>
@@ -188,6 +205,7 @@
         :loading="loading"
         hover
         items-per-page="25"
+        class="custom-table"
       >
         <!-- Product info -->
         <template #item.product="{ item }">
@@ -592,7 +610,7 @@
         </v-card-actions>
       </v-card>
     </v-dialog>
-  </div>
+  </v-container>
 </template>
 
 <script setup>
@@ -819,3 +837,34 @@ onMounted(() => {
   loadDropdowns()
 })
 </script>
+
+<style scoped>
+.header-icon-container {
+  background-color: rgba(var(--v-theme-primary), 0.1);
+}
+
+.shadow-soft {
+  box-shadow: 0 4px 20px rgba(0,0,0,0.04) !important;
+}
+
+.custom-table :deep(th) {
+  font-weight: bold !important;
+  color: #555 !important;
+  background-color: #FAFAFA !important;
+  text-transform: uppercase;
+  font-size: 0.75rem !important;
+  letter-spacing: 0.05em;
+}
+
+.flex-1 {
+  flex: 1;
+}
+
+.trophy-card {
+  transition: transform 0.3s ease;
+}
+
+.trophy-card:hover {
+  transform: translateY(-5px);
+}
+</style>

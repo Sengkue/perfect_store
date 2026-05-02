@@ -2,7 +2,7 @@
   <v-container fluid class="pa-6">
     <v-row class="mb-6">
       <v-col cols="12" class="d-flex align-center flex-wrap gap-3">
-        <div class="header-icon-container rounded-xl pa-3 me-3">
+        <div class="header-icon-container rounded-lg pa-3 me-3">
           <v-icon color="primary" size="32">mdi-chart-box</v-icon>
         </div>
         <div>
@@ -12,7 +12,7 @@
         <v-spacer></v-spacer>
 
         <!-- Date Filter & Export -->
-        <v-card elevation="0" border class="rounded-xl px-4 py-2 d-flex align-center gap-3 bg-white shadow-soft">
+        <v-card elevation="0" border class="rounded-lg px-4 py-2 d-flex align-center gap-3 bg-white shadow-soft">
           <!-- Start Date -->
           <v-menu v-model="startMenu" :close-on-content-click="false">
             <template v-slot:activator="{ props }">
@@ -80,7 +80,7 @@
         <v-card 
           border 
           elevation="0" 
-          class="rounded-xl overflow-hidden shadow-soft metric-card"
+          class="rounded-lg overflow-hidden shadow-soft metric-card"
           :style="{ background: metric.gradient }"
         >
           <div class="pa-6">
@@ -109,7 +109,7 @@
     <v-row>
       <!-- Sales Trend Bar Chart (8/12) -->
       <v-col cols="12" lg="8">
-        <v-card border elevation="0" class="rounded-xl pa-6 bg-white shadow-soft overflow-hidden h-100">
+        <v-card border elevation="0" class="rounded-lg pa-6 bg-white shadow-soft overflow-hidden h-100">
           <div class="d-flex align-center mb-8">
             <v-icon icon="mdi-finance" color="primary" class="me-2"></v-icon>
             <h2 class="text-h6 font-weight-bold">ແນວໂນ້ມລາຍຮັບປະຈຳວັນ</h2>
@@ -117,47 +117,55 @@
             <v-chip size="small" variant="tonal" color="primary">ຍອດຂາຍປະຈຳວັນ</v-chip>
           </div>
           
-          <div class="chart-container" style="height: 350px; position: relative;">
-            <!-- Background Grid -->
-            <div class="position-absolute w-100 h-100 d-flex flex-column justify-space-between ps-12 pe-4 pt-10 pb-12 opacity-10">
-              <div v-for="i in 5" :key="i" class="border-bottom w-100"></div>
-            </div>
-
-            <div class="d-flex align-end justify-space-between h-100 px-4 pt-10 pb-4 position-relative" style="z-index: 1;">
-              <div v-for="day in chartData" :key="day.date" class="flex-grow-1 mx-2 text-center d-flex flex-column align-center justify-end" style="height: 100%;">
-                <div class="text-caption font-weight-black text-primary mb-1 bar-value-label">
-                  {{ formatCurrencyShort(day.total) }}
-                </div>
-                <v-tooltip location="top" offset="10">
-                  <template v-slot:activator="{ props }">
-                    <div 
-                      v-bind="props"
-                      class="chart-bar rounded-t-xl transition-all position-relative overflow-hidden" 
-                      :style="{ 
-                        height: `${(day.total / maxChartValue * 100)}%`,
-                        width: '100%',
-                        maxWidth: '56px',
-                        background: 'linear-gradient(180deg, #1976D2 0%, #64B5F6 100%)',
-                        boxShadow: '0 4px 12px rgba(25, 118, 210, 0.2)'
-                      }"
-                    >
-                      <div class="bar-shine"></div>
-                    </div>
-                  </template>
-                  <div class="pa-2">
-                    <div class="text-caption font-weight-bold">{{ formatDateFull(day.date) }}</div>
-                    <div class="text-h6 font-weight-black">{{ formatCurrency(day.total) }}</div>
-                  </div>
-                </v-tooltip>
-                <div class="text-caption text-grey-darken-1 mt-4 font-weight-bold">{{ formatDate(day.date) }}</div>
-              </div>
-            </div>
-            
-            <!-- Y-axis markers -->
-            <div class="position-absolute left-0 top-0 h-100 ps-4 pt-10 pb-12 d-flex flex-column justify-space-between text-caption text-grey opacity-50 font-weight-bold" style="pointer-events: none;">
+          <div class="chart-outer-container" style="height: 380px; position: relative;">
+            <!-- Y-axis markers (Fixed on the left) -->
+            <div class="position-absolute left-0 top-0 h-100 ps-4 pt-10 pb-12 d-flex flex-column justify-space-between text-caption text-grey opacity-50 font-weight-bold" style="pointer-events: none; z-index: 10;">
               <span>{{ formatCurrencyShort(maxChartValue) }}</span>
               <span>{{ formatCurrencyShort(maxChartValue * 0.5) }}</span>
               <span>0</span>
+            </div>
+
+            <!-- Scrollable Chart Area -->
+            <div class="chart-scroll-area h-100 overflow-x-auto overflow-y-hidden custom-scrollbar">
+              <div class="chart-inner-content position-relative h-100" :style="{ minWidth: `${Math.max(chartData.length * 70, 600)}px` }">
+                
+                <!-- Background Grid (Inside scrollable area) -->
+                <div class="position-absolute w-100 h-100 d-flex flex-column justify-space-between ps-12 pe-4 pt-10 pb-12 opacity-10">
+                  <div v-for="i in 5" :key="i" class="border-bottom w-100"></div>
+                </div>
+
+                <!-- Bars -->
+                <div class="d-flex align-end justify-space-around h-100 ps-12 pe-4 pt-10 pb-4 position-relative" style="z-index: 1;">
+                  <div v-for="day in chartData" :key="day.date" class="chart-bar-column mx-1 text-center d-flex flex-column align-center justify-end" style="height: 100%; min-width: 50px;">
+                    <div class="text-caption font-weight-black text-primary mb-1 bar-value-label">
+                      {{ formatCurrencyShort(day.total) }}
+                    </div>
+                    <v-tooltip location="top" offset="10">
+                      <template v-slot:activator="{ props }">
+                        <div 
+                          v-bind="props"
+                          class="chart-bar rounded-t-xl transition-all position-relative overflow-hidden" 
+                          :style="{ 
+                            height: `${(day.total / maxChartValue * 100)}%`,
+                            width: '100%',
+                            maxWidth: '40px',
+                            background: 'linear-gradient(180deg, #1976D2 0%, #64B5F6 100%)',
+                            boxShadow: '0 4px 12px rgba(25, 118, 210, 0.2)'
+                          }"
+                        >
+                          <div class="bar-shine"></div>
+                        </div>
+                      </template>
+                      <div class="pa-2">
+                        <div class="text-caption font-weight-bold">{{ formatDateFull(day.date) }}</div>
+                        <div class="text-h6 font-weight-black">{{ formatCurrency(day.total) }}</div>
+                      </div>
+                    </v-tooltip>
+                    <div class="text-caption text-grey-darken-1 mt-4 font-weight-bold">{{ formatDate(day.date) }}</div>
+                  </div>
+                </div>
+
+              </div>
             </div>
           </div>
         </v-card>
@@ -165,7 +173,7 @@
 
       <!-- Financial Distribution Donut Chart (4/12) -->
       <v-col cols="12" lg="4">
-        <v-card border elevation="0" class="rounded-xl pa-6 bg-white shadow-soft h-100">
+        <v-card border elevation="0" class="rounded-lg pa-6 bg-white shadow-soft h-100">
           <div class="d-flex align-center mb-8">
             <v-icon icon="mdi-chart-donut" color="primary" class="me-2"></v-icon>
             <h2 class="text-h6 font-weight-bold">ສັດສ່ວນລາຍຮັບ</h2>
@@ -252,16 +260,23 @@ const loading = ref(false)
 const startMenu = ref(false)
 const endMenu = ref(false)
 
-const thirtyDaysAgo = new Date()
-thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30)
+const today = new Date()
+const firstDay = new Date(today.getFullYear(), today.getMonth(), 1)
 
-const startDateDate = ref(thirtyDaysAgo)
-const endDateDate = ref(new Date())
-const startDate = ref(thirtyDaysAgo.toISOString().split('T')[0])
-const endDate = ref(new Date().toISOString().split('T')[0])
+const formatDateToISO = (date) => {
+  const y = date.getFullYear();
+  const m = String(date.getMonth() + 1).padStart(2, '0');
+  const d = String(date.getDate()).padStart(2, '0');
+  return `${y}-${m}-${d}`;
+};
+
+const startDateDate = ref(firstDay)
+const endDateDate = ref(today)
+const startDate = ref(formatDateToISO(firstDay))
+const endDate = ref(formatDateToISO(today))
 
 const summary = ref({
-  revenue: 1,
+  revenue: 0,
   cogs: 0,
   profit: 0,
   expenses: 0
@@ -269,14 +284,28 @@ const summary = ref({
 
 const chartData = ref([])
 
-const profitPercentage = computed(() => (summary.value.profit / (summary.value.revenue || 1)) * 100)
-const cogsPercentage = computed(() => (summary.value.cogs / (summary.value.revenue || 1)) * 100)
-const expensePercentage = computed(() => (summary.value.expenses / (summary.value.revenue || 1)) * 100)
+const profitPercentage = computed(() => {
+  const rev = summary.value?.revenue || 0
+  if (rev <= 0) return 0
+  return Math.min(100, Math.max(0, (summary.value?.profit / rev) * 100))
+})
+
+const cogsPercentage = computed(() => {
+  const rev = summary.value?.revenue || 0
+  if (rev <= 0) return 0
+  return Math.min(100, Math.max(0, (summary.value?.cogs / rev) * 100))
+})
+
+const expensePercentage = computed(() => {
+  const rev = summary.value?.revenue || 0
+  if (rev <= 0) return 0
+  return Math.min(100, Math.max(0, (summary.value?.expenses / rev) * 100))
+})
 
 const metrics = computed(() => [
   { 
     label: 'ລາຍຮັບທັງໝົດ', 
-    value: summary.value.revenue, 
+    value: summary.value?.revenue || 0, 
     desc: 'ຈາກການຂາຍທັງໝົດ',
     icon: 'mdi-cash-register',
     gradient: 'linear-gradient(135deg, #E3F2FD 0%, #BBDEFB 100%)',
@@ -287,7 +316,7 @@ const metrics = computed(() => [
   },
   { 
     label: 'ຕົ້ນທຶນສິນຄ້າ', 
-    value: summary.value.cogs, 
+    value: summary.value?.cogs || 0, 
     desc: 'Cost of Goods Sold',
     icon: 'mdi-tag-outline',
     gradient: 'linear-gradient(135deg, #FFF3E0 0%, #FFE0B2 100%)',
@@ -298,7 +327,7 @@ const metrics = computed(() => [
   },
   { 
     label: 'ກຳໄລເບື້ອງຕົ້ນ', 
-    value: summary.value.profit, 
+    value: summary.value?.profit || 0, 
     desc: 'ລາຍຮັບ - ຕົ້ນທຶນສິນຄ້າ',
     icon: 'mdi-trending-up',
     gradient: 'linear-gradient(135deg, #E8F5E9 0%, #C8E6C9 100%)',
@@ -309,7 +338,7 @@ const metrics = computed(() => [
   },
   { 
     label: 'ລາຍຈ່າຍນຳເຂົ້າ', 
-    value: summary.value.expenses, 
+    value: summary.value?.expenses || 0, 
     desc: 'ລາຍຈ່າຍທັງໝົດ',
     icon: 'mdi-truck-delivery-outline',
     gradient: 'linear-gradient(135deg, #FCE4EC 0%, #F8BBD0 100%)',
@@ -321,7 +350,8 @@ const metrics = computed(() => [
 ])
 
 const maxChartValue = computed(() => {
-  const totals = chartData.value.map(d => Number(d.total))
+  if (!chartData.value || chartData.value.length === 0) return 100000
+  const totals = chartData.value.map(d => Number(d.total) || 0)
   return Math.max(...totals, 100000) * 1.2
 })
 
@@ -331,18 +361,19 @@ const fetchSummary = async () => {
     const res = await api('/reports/summary', {
       params: { startDate: startDate.value, endDate: endDate.value }
     })
-    if (res.success) {
-      summary.value = res.data
+    if (res && res.success) {
+      summary.value = res.data || { revenue: 0, cogs: 0, profit: 0, expenses: 0 }
     }
 
     const chartRes = await api('/reports/sales-chart', {
       params: { startDate: startDate.value, endDate: endDate.value }
     })
-    if (chartRes.success) {
-      chartData.value = chartRes.data
+    if (chartRes && chartRes.success) {
+      chartData.value = chartRes.data || []
     }
   } catch (e) {
     console.error('Failed to fetch dashboard data', e)
+    showToast('ບໍ່ສາມາດໂຫຼດຂໍ້ມູນໄດ້', 'error')
   } finally {
     loading.value = false
   }
@@ -350,7 +381,7 @@ const fetchSummary = async () => {
 
 const onStartDateChange = (val) => {
   if (val) {
-    startDate.value = new Date(val).toISOString().split('T')[0]
+    startDate.value = formatDateToISO(new Date(val))
     startMenu.value = false
     fetchSummary()
   }
@@ -358,30 +389,39 @@ const onStartDateChange = (val) => {
 
 const onEndDateChange = (val) => {
   if (val) {
-    endDate.value = new Date(val).toISOString().split('T')[0]
+    endDate.value = formatDateToISO(new Date(val))
     endMenu.value = false
     fetchSummary()
   }
 }
 
 const formatCurrency = (val) => {
-  return new Intl.NumberFormat('lo-LA', { style: 'currency', currency: 'LAK', maximumFractionDigits: 0 }).format(val)
+  return new Intl.NumberFormat('lo-LA', { style: 'currency', currency: 'LAK', maximumFractionDigits: 0 }).format(val || 0)
 }
 
 const formatCurrencyShort = (val) => {
-  if (val >= 1000000) return (val / 1000000).toFixed(1) + 'M'
-  if (val >= 1000) return (val / 1000).toFixed(0) + 'K'
-  return val
+  const v = Number(val) || 0
+  if (v >= 1000000) return (v / 1000000).toFixed(1) + 'M'
+  if (v >= 1000) return (v / 1000).toFixed(0) + 'K'
+  return v
 }
 
 const formatDate = (val) => {
   if (!val) return '-'
-  return new Date(val).toLocaleDateString('lo-LA', { day: '2-digit', month: 'short' })
+  try {
+    return new Date(val).toLocaleDateString('lo-LA', { day: '2-digit', month: 'short' })
+  } catch (e) {
+    return '-'
+  }
 }
 
 const formatDateFull = (val) => {
   if (!val) return '-'
-  return new Date(val).toLocaleDateString('lo-LA', { day: '2-digit', month: 'long', year: 'numeric' })
+  try {
+    return new Date(val).toLocaleDateString('lo-LA', { day: '2-digit', month: 'long', year: 'numeric' })
+  } catch (e) {
+    return '-'
+  }
 }
 
 const exportToExcel = () => {
@@ -498,5 +538,24 @@ onMounted(fetchSummary)
 
 .donut-segment {
   transition: stroke-dasharray 0.5s ease;
+}
+
+/* Custom Scrollbar for the chart */
+.custom-scrollbar::-webkit-scrollbar {
+  height: 6px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 10px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background: #ccc;
+  border-radius: 10px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: #999;
 }
 </style>

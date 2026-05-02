@@ -2,8 +2,7 @@
   <v-container fluid class="pa-6">
     <v-row class="mb-6">
       <v-col cols="12" class="d-flex align-center flex-wrap gap-3">
-        <v-btn icon="mdi-arrow-left" variant="tonal" class="rounded-lg me-2" to="/reports"></v-btn>
-        <div class="header-icon-container rounded-xl pa-3 me-3">
+        <div class="header-icon-container rounded-lg pa-3 me-3">
           <v-icon color="success" size="32">mdi-receipt</v-icon>
         </div>
         <div>
@@ -13,7 +12,7 @@
         <v-spacer></v-spacer>
 
         <!-- Search & Filters -->
-        <v-card elevation="0" border class="rounded-xl px-4 py-2 d-flex align-center gap-3 bg-white flex-wrap">
+        <v-card elevation="0" border class="rounded-lg px-4 py-2 d-flex align-center gap-3 bg-white flex-wrap">
           <v-text-field
             v-model="search"
             prepend-inner-icon="mdi-magnify"
@@ -26,26 +25,53 @@
             @update:modelValue="loadSales"
           ></v-text-field>
           <v-divider vertical class="mx-2"></v-divider>
-          <v-text-field
-            v-model="fromDate"
-            type="date"
-            label="ເລີ່ມ"
-            variant="plain"
-            density="compact"
-            hide-details
-            style="width: 140px"
-            @update:modelValue="loadSales"
-          ></v-text-field>
-          <v-text-field
-            v-model="toDate"
-            type="date"
-            label="ສິ້ນສຸດ"
-            variant="plain"
-            density="compact"
-            hide-details
-            style="width: 140px"
-            @update:modelValue="loadSales"
-          ></v-text-field>
+          
+          <!-- From Date Menu -->
+          <v-menu v-model="menuFrom" :close-on-content-click="false">
+            <template v-slot:activator="{ props }">
+              <v-text-field
+                v-bind="props"
+                :model-value="formatDateDisplay(fromDate)"
+                label="ເລີ່ມ"
+                variant="plain"
+                density="compact"
+                hide-details
+                readonly
+                prepend-inner-icon="mdi-calendar"
+                style="width: 140px"
+                class="cursor-pointer"
+              ></v-text-field>
+            </template>
+            <v-date-picker 
+              v-model="fromDateDate" 
+              color="primary"
+              @update:modelValue="onFromDateSelected"
+            ></v-date-picker>
+          </v-menu>
+
+          <!-- To Date Menu -->
+          <v-menu v-model="menuTo" :close-on-content-click="false">
+            <template v-slot:activator="{ props }">
+              <v-text-field
+                v-bind="props"
+                :model-value="formatDateDisplay(toDate)"
+                label="ສິ້ນສຸດ"
+                variant="plain"
+                density="compact"
+                hide-details
+                readonly
+                prepend-inner-icon="mdi-calendar"
+                style="width: 140px"
+                class="cursor-pointer"
+              ></v-text-field>
+            </template>
+            <v-date-picker 
+              v-model="toDateDate" 
+              color="primary"
+              @update:modelValue="onToDateSelected"
+            ></v-date-picker>
+          </v-menu>
+
           <v-divider vertical class="mx-2"></v-divider>
           <v-select
             v-model="statusFilter"
@@ -66,9 +92,10 @@
           prepend-icon="mdi-microsoft-excel"
           color="success"
           variant="elevated"
+          height="48"
           :loading="exportingExcel"
           @click="exportExcel"
-          class="rounded-xl px-6 shadow-soft"
+          class="rounded-lg px-6 shadow-soft"
         >
           Export Excel
         </v-btn>
@@ -76,7 +103,7 @@
     </v-row>
 
     <!-- Data Table -->
-    <v-card border elevation="0" class="rounded-xl overflow-hidden shadow-soft">
+    <v-card border elevation="0" class="rounded-lg overflow-hidden shadow-soft">
       <v-data-table
         :headers="headers"
         :items="sales"
@@ -104,9 +131,9 @@
         </template>
 
         <!-- Employee -->
-        <template v-slot:item.employee="{ item }">
-          <v-chip size="x-small" variant="tonal" prepend-icon="mdi-account" v-if="item.employee">
-            {{ item.employee.first_name }}
+        <template v-slot:item.user="{ item }">
+          <v-chip size="x-small" variant="tonal" prepend-icon="mdi-account" v-if="item.user">
+            {{ item.user.profile ? `${item.user.profile.first_name} ${item.user.profile.last_name}` : item.user.username }}
           </v-chip>
           <span v-else class="text-medium-emphasis text-caption">—</span>
         </template>
@@ -170,9 +197,9 @@
             <v-col cols="12" md="6" class="mb-4 text-md-right">
               <div class="text-caption text-grey mb-1 text-uppercase">ພະນັກງານຂາຍ</div>
               <div class="text-subtitle-1 font-weight-bold">
-                {{ detailSale.employee ? `${detailSale.employee.first_name} ${detailSale.employee.last_name}` : detailSale.employee?.username || '—' }}
+                {{ detailSale.user?.profile ? `${detailSale.user.profile.first_name} ${detailSale.user.profile.last_name}` : detailSale.user?.username || '—' }}
               </div>
-              <div class="text-caption text-grey">Role: {{ detailSale.employee?.role }}</div>
+              <div class="text-caption text-grey">Role: {{ detailSale.user?.role }}</div>
             </v-col>
             
             <v-col cols="12"><v-divider class="mb-4"></v-divider></v-col>
@@ -208,7 +235,7 @@
         </div>
 
         <v-card-actions class="pa-4 mt-2">
-          <v-btn block color="primary" variant="tonal" size="large" class="rounded-xl" @click="detailDialog = false">ປິດໜ້າຈໍ</v-btn>
+          <v-btn block color="primary" variant="tonal" size="large" class="rounded-lg" @click="detailDialog = false">ປິດໜ້າຈໍ</v-btn>
         </v-card-actions>
       </v-card>
     </v-dialog>
@@ -227,8 +254,13 @@ const { hasPermission } = usePermissions()
 const sales         = ref([])
 const loading       = ref(false)
 const search        = ref('')
-const fromDate      = ref('')
-const toDate        = ref('')
+const todayStr      = new Date().toISOString().split('T')[0]
+const fromDate      = ref(todayStr)
+const toDate        = ref(todayStr)
+const fromDateDate  = ref(new Date())
+const toDateDate    = ref(new Date())
+const menuFrom      = ref(false)
+const menuTo        = ref(false)
 const statusFilter  = ref(null)
 const exportingExcel = ref(false)
 
@@ -243,7 +275,7 @@ const headers = [
   { title: 'ເລກບິນ',     key: 'sale_number' },
   { title: 'ວັນທີ',        key: 'sale_date' },
   { title: 'ລູກຄ້າ',    key: 'customer',        sortable: false },
-  { title: 'ພະນັກງານ',    key: 'employee',        sortable: false },
+  { title: 'ພະນັກງານ',    key: 'user',            sortable: false },
   { title: 'ຍອດລວມ',       key: 'total_amount' },
   { title: 'ສະຖານະຂາຍ',      key: 'sale_status' },
   { title: 'ສະຖານະເງິນ',     key: 'payment_status' },
@@ -255,6 +287,9 @@ const formatCurrency = (val) =>
   val != null
     ? new Intl.NumberFormat('lo-LA', { style: 'currency', currency: 'LAK', maximumFractionDigits: 0 }).format(val)
     : '—'
+
+const formatDateDisplay = (val) =>
+  val ? new Date(val).toLocaleDateString('lo-LA', { day: '2-digit', month: '2-digit', year: 'numeric' }) : 'ເລືອກວັນທີ'
 
 const formatDate = (val) =>
   val ? new Date(val).toLocaleDateString('lo-LA', { day: '2-digit', month: 'short', year: 'numeric' }) : '—'
@@ -279,7 +314,7 @@ const toExportRows = () =>
     'Date':          s.sale_date ? new Date(s.sale_date).toLocaleString() : '',
     'Type':          s.sale_type ?? '',
     'Customer':      s.customer  ? `${s.customer.first_name} ${s.customer.last_name}` : '',
-    'Employee':      s.employee  ? `${s.employee.first_name} ${s.employee.last_name}` : '',
+    'Employee':      s.user      ? (s.user.profile ? `${s.user.profile.first_name} ${s.user.profile.last_name}` : s.user.username) : '',
     'Subtotal':      Number(s.subtotal       ?? 0),
     'Tax':           Number(s.tax_amount     ?? 0),
     'Discount':      Number(s.discount_amount ?? 0),
@@ -290,6 +325,22 @@ const toExportRows = () =>
   }))
 
 // ── Load data ─────────────────────────────────────────────────
+const onFromDateSelected = (val) => {
+  if (val) {
+    fromDate.value = new Date(val).toISOString().split('T')[0]
+    menuFrom.value = false
+    loadSales()
+  }
+}
+
+const onToDateSelected = (val) => {
+  if (val) {
+    toDate.value = new Date(val).toISOString().split('T')[0]
+    menuTo.value = false
+    loadSales()
+  }
+}
+
 const loadSales = async () => {
   loading.value = true
   try {

@@ -1,39 +1,23 @@
 <template>
-  <div class="imports-page" v-if="hasPermission('imports.view')">
-    
-    <!-- ══ HEADER ════════════════════════════════════════════════════ -->
-    <div class="header-section mb-6">
-      <div class="d-flex align-center gap-3 flex-wrap">
-        <div class="d-flex align-center gap-3">
-          <div class="icon-box">
-            <v-icon icon="mdi-file-check-outline" color="white" size="28" />
-          </div>
-          <div>
-            <h1 class="text-h5 font-weight-bold mb-0">ກວດສອບ ແລະ ນໍາສິນຄ້າເຂົ້າສາງ</h1>
-            <p class="text-caption text-medium-emphasis">Process Bills · ອັບເດດສະຖານະການຊຳລະ ແລະ ສັ່ງສິນຄ້າເຂົ້າສາງທັນທີ</p>
-          </div>
+  <v-container fluid class="pa-6" v-if="hasPermission('imports.view')">
+    <!-- ── Header Section ── -->
+    <v-row class="mb-6">
+      <v-col cols="12" class="d-flex align-center flex-wrap gap-3">
+        <div class="header-icon-container rounded-xl pa-3 me-3">
+          <v-icon color="primary" size="32">mdi-file-check-outline</v-icon>
         </div>
-        <v-spacer />
-        <v-btn-group variant="outlined" density="comfortable" divided rounded="lg" color="primary">
-          <v-btn
-            :variant="activeTab === 'search' ? 'flat' : 'outlined'"
-            prepend-icon="mdi-magnify"
-            @click="activeTab = 'search'"
-          >ຄົ້ນຫາ & ນໍາເຂົ້າ</v-btn>
-          <v-btn
-            v-if="hasPermission('imports.create')"
-            :variant="activeTab === 'direct' ? 'flat' : 'outlined'"
-            prepend-icon="mdi-plus-box-outline"
-            @click="activeTab = 'direct'; initDirectImport()"
-          >ນໍາເຂົ້າໂດຍກົງ</v-btn>
-          <v-btn
-            :variant="activeTab === 'history' ? 'flat' : 'outlined'"
-            prepend-icon="mdi-history"
-            @click="activeTab = 'history'; loadImports()"
-          >ປະຫວັດການນໍາເຂົ້າ</v-btn>
-        </v-btn-group>
-      </div>
-    </div>
+        <div>
+          <h1 class="text-h4 font-weight-black mb-1">ນໍາສິນຄ້າເຂົ້າສາງ</h1>
+          <p class="text-subtitle-1 text-medium-emphasis">ກວດສອບໃບບິນ, ອັບເດດສະຖານະ ແລະ ນໍາສິນຄ້າເຂົ້າຄັງ</p>
+        </div>
+        <v-spacer></v-spacer>
+        <v-btn-toggle v-model="activeTab" density="comfortable" variant="outlined" color="primary" rounded="xl" mandatory class="shadow-soft">
+          <v-btn value="search" prepend-icon="mdi-magnify" class="px-6">ຄົ້ນຫາ</v-btn>
+          <v-btn v-if="hasPermission('imports.create')" value="direct" prepend-icon="mdi-plus" class="px-6" @click="initDirectImport()">ນໍາເຂົ້າໂດຍກົງ</v-btn>
+          <v-btn value="history" prepend-icon="mdi-history" class="px-6" @click="loadImports()">ປະຫວັດ</v-btn>
+        </v-btn-toggle>
+      </v-col>
+    </v-row>
 
     <!-- ══ TAB 1: SEARCH & PROCESS AREA ══════════════════════════════ -->
     <v-window v-model="activeTab">
@@ -568,7 +552,7 @@
         </v-card-text>
       </v-card>
     </v-dialog>
-  </div>
+  </v-container>
 </template>
 
 <script setup>
@@ -970,6 +954,41 @@ onMounted(async () => {
   }
 })
 </script>
+
+<style scoped>
+.header-icon-container {
+  background-color: rgba(var(--v-theme-primary), 0.1);
+}
+
+.shadow-soft {
+  box-shadow: 0 4px 20px rgba(0,0,0,0.04) !important;
+}
+
+.custom-table :deep(th) {
+  font-weight: bold !important;
+  color: #555 !important;
+  background-color: #FAFAFA !important;
+  text-transform: uppercase;
+  font-size: 0.75rem !important;
+  letter-spacing: 0.05em;
+}
+
+.search-card {
+  border: 1px solid rgba(var(--v-theme-primary), 0.1);
+}
+
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  padding: 40px;
+  background: rgba(var(--v-theme-surface), 0.5);
+  border: 2px dashed rgba(var(--v-theme-grey), 0.1);
+  border-radius: 24px;
+}
+</style>
 
 <style scoped>
 .imports-page { width: 100%; }

@@ -3,7 +3,6 @@
     <v-row>
       <v-col cols="12">
         <div class="d-flex align-center mb-6">
-          <v-btn icon="mdi-arrow-left" variant="text" class="mr-2" to="/reports"></v-btn>
           <v-icon size="36" color="primary" class="mr-4">mdi-package-variant</v-icon>
           <div>
             <h1 class="text-h4 font-weight-bold">ລາຍງານສິນຄ້າຄົງຄັງ</h1>
@@ -14,10 +13,19 @@
             color="primary"
             variant="tonal"
             prepend-icon="mdi-refresh"
+            class="mr-2"
             @click="fetchInventory"
             :loading="loading"
           >
             ໂຫຼດໃໝ່
+          </v-btn>
+          <v-btn
+            color="success"
+            variant="elevated"
+            prepend-icon="mdi-file-excel"
+            @click="exportToExcel"
+          >
+            Export Excel
           </v-btn>
         </div>
 
@@ -86,6 +94,8 @@
 
 <script setup>
 import { ref, onMounted } from 'vue'
+import * as XLSX from 'xlsx'
+import { showToast } from '~/composables/useToast'
 
 const api = useApi()
 const loading = ref(false)
@@ -111,7 +121,38 @@ const fetchInventory = async () => {
 }
 
 const formatCurrency = (val) => {
-  return new Intl.NumberFormat('lo-LA', { style: 'currency', currency: 'LAK' }).format(val)
+  return new Intl.NumberFormat('lo-LA', { style: 'currency', currency: 'LAK', maximumFractionDigits: 0 }).format(val)
+}
+
+const exportToExcel = () => {
+  try {
+    const wsData = [
+      ['ລາຍງານສິນຄ້າຄົງຄັງ'],
+      ['ວັນທີລາຍງານ:', new Date().toLocaleString()],
+      [''],
+      ['ສະຫຼຸບພາບລວມ'],
+      ['ຈຳນວນສິນຄ້າທັງໝົດ', inventory.value.totalItems, 'ຊິ້ນ/ອັນ'],
+      ['ມູນຄ່າສາງທັງໝົດ', inventory.value.totalStockValue, 'LAK'],
+      ['ສິນຄ້າທີ່ໃກ້ຈະໝົດ', inventory.value.lowStockCount, 'ລາຍການ'],
+      [''],
+      ['ລາຍການສິນຄ້າທີ່ຄວນສັ່ງຊື້ເພີ່ມ'],
+      ['ຊື່ສິນຄ້າ', 'SKU', 'ຈຳນວນຄົງເຫຼືອ', 'ລະດັບແຈ້ງເຕືອນ']
+    ]
+
+    inventory.value.lowStockItems.forEach(item => {
+      wsData.push([item.product_name, item.variant_sku, item.quantity, item.reorder_level])
+    })
+
+    const ws = XLSX.utils.aoa_to_sheet(wsData)
+    const wb = XLSX.utils.book_new()
+    XLSX.utils.book_append_sheet(wb, ws, 'Inventory')
+
+    XLSX.writeFile(wb, `inventory_report_${new Date().toISOString().slice(0, 10)}.xlsx`)
+    showToast('ສົ່ງອອກຂໍ້ມູນສຳເລັດ', 'success')
+  } catch (e) {
+    console.error(e)
+    showToast('ສົ່ງອອກຂໍ້ມູນຫຼົ້ມເຫຼວ', 'error')
+  }
 }
 
 onMounted(() => {

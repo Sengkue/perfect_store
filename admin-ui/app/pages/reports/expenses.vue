@@ -2,8 +2,7 @@
   <v-container fluid class="pa-6">
     <v-row class="mb-6">
       <v-col cols="12" class="d-flex align-center flex-wrap gap-3">
-        <v-btn icon="mdi-arrow-left" variant="tonal" class="rounded-lg me-2" to="/reports"></v-btn>
-        <div class="header-icon-container rounded-xl pa-3 me-3">
+        <div class="header-icon-container rounded-lg pa-3 me-3">
           <v-icon color="red-darken-3" size="32">mdi-cash-minus</v-icon>
         </div>
         <div>
@@ -13,27 +12,48 @@
         <v-spacer></v-spacer>
 
         <!-- Date Filters -->
-        <v-card elevation="0" border class="rounded-xl px-4 py-2 d-flex align-center gap-3 bg-white">
-          <v-text-field
-            v-model="startDate"
-            type="date"
-            label="ແຕ່ວັນທີ"
-            variant="plain"
-            density="compact"
-            hide-details
-            style="width: 140px"
-            @update:modelValue="fetchExpenses"
-          ></v-text-field>
-          <v-text-field
-            v-model="endDate"
-            type="date"
-            label="ເຖິງວັນທີ"
-            variant="plain"
-            density="compact"
-            hide-details
-            style="width: 140px"
-            @update:modelValue="fetchExpenses"
-          ></v-text-field>
+        <v-card elevation="0" border class="rounded-lg px-4 py-2 d-flex align-center gap-3 bg-white shadow-soft">
+          <!-- Start Date -->
+          <v-menu v-model="menuStart" :close-on-content-click="false">
+            <template v-slot:activator="{ props }">
+              <v-text-field
+                v-bind="props"
+                v-model="startDateFormatted"
+                label="ເລີ່ມ"
+                variant="plain"
+                density="compact"
+                hide-details
+                readonly
+                prepend-inner-icon="mdi-calendar"
+                style="width: 150px"
+              ></v-text-field>
+            </template>
+            <v-date-picker v-model="startDateValue" color="red-darken-3" @update:model-value="menuStart = false"></v-date-picker>
+          </v-menu>
+
+          <v-icon icon="mdi-arrow-right" color="grey"></v-icon>
+
+          <!-- End Date -->
+          <v-menu v-model="menuEnd" :close-on-content-click="false">
+            <template v-slot:activator="{ props }">
+              <v-text-field
+                v-bind="props"
+                v-model="endDateFormatted"
+                label="ສິ້ນສຸດ"
+                variant="plain"
+                density="compact"
+                hide-details
+                readonly
+                prepend-inner-icon="mdi-calendar"
+                style="width: 150px"
+              ></v-text-field>
+            </template>
+            <v-date-picker v-model="endDateValue" color="red-darken-3" @update:model-value="menuEnd = false"></v-date-picker>
+          </v-menu>
+
+          <v-divider vertical class="mx-2"></v-divider>
+          <v-btn color="red-darken-3" variant="elevated" class="rounded-lg mr-2" @click="fetchExpenses" :loading="loading">ຄຳນວນ</v-btn>
+          <v-btn color="success" variant="tonal" prepend-icon="mdi-file-excel" @click="exportToExcel">Export</v-btn>
         </v-card>
       </v-col>
     </v-row>
@@ -41,7 +61,7 @@
     <!-- Expense Stats -->
     <v-row class="mb-6">
       <v-col cols="12" md="4">
-        <v-card border elevation="0" class="rounded-xl overflow-hidden shadow-soft">
+        <v-card border elevation="0" class="rounded-lg overflow-hidden shadow-soft">
           <div class="pa-5 d-flex align-center">
             <v-avatar color="red-lighten-5" rounded="lg" size="48" class="me-4">
               <v-icon color="red-darken-2">mdi-cash-multiple</v-icon>
@@ -59,7 +79,7 @@
       </v-col>
       
       <v-col cols="12" md="4">
-        <v-card border elevation="0" class="rounded-xl overflow-hidden shadow-soft">
+        <v-card border elevation="0" class="rounded-lg overflow-hidden shadow-soft">
           <div class="pa-5 d-flex align-center">
             <v-avatar color="blue-lighten-5" rounded="lg" size="48" class="me-4">
               <v-icon color="blue-darken-2">mdi-file-document-multiple-outline</v-icon>
@@ -78,7 +98,7 @@
     </v-row>
 
     <!-- Expenses Table -->
-    <v-card border elevation="0" class="rounded-xl overflow-hidden shadow-soft">
+    <v-card border elevation="0" class="rounded-lg overflow-hidden shadow-soft">
       <v-data-table
         :headers="headers"
         :items="expenses"
@@ -123,6 +143,11 @@
         <!-- Status -->
         <template v-slot:item.status="{ item }">
           <v-chip color="success" size="x-small" variant="flat">ສຳເລັດ</v-chip>
+        </template>
+
+        <!-- Actions -->
+        <template v-slot:item.actions="{ item }">
+          <v-btn icon="mdi-eye-outline" variant="tonal" size="small" color="primary" class="rounded-lg" @click="openDetail(item)"></v-btn>
         </template>
       </v-data-table>
     </v-card>
@@ -175,7 +200,7 @@
         </v-card-text>
         <v-card-actions class="pa-4">
           <v-spacer></v-spacer>
-          <v-btn variant="tonal" color="primary" class="rounded-xl px-8" @click="detailDialog = false">ປິດ</v-btn>
+          <v-btn variant="tonal" color="primary" class="rounded-lg px-8" @click="detailDialog = false">ປິດ</v-btn>
         </v-card-actions>
       </v-card>
     </v-dialog>
@@ -183,30 +208,51 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue'
-
+import { ref, onMounted, computed } from 'vue'
+import * as XLSX from 'xlsx'
+import { showToast } from '~/composables/useToast'
 const api = useApi()
+
 const loading = ref(false)
+const menuStart = ref(false)
+const menuEnd = ref(false)
+
+// Internal Date objects
+const startDateValue = ref(new Date())
+const endDateValue = ref(new Date())
+
+// Formatted for display
+const startDateFormatted = computed(() => formatDate(startDateValue.value))
+const endDateFormatted = computed(() => formatDate(endDateValue.value))
+
+// API format (YYYY-MM-DD)
+const startDate = computed(() => toISODate(startDateValue.value))
+const endDate = computed(() => toISODate(endDateValue.value))
+
 const expenses = ref([])
-
-const detailDialog = ref(false)
+const totalExpenses = ref(0)
 const selectedImport = ref(null)
+const detailDialog = ref(false)
 
-const startDate = ref(new Date(new Date().setDate(1)).toISOString().substr(0, 10)) // 1st of month
-const endDate = ref(new Date().toISOString().substr(0, 10))
+// Helpers
+function formatDate(date) {
+  if (!date) return '-'
+  return new Intl.DateTimeFormat('lo-LA', { day: '2-digit', month: 'short', year: 'numeric' }).format(new Date(date))
+}
+
+function toISODate(date) {
+  if (!date) return ''
+  const d = new Date(date)
+  return d.toISOString().split('T')[0]
+}
 
 const headers = [
-  { title: 'ວັນທີຮັບ', key: 'receive_date' },
-  { title: 'ເລກທີໃບນຳເຂົ້າ', key: 'invoice_number' },
-  { title: 'ຜູ້ສະໜອງ', key: 'supplier' },
-  { title: 'ພະນັກງານບັນທຶກ', key: 'user' },
-  { title: 'ຍອດເງິນທີ່ຈ່າຍ', key: 'total_amount', align: 'end' },
-  { title: 'ສະຖານະ', key: 'status', align: 'center' }
+  { title: 'ວັນທີ', key: 'receive_date' },
+  { title: 'ເລກບິນ', key: 'invoice_number' },
+  { title: 'ຜູ້ສະໜອງ', key: 'supplier.name' },
+  { title: 'ຍອດລວມ', key: 'total_amount', align: 'end' },
+  { title: 'ລາຍລະອຽດ', key: 'actions', sortable: false, align: 'end' }
 ]
-
-const totalExpenses = computed(() => {
-  return expenses.value.reduce((sum, e) => sum + Number(e.total_amount), 0)
-})
 
 const fetchExpenses = async () => {
   loading.value = true
@@ -215,10 +261,11 @@ const fetchExpenses = async () => {
       params: { startDate: startDate.value, endDate: endDate.value }
     })
     if (res.success) {
-      expenses.value = res.data
+      expenses.value = res.data || []
+      totalExpenses.value = (res.data || []).reduce((acc, item) => acc + Number(item.total_amount || 0), 0)
     }
   } catch (e) {
-    console.error('Failed to fetch expense report', e)
+    console.error(e)
   } finally {
     loading.value = false
   }
@@ -243,19 +290,42 @@ const formatCurrency = (val) => {
   return new Intl.NumberFormat('lo-LA', { style: 'currency', currency: 'LAK', maximumFractionDigits: 0 }).format(val)
 }
 
-const formatDate = (val) => {
-  return val ? new Date(val).toLocaleDateString('lo-LA', { day: '2-digit', month: 'short', year: 'numeric' }) : '-'
+
+
+const exportToExcel = () => {
+  if (!expenses.value.length) return
+  try {
+    const wsData = [
+      ['ລາຍງານລາຍຈ່າຍ'],
+      ['ໄລຍະເວລາ:', `${startDate.value} ຫາ ${endDate.value}`],
+      [''],
+      ['ວັນທີຮັບ', 'ເລກທີໃບນຳເຂົ້າ', 'ຜູ້ສະໜອງ', 'ພະນັກງານບັນທຶກ', 'ຍອດເງິນທີ່ຈ່າຍ', 'ສະຖານະ']
+    ]
+    expenses.value.forEach(e => {
+      wsData.push([
+        formatDate(e.receive_date),
+        e.invoice_number,
+        e.supplier?.name || 'ທົ່ວໄປ',
+        e.user?.username,
+        e.total_amount,
+        'ສຳເລັດ'
+      ])
+    })
+    const ws = XLSX.utils.aoa_to_sheet(wsData)
+    const wb = XLSX.utils.book_new()
+    XLSX.utils.book_append_sheet(wb, ws, 'Expenses')
+    XLSX.writeFile(wb, `expense_report_${startDate.value}_to_${endDate.value}.xlsx`)
+    showToast('ສົ່ງອອກຂໍ້ມູນສຳເລັດ', 'success')
+  } catch (e) {
+    showToast('ສົ່ງອອກຂໍ້ມູນຫຼົ້ມເຫຼວ', 'error')
+  }
 }
 
 onMounted(fetchExpenses)
 </script>
 
 <style scoped>
-.header-icon-container {
-  background-color: rgba(211, 47, 47, 0.1);
-}
-
-.shadow-soft {
-  box-shadow: 0 4px 20px rgba(0,0,0,0.04) !important;
-}
+.header-icon-container { background-color: rgba(198, 40, 40, 0.1); }
+.shadow-soft { box-shadow: 0 4px 20px rgba(0,0,0,0.04) !important; }
+.border-red-darken-2 { border-left: 4px solid #D32F2F !important; }
 </style>
