@@ -1,18 +1,18 @@
 <template>
-  <v-container fluid class="pa-6">
-    <v-row class="mb-6">
-      <v-col cols="12" class="d-flex align-center flex-wrap gap-3">
+  <v-container fluid class="pa-2 container-border">
+    <v-row class="mb-2">
+      <v-col cols="12" class="d-flex align-center flex-wrap gap-2">
         <div class="header-icon-container rounded-lg pa-3 me-3">
           <v-icon color="primary" size="32">mdi-chart-box</v-icon>
         </div>
         <div>
-          <h1 class="text-h4 font-weight-black mb-1">ວິເຄາະທຸລະກິດ</h1>
-          <p class="text-subtitle-1 text-medium-emphasis">ພາບລວມການເຕີບໂຕ ແລະ ສະຖານະການເງິນຂອງຮ້ານ</p>
+          <h1 class="text-h5 font-weight-black mb-1">ວິເຄາະທຸລະກິດ</h1>
+          <p class="text-body-2 text-medium-emphasis">ພາບລວມການເຕີບໂຕ ແລະ ສະຖານະການເງິນຂອງຮ້ານ</p>
         </div>
         <v-spacer></v-spacer>
 
         <!-- Date Filter & Export -->
-        <v-card elevation="0" border class="rounded-lg px-4 py-2 d-flex align-center gap-3 bg-white shadow-soft">
+        <v-card elevation="0" border class="rounded-lg px-2 py-1 d-flex align-center gap-2 bg-white shadow-soft">
           <!-- Start Date -->
           <v-menu v-model="startMenu" :close-on-content-click="false">
             <template v-slot:activator="{ props }">
@@ -55,7 +55,8 @@
           <v-btn
             color="primary"
             variant="elevated"
-            class="rounded-lg px-6"
+            size="small"
+            class="rounded-lg px-4"
             @click="fetchSummary"
             :loading="loading"
           >
@@ -64,8 +65,9 @@
           <v-btn
             color="success"
             variant="tonal"
+            size="small"
             prepend-icon="mdi-file-excel"
-            class="rounded-lg px-6"
+            class="rounded-lg px-4"
             @click="exportToExcel"
           >
             Export
@@ -75,7 +77,7 @@
     </v-row>
 
     <!-- Financial Metric Cards -->
-    <v-row class="mb-8">
+    <v-row class="mb-2">
       <v-col v-for="(metric, i) in metrics" :key="i" cols="12" sm="6" md="3">
         <v-card 
           border 
@@ -83,7 +85,7 @@
           class="rounded-lg overflow-hidden shadow-soft metric-card"
           :style="{ background: metric.gradient }"
         >
-          <div class="pa-6">
+          <div class="pa-3">
             <div class="d-flex justify-space-between align-start mb-4">
               <div>
                 <div class="text-subtitle-2 font-weight-bold mb-1" :style="{ color: metric.textColor }">
@@ -109,8 +111,8 @@
     <v-row>
       <!-- Sales Trend Bar Chart (8/12) -->
       <v-col cols="12" lg="8">
-        <v-card border elevation="0" class="rounded-lg pa-6 bg-white shadow-soft overflow-hidden h-100">
-          <div class="d-flex align-center mb-8">
+        <v-card border elevation="0" class="rounded-lg pa-3 bg-white shadow-soft overflow-hidden h-100">
+          <div class="d-flex align-center mb-2">
             <v-icon icon="mdi-finance" color="primary" class="me-2"></v-icon>
             <h2 class="text-h6 font-weight-bold">ແນວໂນ້ມລາຍຮັບປະຈຳວັນ</h2>
             <v-spacer></v-spacer>
@@ -173,8 +175,8 @@
 
       <!-- Financial Distribution Donut Chart (4/12) -->
       <v-col cols="12" lg="4">
-        <v-card border elevation="0" class="rounded-lg pa-6 bg-white shadow-soft h-100">
-          <div class="d-flex align-center mb-8">
+        <v-card border elevation="0" class="rounded-lg pa-3 bg-white shadow-soft h-100">
+          <div class="d-flex align-center mb-2">
             <v-icon icon="mdi-chart-donut" color="primary" class="me-2"></v-icon>
             <h2 class="text-h6 font-weight-bold">ສັດສ່ວນລາຍຮັບ</h2>
           </div>
@@ -218,7 +220,7 @@
             </div>
 
             <!-- Legend -->
-            <div class="w-100 mt-10">
+            <div class="w-100 mt-4">
               <div class="d-flex align-center justify-space-between mb-3">
                 <div class="d-flex align-center">
                   <div class="legend-dot bg-success me-2"></div>
@@ -465,6 +467,13 @@ onMounted(fetchSummary)
 <style scoped>
 .header-icon-container {
   background-color: rgba(var(--v-theme-primary), 0.1);
+}
+
+.container-border {
+  border: 1px solid rgba(var(--v-border-color), var(--v-border-opacity));
+  border-radius: 12px;
+  background-color: rgb(var(--v-theme-surface));
+  margin-top: 8px;
 }
 
 .shadow-soft {

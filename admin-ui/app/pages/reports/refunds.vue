@@ -1,13 +1,13 @@
 <template>
-  <v-container fluid class="pa-6">
-    <v-row class="mb-6">
-      <v-col cols="12" class="d-flex align-center flex-wrap gap-3">
-        <div class="header-icon-container rounded-lg pa-3 me-3">
-          <v-icon color="deep-orange" size="32">mdi-backspace-reverse-outline</v-icon>
+  <v-container fluid class="pa-2 container-border">
+    <v-row class="mb-2">
+      <v-col cols="12" class="d-flex align-center flex-wrap gap-2">
+        <div class="header-icon-container rounded-lg pa-2 me-3">
+          <v-icon color="deep-orange" size="20">mdi-backspace-reverse-outline</v-icon>
         </div>
         <div>
-          <h1 class="text-h4 font-weight-black mb-1">ລາຍງານການຄືນເງິນ</h1>
-          <p class="text-subtitle-1 text-medium-emphasis">ກວດສອບລາຍການຄືນສິນຄ້າ ແລະ ຄືນເງິນໃຫ້ລູກຄ້າ</p>
+          <h1 class="text-h5 font-weight-bold mb-0">ລາຍງານການຄືນເງິນ</h1>
+          <div class="text-caption text-medium-emphasis">ກວດສອບລາຍການຄືນສິນຄ້າ ແລະ ຄືນເງິນໃຫ້ລູກຄ້າ</div>
         </div>
         <v-spacer></v-spacer>
 
@@ -51,24 +51,45 @@
           </v-menu>
 
           <v-divider vertical class="mx-2"></v-divider>
-          <v-btn color="deep-orange" variant="elevated" class="rounded-lg mr-2" @click="fetchData" :loading="loading">ຄົ້ນຫາ</v-btn>
-          <v-btn color="success" variant="tonal" prepend-icon="mdi-file-excel" @click="exportToExcel">Export</v-btn>
+          <v-btn color="deep-orange" variant="elevated" size="small" class="rounded-lg mr-2" @click="fetchData" :loading="loading">ຄົ້ນຫາ</v-btn>
+          <v-btn color="success" variant="tonal" size="small" prepend-icon="mdi-file-excel" @click="exportToExcel">Export</v-btn>
         </v-card>
       </v-col>
     </v-row>
 
-    <v-row v-if="refundData">
-      <v-col cols="12" md="6">
-        <v-card border elevation="0" class="rounded-lg pa-6 h-100 bg-deep-orange-lighten-5 shadow-soft border-deep-orange-lighten-4">
-          <div class="text-overline text-deep-orange">ຍອດຄືນເງິນທັງໝົດ</div>
-          <div class="text-h3 font-weight-black text-deep-orange mt-2">{{ formatCurrency(refundData.summary?.totalAmount || 0) }}</div>
-          <div class="text-subtitle-2 mt-2">ຈຳນວນ {{ refundData.summary?.count || 0 }} ລາຍການທີ່ອະນຸມັດແລ້ວ</div>
+    <v-row v-if="refundData" class="mb-4">
+      <v-col cols="12" sm="6" md="4">
+        <v-card border elevation="0" class="rounded-lg overflow-hidden shadow-soft">
+          <div class="pa-3 d-flex align-center">
+            <v-avatar color="deep-orange-lighten-5" rounded="lg" size="36" class="me-4">
+              <v-icon color="deep-orange-darken-2" size="20">mdi-cash-refund</v-icon>
+            </v-avatar>
+            <div>
+              <div class="text-caption text-grey font-weight-bold text-uppercase" style="font-size: 0.7rem">ຍອດຄືນເງິນທັງໝົດ</div>
+              <div class="text-h6 font-weight-bold text-deep-orange-darken-2">{{ formatCurrency(refundData.summary?.totalAmount || 0) }}</div>
+            </div>
+          </div>
+          <v-divider></v-divider>
+          <div class="px-3 py-1 bg-deep-orange-lighten-5 text-caption text-deep-orange-darken-4">
+            ຈຳນວນ {{ refundData.summary?.count || 0 }} ລາຍການທີ່ອະນຸມັດແລ້ວ
+          </div>
         </v-card>
       </v-col>
-      <v-col cols="12" md="6">
-        <v-card border elevation="0" class="rounded-lg pa-6 h-100 shadow-soft">
-          <div class="text-overline text-grey">ໝາຍເຫດ</div>
-          <div class="text-subtitle-1 mt-2">ການຄືນເງິນຈະມີຜົນກະທົບຕໍ່ກຳໄລສຸດທິ ແລະ ຈຳນວນສິນຄ້າໃນສາງ (ຖ້າສິນຄ້າຖືກນຳກັບເຂົ້າສາງ).</div>
+      <v-col cols="12" sm="6" md="4">
+        <v-card border elevation="0" class="rounded-lg overflow-hidden shadow-soft">
+          <div class="pa-3 d-flex align-center">
+            <v-avatar color="grey-lighten-4" rounded="lg" size="36" class="me-4">
+              <v-icon color="grey-darken-2" size="20">mdi-information-outline</v-icon>
+            </v-avatar>
+            <div>
+              <div class="text-caption text-grey font-weight-bold text-uppercase" style="font-size: 0.7rem">ໝາຍເຫດ</div>
+              <div class="text-subtitle-2 text-medium-emphasis">ລາຍງານຜົນກະທົບຕໍ່ກຳໄລ</div>
+            </div>
+          </div>
+          <v-divider></v-divider>
+          <div class="px-3 py-1 bg-grey-lighten-5 text-caption text-grey-darken-4">
+            ການຄືນເງິນມີຜົນກະທົບຕໍ່ກຳໄລສຸດທິ
+          </div>
         </v-card>
       </v-col>
 
@@ -78,6 +99,7 @@
             :headers="headers"
             :items="refundData.refunds"
             :loading="loading"
+            density="compact"
             hover
           >
             <template v-slot:item.refund_date="{ item }">
@@ -178,5 +200,11 @@ onMounted(fetchData)
 
 <style scoped>
 .header-icon-container { background-color: rgba(255, 87, 34, 0.1); }
+.container-border {
+  border: 1px solid rgba(var(--v-border-color), var(--v-border-opacity));
+  border-radius: 12px;
+  background-color: rgb(var(--v-theme-surface));
+  margin-top: 8px;
+}
 .shadow-soft { box-shadow: 0 4px 20px rgba(0,0,0,0.04) !important; }
 </style>

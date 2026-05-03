@@ -1,12 +1,14 @@
 <template>
-  <v-container fluid>
-    <v-row>
+  <v-container fluid class="pa-2 container-border">
+    <v-row dense>
       <v-col cols="12">
-        <div class="d-flex align-center mb-6">
-          <v-icon size="36" color="primary" class="mr-4">mdi-file-document-outline</v-icon>
+        <div class="d-flex align-center mb-2">
+          <div class="header-icon-container rounded-lg pa-2 me-2 border">
+            <v-icon size="20" color="primary">mdi-file-document-outline</v-icon>
+          </div>
           <div>
-            <h1 class="text-h4 font-weight-bold">System Logs</h1>
-            <div class="text-subtitle-1 text-medium-emphasis">ຕິດຕາມການເຮັດວຽກ ແລະ ຂໍ້ຜິດພາດຂອງລະບົບ</div>
+            <h1 class="text-h5 font-weight-bold mb-0">System Logs</h1>
+            <div class="text-caption text-medium-emphasis mb-0">ຕິດຕາມການເຮັດວຽກ ແລະ ຂໍ້ຜິດພາດຂອງລະບົບ</div>
           </div>
           <v-spacer></v-spacer>
           <v-select
@@ -24,14 +26,15 @@
             color="primary"
             variant="tonal"
             icon="mdi-refresh"
-            class="ml-2"
+            size="small"
+            class="ms-2 rounded-lg"
             @click="fetchLogs"
             :loading="loading"
           ></v-btn>
         </div>
 
-        <v-card variant="outlined" class="log-card">
-          <v-table density="compact" fixed-header height="calc(100vh - 250px)">
+        <v-card border elevation="0" class="rounded-lg overflow-hidden shadow-soft">
+          <v-table density="compact" fixed-header height="calc(100vh - 180px)" class="custom-table">
             <thead>
               <tr>
                 <th class="text-left font-weight-bold">Timestamp</th>
@@ -61,7 +64,7 @@
                     variant="flat"
                     label
                   >
-                    {{ log.level.toUpperCase() }}
+                    {{ log.level?.toUpperCase() }}
                   </v-chip>
                 </td>
                 <td class="text-body-2 font-weight-medium">{{ log.message }}</td>
@@ -85,7 +88,7 @@
     <v-dialog v-model="detailsDialog" max-width="800">
       <v-card v-if="selectedLog" border>
         <v-card-title class="d-flex align-center">
-          <v-icon :color="getLevelColor(selectedLog.level)" class="mr-2">
+          <v-icon :color="getLevelColor(selectedLog.level)" class="me-2">
             {{ getLevelIcon(selectedLog.level) }}
           </v-icon>
           Log Details
@@ -115,7 +118,7 @@ const detailsDialog = ref(false)
 const selectedLog = ref(null)
 
 const fetchLogs = async () => {
-  loading.ref = true
+  loading.value = true
   try {
     const res = await api('/system-logs', {
       params: { file: selectedFile.value }
@@ -140,7 +143,7 @@ const getLevelColor = (level) => {
     case 'warn': return 'warning'
     case 'info': return 'info'
     case 'debug': return 'secondary'
-    default: return 'medium-emphasis'
+    default: return 'grey'
   }
 }
 
@@ -186,11 +189,18 @@ onMounted(() => {
 })
 </script>
 
+
 <style scoped>
-.log-card {
+.container-border {
+  border: 1px solid rgba(var(--v-border-color), var(--v-border-opacity));
   border-radius: 12px;
-  overflow: hidden;
-  background: white;
+  background-color: rgb(var(--v-theme-surface));
+  margin-top: 8px;
+}
+
+.header-icon-container {
+  background-color: rgba(var(--v-theme-primary), 0.1);
+  border-color: rgba(var(--v-theme-primary), 0.2) !important;
 }
 
 .font-monospace {
@@ -205,11 +215,26 @@ onMounted(() => {
   background-color: rgba(var(--v-theme-warning), 0.05) !important;
 }
 
-tr:hover {
-  background-color: rgba(var(--v-theme-primary), 0.02) !important;
+.shadow-soft {
+  box-shadow: 0 4px 20px rgba(0,0,0,0.04) !important;
 }
 
-td {
+.custom-table :deep(th) {
+  font-weight: bold !important;
+  color: #555 !important;
+  background-color: #FAFAFA !important;
+  text-transform: uppercase;
+  font-size: 0.7rem !important;
+  letter-spacing: 0.05em;
+  padding: 0 8px !important;
+}
+
+.custom-table :deep(td) {
+  padding: 0 8px !important;
   border-bottom: 1px solid rgba(0,0,0,0.05) !important;
+}
+
+tr:hover {
+  background-color: rgba(var(--v-theme-primary), 0.02) !important;
 }
 </style>

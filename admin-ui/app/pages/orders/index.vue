@@ -1,31 +1,23 @@
 <template>
-  <div class="orders-page" v-if="hasPermission('sales.view')">
+  <v-container fluid class="pa-2 container-border" v-if="hasPermission('sales.view')">
 
-    <!-- ══ Page Header ══════════════════════════════════════════════ -->
-    <div class="page-header mb-4">
-      <div class="d-flex align-center flex-wrap gap-3">
+    <!-- ── Header Section ── -->
+    <v-row class="mb-4">
+      <v-col cols="12" class="d-flex align-center flex-wrap gap-3">
+        <div class="header-icon-container rounded-lg pa-2 me-3">
+          <v-icon color="primary" size="20">mdi-cart-plus</v-icon>
+        </div>
         <div>
-          <h1 class="text-h5 font-weight-bold">ສັ່ງຊື້ສິນຄ້າ</h1>
-          <p class="text-caption text-medium-emphasis mb-0">ສ້າງ ແລະ ຈັດການລາຍການສັ່ງຊື້</p>
+          <h1 class="text-h5 font-weight-bold mb-0">ສັ່ງຊື້ສິນຄ້າ</h1>
+          <div class="text-caption text-medium-emphasis">ສ້າງ ແລະ ຈັດການລາຍການສັ່ງຊື້</div>
         </div>
         <v-spacer />
-        <v-btn-group variant="outlined" density="comfortable" divided>
-          <v-btn
-            v-if="hasPermission('sales.create')"
-            :color="activeTab === 'create' ? 'primary' : ''"
-            :variant="activeTab === 'create' ? 'flat' : 'outlined'"
-            prepend-icon="mdi-plus-circle-outline"
-            @click="activeTab = 'create'"
-          >ສ້າງລາຍການ</v-btn>
-          <v-btn
-            :color="activeTab === 'list' ? 'primary' : ''"
-            :variant="activeTab === 'list' ? 'flat' : 'outlined'"
-            prepend-icon="mdi-format-list-bulleted"
-            @click="activeTab = 'list'; loadOrders()"
-          >ລາຍການສັ່ງຊື້</v-btn>
-        </v-btn-group>
-      </div>
-    </div>
+        <v-btn-toggle v-model="activeTab" density="compact" variant="outlined" color="primary" rounded="lg" mandatory class="shadow-soft">
+          <v-btn v-if="hasPermission('sales.create')" value="create" prepend-icon="mdi-plus-circle-outline" class="px-4">ສ້າງລາຍການ</v-btn>
+          <v-btn value="list" prepend-icon="mdi-clipboard-list-outline" class="px-4" @click="loadOrders()">ລາຍການສັ່ງຊື້</v-btn>
+        </v-btn-toggle>
+      </v-col>
+    </v-row>
 
     <!-- ══ CREATE ORDER TAB ══════════════════════════════════════════ -->
     <div v-if="activeTab === 'create' && hasPermission('sales.create')">
@@ -33,12 +25,17 @@
 
         <!-- LEFT: Product Picker ─────────────────────────── -->
         <v-col cols="12" lg="7">
-          <v-card rounded="xl" elevation="2" class="h-100">
-            <v-card-title class="d-flex align-center pa-4 pb-2">
-              <v-icon icon="mdi-package-variant-closed" color="primary" class="me-2" />
-              <span class="text-subtitle-1 font-weight-bold">ເລືອກສິນຄ້າ</span>
+          <v-card border elevation="0" class="rounded-lg shadow-soft h-100">
+            <v-card-title class="d-flex align-center pa-3 pb-2">
+              <v-avatar color="primary-lighten-5" rounded="lg" size="32" class="me-3">
+                <v-icon icon="mdi-package-variant-closed" color="primary" size="18" />
+              </v-avatar>
+              <div>
+                <div class="text-subtitle-2 font-weight-bold">ເລືອກສິນຄ້າ</div>
+                <div class="text-caption text-medium-emphasis" style="font-size: 0.7rem">ຄົ້ນຫາ ແລະ ເພີ່ມລາຍການ</div>
+              </div>
               <v-spacer />
-              <v-chip color="primary" variant="tonal" size="small">
+              <v-chip color="primary" variant="tonal" size="small" prepend-icon="mdi-package-variant-closed" class="rounded-lg">
                 {{ products.length }} ລາຍການ
               </v-chip>
             </v-card-title>
@@ -141,10 +138,12 @@
 
             <!-- Customer Selection -->
             <v-col cols="12">
-              <v-card rounded="xl" elevation="2">
-                <v-card-title class="d-flex align-center pa-4 pb-2">
-                  <v-icon icon="mdi-account-circle-outline" color="indigo" class="me-2" />
-                  <span class="text-subtitle-1 font-weight-bold">ຂໍ້ມູນລູກຄ້າ</span>
+              <v-card border elevation="0" class="rounded-lg shadow-soft">
+                <v-card-title class="d-flex align-center pa-3 pb-2">
+                  <v-avatar color="indigo-lighten-5" rounded="lg" size="32" class="me-3">
+                    <v-icon icon="mdi-account-circle-outline" color="indigo" size="18" />
+                  </v-avatar>
+                  <div class="text-subtitle-2 font-weight-bold">ຂໍ້ມູນລູກຄ້າ</div>
                 </v-card-title>
                 <v-card-text class="pa-4 pt-1">
                   <v-autocomplete
@@ -232,12 +231,14 @@
 
             <!-- Cart -->
             <v-col cols="12">
-              <v-card rounded="xl" elevation="2">
-                <v-card-title class="d-flex align-center pa-4 pb-2">
-                  <v-icon icon="mdi-cart-outline" color="deep-orange" class="me-2" />
-                  <span class="text-subtitle-1 font-weight-bold">ກະຕ່າສິນຄ້າ</span>
+              <v-card border elevation="0" class="rounded-lg shadow-soft">
+                <v-card-title class="d-flex align-center pa-3 pb-2">
+                  <v-avatar color="deep-orange-lighten-5" rounded="lg" size="32" class="me-3">
+                    <v-icon icon="mdi-cart-outline" color="deep-orange" size="18" />
+                  </v-avatar>
+                  <div class="text-subtitle-2 font-weight-bold">ກະຕ່າສິນຄ້າ</div>
                   <v-spacer />
-                  <v-chip v-if="cart.length" color="deep-orange" variant="tonal" size="small">
+                  <v-chip v-if="cart.length" color="deep-orange" variant="tonal" size="small" class="rounded-lg">
                     {{ totalItems }} ຊ/ຕ
                   </v-chip>
                   <v-btn
@@ -283,6 +284,9 @@
 
                     <v-list-item-title class="text-body-2 font-weight-medium">
                       {{ item.product.name }}
+                      <v-chip v-if="item.variantLabel" size="x-small" color="primary" variant="tonal" class="ms-1">
+                        {{ item.variantLabel }}
+                      </v-chip>
                     </v-list-item-title>
                     <v-list-item-subtitle class="text-caption">
                       {{ formatCurrency(item.price) }} / ຊ//ຕ
@@ -363,11 +367,11 @@
 
     <!-- ══ ORDERS LIST TAB ══════════════════════════════════════════ -->
     <div v-else>
-      <v-card rounded="xl" elevation="2">
+      <v-card border elevation="0" class="rounded-lg shadow-soft">
         <!-- Header -->
-        <v-card-title class="d-flex align-center py-3 px-4 flex-wrap gap-2">
-          <v-icon icon="mdi-clipboard-list-outline" color="primary" class="me-2" />
-          <span class="text-subtitle-1 font-weight-bold">ລາຍການສັ່ງຊື້ທາງອອນລາຍ</span>
+        <v-card-title class="d-flex align-center py-2 px-3 flex-wrap gap-2">
+          <v-icon icon="mdi-clipboard-list-outline" color="primary" class="me-2" size="20" />
+          <span class="text-body-2 font-weight-bold">ລາຍການສັ່ງຊື້ທາງອອນລາຍ</span>
           <v-spacer />
 
           <v-text-field
@@ -509,7 +513,7 @@
 
     <!-- ══ VARIANT PICKER DIALOG ════════════════════════════════════ -->
     <v-dialog v-model="variantDialog" max-width="500" >
-      <v-card v-if="variantProduct" rounded="xl">
+      <v-card v-if="variantProduct" rounded="lg">
         <v-card-title class="d-flex align-center pa-4">
           <v-icon icon="mdi-format-list-checks" color="primary" class="me-2" />
           ເລືອກຕົວເລືອກ
@@ -521,7 +525,7 @@
             <v-list-item
               v-for="(variant, i) in variantProduct.variants"
               :key="variant.id"
-              :title="`${variant.variant_type}: ${variant.variant_value}`"
+              :title="formatVariantName(variant)"
               :subtitle="`ລາຄາ: ${formatCurrency(variant.price || variantProduct.selling_price)} · ຈໍານວນ: ${variant.quantity_in_stock}`"
               :class="i !== variantProduct.variants.length - 1 ? 'border-b' : ''"
               :disabled="variant.quantity_in_stock === 0"
@@ -548,7 +552,7 @@
 
     <!-- ══ ORDER DETAIL DIALOG ══════════════════════════════════════ -->
     <v-dialog v-model="detailDialog" max-width="700">
-      <v-card v-if="detailOrder" rounded="xl">
+      <v-card v-if="detailOrder" rounded="lg">
         <v-card-title class="d-flex align-center pa-4">
           <v-icon icon="mdi-receipt-text-outline" color="primary" class="me-2" />
           ລາຍລະອຽດລາຍການ #{{ detailOrder.sale_number }}
@@ -662,7 +666,7 @@
 
     <!-- ══ SUCCESS OVERLAY ══════════════════════════════════════════ -->
     <v-dialog v-model="successDialog" max-width="420" persistent>
-      <v-card rounded="xl" class="text-center pa-2">
+      <v-card rounded="lg" class="text-center pa-2">
         <v-card-text class="pa-6">
           <div class="success-checkmark mb-4">
             <v-icon icon="mdi-check-circle" color="success" size="80" />
@@ -691,7 +695,7 @@
         </v-card-actions>
       </v-card>
     </v-dialog>
-  </div>
+  </v-container>
 </template>
 
 <script setup>
@@ -699,6 +703,22 @@ import { ref, computed, onMounted } from 'vue'
 
 const api = useApi()
 const { hasPermission } = usePermissions()
+
+// Audio
+const sounds = {
+  click:   typeof Audio !== 'undefined' ? new Audio('/sounds/UI_click.mp3') : null,
+  cash:    typeof Audio !== 'undefined' ? new Audio('/sounds/cash_register_beep.mp3') : null,
+  error:   typeof Audio !== 'undefined' ? new Audio('/sounds/error.mp3') : null,
+  success: typeof Audio !== 'undefined' ? new Audio('/sounds/success_transaction_chim.mp3') : null,
+}
+
+const playSound = (type) => {
+  if (sounds[type]) {
+    const audio = sounds[type];
+    audio.currentTime = 0
+    audio.play().catch(e => console.warn(`Audio ${type} play failed:`, e))
+  }
+}
 
 // ── Tab ────────────────────────────────────────────────────────────
 const activeTab = ref('create')
@@ -748,7 +768,11 @@ const variantDialog  = ref(false)
 const variantProduct = ref(null)
 
 const handleProductClick = (product) => {
-  if (getStock(product) === 0) return
+  if (getStock(product) === 0) {
+    playSound('error')
+    return
+  }
+  playSound('click')
   if (product.variants?.length > 1) {
     variantProduct.value = product
     variantDialog.value  = true
@@ -759,6 +783,7 @@ const handleProductClick = (product) => {
 }
 
 const addToCartDirect = (product, price) => {
+  playSound('click')
   const existing = cart.value.find(c => c.product.id === product.id && !c.variantId)
   if (existing) {
     existing.quantity++
@@ -768,25 +793,31 @@ const addToCartDirect = (product, price) => {
 }
 
 const addVariantToCart = (product, variant) => {
+  playSound('click')
   variantDialog.value = false
   const price = Number(variant.price || product.selling_price)
   const existing = cart.value.find(c => c.variantId === variant.id)
   if (existing) {
     existing.quantity++
   } else {
-    cart.value.push({ product, price, quantity: 1, variantId: variant.id, variantLabel: `${variant.variant_type}: ${variant.variant_value}` })
+    cart.value.push({ product, price, quantity: 1, variantId: variant.id, variantLabel: formatVariantName(variant) })
   }
 }
 
-const incrementItem = (item) => { item.quantity++ }
+const incrementItem = (item) => { playSound('click'); item.quantity++ }
 const decrementItem = (item) => {
+  playSound('click')
   if (item.quantity > 1) item.quantity--
   else removeItem(item)
 }
 const removeItem = (item) => {
+  playSound('click')
   cart.value = cart.value.filter(c => c !== item)
 }
-const clearCart = () => { cart.value = [] }
+const clearCart = () => {
+  playSound('click')
+  cart.value = []
+}
 
 // ── Order Info ────────────────────────────────────────────────────
 const customers       = ref([])
@@ -874,12 +905,15 @@ const submitOrder = async () => {
     })
 
     if (res.success) {
+      playSound('success')
       createdOrder.value = res.data
       successDialog.value = true
     } else {
+      playSound('error')
       showToast(res.message || 'Error creating order', 'error')
     }
   } catch (e) {
+    playSound('error')
     showToast('Failed to connect to server', 'error')
   } finally {
     submitting.value = false
@@ -948,11 +982,12 @@ const loadOrders = async () => {
 const confirmPayment = async (order) => {
   confirmingPayment.value = order.id
   try {
-    const res = await api(`/sales/${order.id}`, {
+    const res = await api(`/sales/${order.id}/status`, {
       method: 'PUT',
       body: { payment_status: 'paid' }
     })
     if (res.success) {
+      playSound('cash')
       showToast('ຢືນຢັນການຊຳລະເງິນສຳເລັດ', 'success')
       loadOrders()
       if (detailOrder.value?.id === order.id) {
@@ -960,6 +995,7 @@ const confirmPayment = async (order) => {
       }
     }
   } catch (e) {
+    playSound('error')
     showToast('Error confirming payment', 'error')
   } finally {
     confirmingPayment.value = null
@@ -969,11 +1005,12 @@ const confirmPayment = async (order) => {
 const updateOrderStatus = async (order, status) => {
   updatingStatus.value = status
   try {
-    const res = await api(`/sales/${order.id}`, {
+    const res = await api(`/sales/${order.id}/status`, {
       method: 'PUT',
       body: { sale_status: status }
     })
     if (res.success) {
+      playSound('success')
       showToast('ອັບເດດສະຖານະສຳເລັດ', 'success')
       loadOrders()
       if (detailOrder.value?.id === order.id) {
@@ -981,6 +1018,7 @@ const updateOrderStatus = async (order, status) => {
       }
     }
   } catch (e) {
+    playSound('error')
     showToast('Error updating status', 'error')
   } finally {
     updatingStatus.value = null
@@ -1009,6 +1047,20 @@ const allowedStatusTransitions = (order) => {
 }
 
 // ── Format Helpers ───────────────────────────────────────────────
+const formatVariantName = (v) => {
+  if (!v) return ''
+  const parts = []
+  if (v.color && v.color !== 'Default' && v.color !== 'ມາດຕະຖານ') parts.push(v.color)
+  if (v.size && v.size !== 'ທົ່ວໄປ') parts.push(v.size)
+  
+  // Fallback for old schema if any
+  if (v.variant_type && v.variant_value) {
+    return `${v.variant_type}: ${v.variant_value}`
+  }
+  
+  return parts.length > 0 ? parts.join(' / ') : (v.variant_sku || 'Default')
+}
+
 const formatCurrency = (v) =>
   v != null ? new Intl.NumberFormat('lo-LA', { style: 'currency', currency: 'LAK' }).format(v) : '—'
 

@@ -1,31 +1,33 @@
 <template>
-  <v-container fluid class="pa-6">
-    <v-row class="mb-6">
-      <v-col cols="12" class="d-flex align-center">
-        <div class="header-icon-container rounded-xl pa-3 me-4">
-          <v-icon color="orange-darken-3" size="32">mdi-fire</v-icon>
+  <v-container fluid class="pa-2 container-border">
+    <v-row class="mb-4">
+      <v-col cols="12" class="d-flex align-center gap-2">
+        <div class="header-icon-container rounded-xl pa-2 me-2">
+          <v-icon color="orange-darken-3" size="28">mdi-fire</v-icon>
         </div>
         <div>
-          <h1 class="text-h4 font-weight-black mb-1">ສິນຄ້າຂາຍດີ</h1>
-          <p class="text-subtitle-1 text-medium-emphasis">ວິເຄາະສິນຄ້າທີ່ສ້າງລາຍຮັບ ແລະ ຈຳນວນຂາຍສູງສຸດ</p>
+          <h1 class="text-h5 font-weight-black mb-1">ສິນຄ້າຂາຍດີ</h1>
+          <p class="text-body-2 text-medium-emphasis">ວິເຄາະສິນຄ້າທີ່ສ້າງລາຍຮັບ ແລະ ຈຳນວນຂາຍສູງສຸດ</p>
         </div>
         <v-spacer></v-spacer>
         <v-btn
           color="orange-darken-3"
           variant="tonal"
+          size="small"
           prepend-icon="mdi-refresh"
           @click="fetchProducts"
           :loading="loading"
-          class="rounded-lg px-6 mr-2"
+          class="rounded-lg px-4 mr-2"
         >
           ໂຫຼດໃໝ່
         </v-btn>
         <v-btn
           color="success"
           variant="elevated"
+          size="small"
           prepend-icon="mdi-file-excel"
           @click="exportToExcel"
-          class="rounded-lg px-6"
+          class="rounded-lg px-4"
         >
           Export
         </v-btn>
@@ -221,6 +223,13 @@ export default {
 <style scoped>
 .header-icon-container {
   background-color: rgba(255, 152, 0, 0.1);
+}
+
+.container-border {
+  border: 1px solid rgba(var(--v-border-color), var(--v-border-opacity));
+  border-radius: 12px;
+  background-color: rgb(var(--v-theme-surface));
+  margin-top: 8px;
 }
 
 .trophy-card {

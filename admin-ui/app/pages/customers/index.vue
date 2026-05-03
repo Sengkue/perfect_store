@@ -1,22 +1,22 @@
 <template>
-  <v-container fluid class="pa-6">
+  <v-container fluid class="pa-2 container-border" v-if="hasPermission('customers.view')">
     <!-- ── Header Section ── -->
-    <v-row class="mb-6">
-      <v-col cols="12" class="d-flex align-center flex-wrap gap-3">
-        <div class="header-icon-container rounded-xl pa-3 me-3">
-          <v-icon color="primary" size="32">mdi-account-group</v-icon>
+    <v-row class="mb-2">
+      <v-col cols="12" class="d-flex align-center flex-wrap gap-2">
+        <div class="header-icon-container rounded-lg pa-2 me-2">
+          <v-icon color="primary" size="28">mdi-account-group</v-icon>
         </div>
         <div>
-          <h1 class="text-h4 font-weight-black mb-1">ຈັດການລູກຄ້າ</h1>
-          <p class="text-subtitle-1 text-medium-emphasis">ລາຍຊື່ລູກຄ້າ, ລະດັບສະມາຊິກ ແລະ ຄະແນນສະສົມ</p>
+          <h1 class="text-h5 font-weight-black mb-1">ຈັດການລູກຄ້າ</h1>
+          <p class="text-body-2 text-medium-emphasis">ລາຍຊື່ລູກຄ້າ, ລະດັບສະມາຊິກ ແລະ ຄະແນນສະສົມ</p>
         </div>
         <v-spacer></v-spacer>
         <v-btn 
           v-if="hasPermission('customers.manage')" 
           color="primary" 
           variant="elevated" 
-          size="large"
-          class="rounded-xl px-6 font-weight-bold shadow-soft" 
+          size="small"
+          class="rounded-lg px-4 font-weight-bold shadow-soft" 
           prepend-icon="mdi-account-plus" 
           @click="openAddDialog"
         >
@@ -26,7 +26,7 @@
     </v-row>
 
     <!-- ── Search & Filters Section ── -->
-    <v-card border elevation="0" class="rounded-xl mb-6 shadow-soft pa-4">
+    <v-card border elevation="0" class="rounded-lg mb-2 shadow-soft pa-2">
       <v-row dense align="center">
         <v-col cols="12" md="4">
           <v-text-field
@@ -34,7 +34,7 @@
             placeholder="ຄົ້ນຫາຊື່, ເບີໂທ, ອີເມວ..."
             prepend-inner-icon="mdi-magnify"
             variant="outlined"
-            density="comfortable"
+            density="compact"
             hide-details
             rounded="lg"
             clearable
@@ -47,7 +47,7 @@
             :items="tierOptions"
             label="ລະດັບສະມາຊິກ"
             variant="outlined"
-            density="comfortable"
+            density="compact"
             hide-details
             rounded="lg"
             clearable
@@ -56,10 +56,10 @@
         </v-col>
         <v-spacer></v-spacer>
         <v-col cols="12" md="auto">
-          <div class="d-flex align-center gap-2 px-4 py-2 rounded-lg bg-grey-lighten-4">
-            <v-icon icon="mdi-account-star" color="amber-darken-1" size="20"></v-icon>
+          <div class="d-flex align-center gap-2 px-3 py-1 rounded-lg bg-grey-lighten-4">
+            <v-icon icon="mdi-account-star" color="amber-darken-1" size="18"></v-icon>
             <span class="text-caption font-weight-bold text-grey-darken-2">ລູກຄ້າທັງໝົດ:</span>
-            <v-chip color="primary" size="small" variant="flat" class="font-weight-black">
+            <v-chip color="primary" size="x-small" variant="flat" class="font-weight-black">
               {{ customers.length }}
             </v-chip>
           </div>
@@ -68,11 +68,12 @@
     </v-card>
 
     <!-- ── Data Table Section ── -->
-    <v-card border elevation="0" class="rounded-xl overflow-hidden shadow-soft">
+    <v-card border elevation="0" class="rounded-lg overflow-hidden shadow-soft">
       <v-data-table
         :headers="headers"
         :items="customers"
         :loading="loading"
+        density="compact"
         hover
         class="custom-table"
       >
@@ -120,7 +121,7 @@
                   label="First Name *"
                   prepend-inner-icon="mdi-account-outline"
                   variant="outlined"
-                  density="comfortable"
+                  density="compact"
                   :rules="[v => !!v || 'First name is required']"
                 ></v-text-field>
               </v-col>
@@ -130,7 +131,7 @@
                   label="Last Name *"
                   prepend-inner-icon="mdi-account-outline"
                   variant="outlined"
-                  density="comfortable"
+                  density="compact"
                   :rules="[v => !!v || 'Last name is required']"
                 ></v-text-field>
               </v-col>
@@ -140,7 +141,7 @@
                   label="Phone"
                   prepend-inner-icon="mdi-phone-outline"
                   variant="outlined"
-                  density="comfortable"
+                  density="compact"
                 ></v-text-field>
               </v-col>
               <v-col cols="12" sm="6">
@@ -149,7 +150,7 @@
                   label="Email"
                   prepend-inner-icon="mdi-email-outline"
                   variant="outlined"
-                  density="comfortable"
+                  density="compact"
                   type="email"
                   :rules="[v => !v || /.+@.+\..+/.test(v) || 'Invalid email']"
                 ></v-text-field>
@@ -161,7 +162,7 @@
                   label="Customer Tier"
                   prepend-inner-icon="mdi-star-outline"
                   variant="outlined"
-                  density="comfortable"
+                  density="compact"
                   clearable
                 ></v-select>
               </v-col>
@@ -171,7 +172,7 @@
                   label="Loyalty Points"
                   prepend-inner-icon="mdi-gift-outline"
                   variant="outlined"
-                  density="comfortable"
+                  density="compact"
                   type="number"
                   min="0"
                 ></v-text-field>
@@ -182,7 +183,7 @@
                   :label="isEditing ? 'New Password (leave blank to keep)' : 'Password'"
                   prepend-inner-icon="mdi-lock-outline"
                   variant="outlined"
-                  density="comfortable"
+                  density="compact"
                   :type="showPassword ? 'text' : 'password'"
                   :append-inner-icon="showPassword ? 'mdi-eye-off' : 'mdi-eye'"
                   @click:append-inner="showPassword = !showPassword"
@@ -405,6 +406,13 @@ onMounted(loadCustomers)
 <style scoped>
 .header-icon-container {
   background-color: rgba(var(--v-theme-primary), 0.1);
+}
+
+.container-border {
+  border: 1px solid rgba(var(--v-border-color), var(--v-border-opacity));
+  border-radius: 12px;
+  background-color: rgb(var(--v-theme-surface));
+  margin-top: 8px;
 }
 
 .shadow-soft {

@@ -1,13 +1,13 @@
 <template>
-  <v-container fluid class="pa-6">
-    <v-row class="mb-6">
+  <v-container fluid class="pa-2 container-border">
+    <v-row class="mb-4">
       <v-col cols="12" class="d-flex align-center flex-wrap gap-3">
-        <div class="header-icon-container rounded-lg pa-3 me-3">
-          <v-icon color="red-darken-3" size="32">mdi-cash-minus</v-icon>
+        <div class="header-icon-container rounded-lg pa-2 me-3">
+          <v-icon color="red-darken-3" size="20">mdi-cash-minus</v-icon>
         </div>
         <div>
-          <h1 class="text-h4 font-weight-black mb-1">ລາຍງານລາຍຈ່າຍ</h1>
-          <p class="text-subtitle-1 text-medium-emphasis">ຕິດຕາມລາຍຈ່າຍຈາກການນຳເຂົ້າສິນຄ້າ ແລະ ຕົ້ນທຶນ</p>
+          <h1 class="text-h5 font-weight-bold mb-0">ລາຍງານລາຍຈ່າຍ</h1>
+          <div class="text-caption text-medium-emphasis">ຕິດຕາມລາຍຈ່າຍຈາກການນຳເຂົ້າສິນຄ້າ ແລະ ຕົ້ນທຶນ</div>
         </div>
         <v-spacer></v-spacer>
 
@@ -52,8 +52,8 @@
           </v-menu>
 
           <v-divider vertical class="mx-2"></v-divider>
-          <v-btn color="red-darken-3" variant="elevated" class="rounded-lg mr-2" @click="fetchExpenses" :loading="loading">ຄຳນວນ</v-btn>
-          <v-btn color="success" variant="tonal" prepend-icon="mdi-file-excel" @click="exportToExcel">Export</v-btn>
+          <v-btn color="red-darken-3" variant="elevated" size="small" class="rounded-lg mr-2" @click="fetchExpenses" :loading="loading">ຄຳນວນ</v-btn>
+          <v-btn color="success" variant="tonal" size="small" prepend-icon="mdi-file-excel" @click="exportToExcel">Export</v-btn>
         </v-card>
       </v-col>
     </v-row>
@@ -62,17 +62,17 @@
     <v-row class="mb-6">
       <v-col cols="12" md="4">
         <v-card border elevation="0" class="rounded-lg overflow-hidden shadow-soft">
-          <div class="pa-5 d-flex align-center">
-            <v-avatar color="red-lighten-5" rounded="lg" size="48" class="me-4">
-              <v-icon color="red-darken-2">mdi-cash-multiple</v-icon>
+          <div class="pa-3 d-flex align-center">
+            <v-avatar color="red-lighten-5" rounded="lg" size="36" class="me-4">
+              <v-icon color="red-darken-2" size="20">mdi-cash-multiple</v-icon>
             </v-avatar>
             <div>
-              <div class="text-caption text-grey font-weight-bold text-uppercase">ລາຍຈ່າຍລວມ</div>
-              <div class="text-h5 font-weight-black text-red-darken-2">{{ formatCurrency(totalExpenses) }}</div>
+              <div class="text-caption text-grey font-weight-bold text-uppercase" style="font-size: 0.7rem">ລາຍຈ່າຍລວມ</div>
+              <div class="text-h6 font-weight-bold text-red-darken-2">{{ formatCurrency(totalExpenses) }}</div>
             </div>
           </div>
           <v-divider></v-divider>
-          <div class="px-5 py-2 bg-red-lighten-5 text-caption text-red-darken-4">
+          <div class="px-3 py-1 bg-red-lighten-5 text-caption text-red-darken-4">
             ອີງຕາມລາຍການນຳເຂົ້າທັງໝົດ
           </div>
         </v-card>
@@ -80,17 +80,17 @@
       
       <v-col cols="12" md="4">
         <v-card border elevation="0" class="rounded-lg overflow-hidden shadow-soft">
-          <div class="pa-5 d-flex align-center">
-            <v-avatar color="blue-lighten-5" rounded="lg" size="48" class="me-4">
-              <v-icon color="blue-darken-2">mdi-file-document-multiple-outline</v-icon>
+          <div class="pa-3 d-flex align-center">
+            <v-avatar color="blue-lighten-5" rounded="lg" size="36" class="me-4">
+              <v-icon color="blue-darken-2" size="20">mdi-file-document-multiple-outline</v-icon>
             </v-avatar>
             <div>
-              <div class="text-caption text-grey font-weight-bold text-uppercase">ຈຳນວນລາຍການ</div>
-              <div class="text-h5 font-weight-black text-blue-darken-2">{{ expenses.length }} ບິນ</div>
+              <div class="text-caption text-grey font-weight-bold text-uppercase" style="font-size: 0.7rem">ຈຳນວນລາຍການ</div>
+              <div class="text-h6 font-weight-bold text-blue-darken-2">{{ expenses.length }} ບິນ</div>
             </div>
           </div>
           <v-divider></v-divider>
-          <div class="px-5 py-2 bg-blue-lighten-5 text-caption text-blue-darken-4">
+          <div class="px-3 py-1 bg-blue-lighten-5 text-caption text-blue-darken-4">
             ຂໍ້ມູນຈາກການນຳເຂົ້າສິນຄ້າ
           </div>
         </v-card>
@@ -103,6 +103,7 @@
         :headers="headers"
         :items="expenses"
         :loading="loading"
+        density="compact"
         hover
       >
         <!-- Date -->
@@ -166,7 +167,7 @@
         </v-card-title>
         <v-divider></v-divider>
         <v-card-text class="pa-0">
-          <v-table>
+          <v-table density="compact">
             <thead class="bg-grey-lighten-4">
               <tr>
                 <th class="text-left">ສິນຄ້າ</th>
@@ -326,6 +327,12 @@ onMounted(fetchExpenses)
 
 <style scoped>
 .header-icon-container { background-color: rgba(198, 40, 40, 0.1); }
+.container-border {
+  border: 1px solid rgba(var(--v-border-color), var(--v-border-opacity));
+  border-radius: 12px;
+  background-color: rgb(var(--v-theme-surface));
+  margin-top: 8px;
+}
 .shadow-soft { box-shadow: 0 4px 20px rgba(0,0,0,0.04) !important; }
 .border-red-darken-2 { border-left: 4px solid #D32F2F !important; }
 </style>

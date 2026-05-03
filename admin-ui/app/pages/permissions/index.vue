@@ -1,23 +1,24 @@
 <template>
-  <v-card v-if="hasPermission('permissions.manage')" rounded="lg" elevation="2">
+  <v-container fluid class="pa-2 container-border" v-if="hasPermission('permissions.manage')">
+    <v-card rounded="lg" elevation="1">
     <!-- ── Header ── -->
-    <v-card-title class="d-flex align-center py-3 px-4 flex-wrap gap-2">
+    <v-card-title class="d-flex align-center pa-2 flex-wrap gap-2">
       <div class="d-flex align-center">
-        <v-icon icon="mdi-shield-lock" color="primary" class="me-2" />
+        <v-icon icon="mdi-shield-lock" color="primary" class="me-2" size="20" />
         <div>
-          <div class="text-h6 font-weight-bold">Permission Management</div>
-          <div class="text-caption text-medium-emphasis">Control what each role and user can access</div>
+          <div class="text-body-1 font-weight-bold">ຈັດການສິດການເຂົ້າເຖິງ</div>
+          <div class="text-caption text-medium-emphasis">ກຳນົດສິດການໃຊ້ງານສຳລັບແຕ່ລະຕຳແໜ່ງ ແລະ ຜູ້ໃຊ້</div>
         </div>
       </div>
     </v-card-title>
     <v-divider />
 
     <!-- ── Tabs: Role Permissions / User Permissions ── -->
-    <v-tabs v-model="tab" color="primary" class="px-2">
-      <v-tab value="roles" prepend-icon="mdi-shield-account">
+    <v-tabs v-model="tab" color="primary" class="px-2" density="compact">
+      <v-tab value="roles" prepend-icon="mdi-shield-account" size="small">
         Role Permissions
       </v-tab>
-      <v-tab value="users" prepend-icon="mdi-account-key">
+      <v-tab value="users" prepend-icon="mdi-account-key" size="small">
         User Overrides
       </v-tab>
     </v-tabs>
@@ -28,10 +29,10 @@
     <!-- ══════════════════════════════════════════════ -->
     <v-window v-model="tab">
       <v-window-item value="roles">
-        <div class="pa-4">
+        <div class="pa-2">
           <!-- Role selector -->
-          <div class="d-flex align-center gap-3 mb-4 flex-wrap">
-            <div class="text-subtitle-2 font-weight-bold">Select Role:</div>
+          <div class="d-flex align-center gap-2 mb-2 flex-wrap">
+            <div class="text-caption font-weight-bold">Select Role:</div>
             <v-btn-toggle v-model="selectedRole" color="primary" variant="outlined" density="compact" mandatory>
               <v-btn
                 v-for="r in roles"
@@ -39,6 +40,7 @@
                 :value="r.value"
                 :prepend-icon="r.icon"
                 :color="r.color"
+                size="small"
                 @click="loadRolePermissions(r.value)"
               >
                 {{ r.label }}
@@ -49,6 +51,7 @@
               v-if="selectedRole !== 'root'"
               color="primary"
               variant="elevated"
+              size="small"
               prepend-icon="mdi-content-save"
               :loading="savingRole"
               @click="saveRolePermissions"
@@ -209,17 +212,17 @@
       <!-- TAB 2: USER PERMISSION OVERRIDES               -->
       <!-- ══════════════════════════════════════════════ -->
       <v-window-item value="users">
-        <div class="pa-4">
+            <div class="pa-2">
           <v-alert
             type="warning"
             variant="tonal"
             density="compact"
-            class="mb-4"
+            class="mb-2"
             text="User overrides take priority over role permissions. Use this to grant or restrict specific permissions for individual users."
           />
 
           <!-- User selector -->
-          <div class="d-flex align-center gap-3 mb-4 flex-wrap">
+          <div class="d-flex align-center gap-2 mb-2 flex-wrap">
             <v-autocomplete
               v-model="selectedUserId"
               :items="users"
@@ -237,7 +240,7 @@
               <template #item="{ item, props: itemProps }">
                 <v-list-item v-bind="itemProps">
                   <template #prepend>
-                    <v-avatar :color="roleColor(item.raw.role)" variant="tonal" size="32">
+                    <v-avatar :color="roleColor(item.raw.role)" variant="tonal" size="28">
                       <span class="text-caption font-weight-bold">{{ item.raw.username.slice(0,2).toUpperCase() }}</span>
                     </v-avatar>
                   </template>
@@ -254,6 +257,7 @@
               v-if="selectedUserId"
               color="primary"
               variant="elevated"
+              size="small"
               prepend-icon="mdi-content-save"
               :loading="savingUser"
               @click="saveUserPermissions"
@@ -348,20 +352,20 @@
       </v-window-item>
     </v-window>
 
-    <!-- Centralized toast is used instead of local snackbar -->
-  </v-card>
+    </v-card>
+  </v-container>
 
   <v-container v-else class="fill-height d-flex align-center justify-center">
-    <v-card rounded="xl" class="pa-12 text-center" max-width="500">
-      <v-avatar color="error-lighten-5" size="120" class="mb-6">
-        <v-icon size="64" color="error">mdi-shield-off-outline</v-icon>
+    <v-card rounded="lg" class="pa-8 text-center" max-width="500">
+      <v-avatar color="error-lighten-5" size="80" class="mb-4">
+        <v-icon size="48" color="error">mdi-shield-off-outline</v-icon>
       </v-avatar>
-      <div class="text-h4 font-weight-black text-grey-darken-3 mb-2">Access Denied</div>
-      <div class="text-body-1 text-medium-emphasis mb-8">
+      <div class="text-h5 font-weight-black text-grey-darken-3 mb-2">Access Denied</div>
+      <div class="text-body-2 text-medium-emphasis mb-6">
         You don't have permission to manage system security settings. 
         Please contact your system administrator if you believe this is an error.
       </div>
-      <v-btn color="primary" variant="elevated" rounded="pill" size="large" to="/" prepend-icon="mdi-arrow-left">
+      <v-btn color="primary" variant="elevated" rounded="lg" size="small" to="/" prepend-icon="mdi-arrow-left">
         Back to Dashboard
       </v-btn>
     </v-card>
@@ -570,6 +574,13 @@ onMounted(async () => {
 </script>
 
 <style scoped>
+.container-border {
+  border: 1px solid rgba(var(--v-border-color), var(--v-border-opacity));
+  border-radius: 12px;
+  background-color: rgb(var(--v-theme-surface));
+  margin-top: 8px;
+}
+
 .cursor-pointer { cursor: pointer; }
 .border-success { border-color: rgb(var(--v-theme-success)) !important; }
 .tracking-wide { letter-spacing: 0.05em; }

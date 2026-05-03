@@ -36,28 +36,70 @@
         </template>
       </v-list>
 
-      <template v-slot:append>
-        <div class="pa-4">
-          <v-btn block color="error" variant="tonal" prepend-icon="mdi-logout" @click="logout" class="rounded-lg font-weight-bold">
-            ອອກຈາກລະບົບ
-          </v-btn>
-        </div>
-      </template>
     </v-navigation-drawer>
 
-    <v-app-bar color="primary" elevation="1">
-      <v-app-bar-nav-icon @click.stop="drawer = !drawer"></v-app-bar-nav-icon>
-      <v-app-bar-title>
+    <v-app-bar color="primary" elevation="1" height="70" class="px-2">
+      <v-app-bar-nav-icon variant="text" @click.stop="drawer = !drawer"></v-app-bar-nav-icon>
+      
+      <v-app-bar-title class="font-weight-black text-uppercase" style="letter-spacing: 1px;">
         <v-icon icon="mdi-store" class="me-2" size="24"></v-icon>
-        ຜູ້ດູແລ Perfect Store
+        <span class="hidden-sm-and-down">Perfect Store Admin</span>
       </v-app-bar-title>
+
       <v-spacer></v-spacer>
-      <v-chip class="me-3" :color="roleChipColor" variant="tonal" size="small" prepend-icon="mdi-shield-account">
-        {{ roleDisplayLabel }}
-      </v-chip>
-      <v-btn icon>
-        <v-icon>mdi-bell</v-icon>
+
+      <!-- Theme Toggle -->
+      <v-btn icon @click="toggleTheme" class="me-1">
+        <v-icon>{{ isDark ? 'mdi-weather-sunny' : 'mdi-weather-night' }}</v-icon>
+        <v-tooltip activator="parent" location="bottom">ປ່ຽນຮູບແບບ</v-tooltip>
       </v-btn>
+
+      <v-btn icon class="me-2">
+        <v-icon>mdi-bell-outline</v-icon>
+        <v-tooltip activator="parent" location="bottom">ແຈ້ງເຕືອນ</v-tooltip>
+      </v-btn>
+
+      <!-- Joined User Menu & Role -->
+      <v-menu min-width="240px" rounded="lg" transition="slide-y-transition" offset="10">
+        <template v-slot:activator="{ props }">
+          <v-btn 
+            variant="flat" 
+            color="primary-darken-1"
+            v-bind="props" 
+            class="ms-2 px-1 rounded-pill pr-4"
+            height="48"
+          >
+            <v-avatar size="38" class="me-3 border">
+              <v-img :src="avatarUrl"></v-img>
+            </v-avatar>
+            <div class="text-start hidden-xs-only">
+              <div class="text-subtitle-2 font-weight-bold" style="line-height: 1.2;">{{ userDisplayName }}</div>
+              <div class="text-caption opacity-80 font-weight-medium text-uppercase" style="font-size: 10px !important; letter-spacing: 0.5px;">{{ roleDisplayLabel }}</div>
+            </div>
+            <v-icon size="small" class="ms-3 opacity-60">mdi-chevron-down</v-icon>
+          </v-btn>
+        </template>
+        
+        <v-card elevation="20" border class="mt-2">
+          <v-list class="pa-2">
+            <v-list-item
+              :prepend-avatar="avatarUrl"
+              :title="userDisplayName"
+              :subtitle="roleDisplayLabel"
+              class="mb-2"
+            >
+            </v-list-item>
+            <v-divider class="my-2"></v-divider>
+            <v-list-item 
+              prepend-icon="mdi-logout" 
+              title="ອອກຈາກລະບົບ" 
+              color="error" 
+              rounded="lg"
+              @click="logout"
+            ></v-list-item>
+          </v-list>
+        </v-card>
+      </v-menu>
     </v-app-bar>
 
     <v-main class="bg-background">
@@ -74,6 +116,16 @@
 <script setup>
 import { ref, computed, onMounted } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
+import { useTheme } from 'vuetify'
+
+const theme = useTheme()
+const isDark = computed(() => theme.global.name.value === 'dark')
+
+const toggleTheme = () => {
+  const newTheme = isDark.value ? 'light' : 'dark'
+  theme.global.name.value = newTheme
+  localStorage.setItem('pos_theme', newTheme)
+}
 
 const drawer = ref(true)
 const router = useRouter()

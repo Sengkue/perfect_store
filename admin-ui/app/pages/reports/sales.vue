@@ -1,18 +1,18 @@
 <template>
-  <v-container fluid class="pa-6">
-    <v-row class="mb-6">
-      <v-col cols="12" class="d-flex align-center flex-wrap gap-3">
+  <v-container fluid class="pa-2 container-border">
+    <v-row class="mb-2">
+      <v-col cols="12" class="d-flex align-center flex-wrap gap-2">
         <div class="header-icon-container rounded-lg pa-3 me-3">
           <v-icon color="success" size="32">mdi-receipt</v-icon>
         </div>
         <div>
-          <h1 class="text-h4 font-weight-black mb-1">ລາຍງານການຂາຍ</h1>
-          <p class="text-subtitle-1 text-medium-emphasis">ກວດສອບປະຫວັດການຂາຍ ແລະ ສະຖານະການຊຳລະເງິນ</p>
+          <h1 class="text-h5 font-weight-black mb-1">ລາຍງານການຂາຍ</h1>
+          <p class="text-body-2 text-medium-emphasis">ກວດສອບປະຫວັດການຂາຍ ແລະ ສະຖານະການຊຳລະເງິນ</p>
         </div>
         <v-spacer></v-spacer>
 
         <!-- Search & Filters -->
-        <v-card elevation="0" border class="rounded-lg px-4 py-2 d-flex align-center gap-3 bg-white flex-wrap">
+        <v-card elevation="0" border class="rounded-lg px-2 py-1 d-flex align-center gap-2 bg-white flex-wrap">
           <v-text-field
             v-model="search"
             prepend-inner-icon="mdi-magnify"
@@ -92,12 +92,12 @@
           prepend-icon="mdi-microsoft-excel"
           color="success"
           variant="elevated"
-          height="48"
+          size="large"
           :loading="exportingExcel"
           @click="exportExcel"
-          class="rounded-lg px-6 shadow-soft"
+          class="rounded-lg px-4 shadow-soft"
         >
-          Export Excel
+          Export
         </v-btn>
       </v-col>
     </v-row>
@@ -108,6 +108,7 @@
         :headers="headers"
         :items="sales"
         :loading="loading"
+        density="compact"
         hover
         class="sales-table"
       >
@@ -118,12 +119,12 @@
 
         <!-- Customer -->
         <template v-slot:item.customer="{ item }">
-          <div v-if="item.customer" class="d-flex align-center py-2">
-            <v-avatar size="32" color="blue-lighten-4" class="me-2">
+          <div v-if="item.customer" class="d-flex align-center py-1">
+            <v-avatar size="28" color="blue-lighten-4" class="me-2">
               <span class="text-caption font-weight-bold text-blue-darken-2">{{ item.customer.first_name[0] }}</span>
             </v-avatar>
             <div class="d-flex flex-column">
-              <span class="text-subtitle-2">{{ item.customer.first_name }} {{ item.customer.last_name }}</span>
+              <span class="text-body-2 font-weight-medium">{{ item.customer.first_name }} {{ item.customer.last_name }}</span>
               <span class="text-caption text-grey">{{ item.customer.phone || '—' }}</span>
             </div>
           </div>
@@ -140,7 +141,7 @@
 
         <!-- Total -->
         <template v-slot:item.total_amount="{ item }">
-          <span class="font-weight-black text-subtitle-1">{{ formatCurrency(item.total_amount) }}</span>
+          <span class="font-weight-black text-body-2">{{ formatCurrency(item.total_amount) }}</span>
         </template>
 
         <!-- Date -->
@@ -175,9 +176,9 @@
     <v-dialog v-model="detailDialog" max-width="720">
       <v-card v-if="detailSale" rounded="xl" class="pa-4">
         <v-card-title class="d-flex align-center pb-4">
-          <v-icon icon="mdi-receipt-text-outline" class="me-3" color="primary" size="32"></v-icon>
+          <v-icon icon="mdi-receipt-text-outline" class="me-3" color="primary" size="28"></v-icon>
           <div>
-            <div class="text-h5 font-weight-black">ບິນເລກທີ {{ detailSale.sale_number }}</div>
+            <div class="text-h6 font-weight-black">ບິນເລກທີ {{ detailSale.sale_number }}</div>
             <div class="text-caption text-grey">ວັນທີ: {{ formatDateFull(detailSale.sale_date) }}</div>
           </div>
           <v-spacer></v-spacer>
@@ -189,14 +190,14 @@
           <v-row dense>
             <v-col cols="12" md="6" class="mb-4">
               <div class="text-caption text-grey mb-1 text-uppercase">ຂໍ້ມູນລູກຄ້າ</div>
-              <div class="text-subtitle-1 font-weight-bold">
+              <div class="text-body-2 font-weight-bold">
                 {{ detailSale.customer ? `${detailSale.customer.first_name} ${detailSale.customer.last_name}` : 'ລູກຄ້າທົ່ວໄປ (Walk-in)' }}
               </div>
               <div class="text-caption text-grey">{{ detailSale.customer?.phone || '-' }}</div>
             </v-col>
             <v-col cols="12" md="6" class="mb-4 text-md-right">
               <div class="text-caption text-grey mb-1 text-uppercase">ພະນັກງານຂາຍ</div>
-              <div class="text-subtitle-1 font-weight-bold">
+              <div class="text-body-2 font-weight-bold">
                 {{ detailSale.user?.profile ? `${detailSale.user.profile.first_name} ${detailSale.user.profile.last_name}` : detailSale.user?.username || '—' }}
               </div>
               <div class="text-caption text-grey">Role: {{ detailSale.user?.role }}</div>
@@ -226,16 +227,16 @@
         <div class="pa-4 bg-primary-lighten-5 rounded-lg border-primary">
           <v-row dense class="align-center">
             <v-col cols="6">
-              <div class="text-subtitle-1 font-weight-bold">ຍອດລວມທັງໝົດ</div>
+              <div class="text-body-2 font-weight-bold">ຍອດລວມທັງໝົດ</div>
             </v-col>
             <v-col cols="6" class="text-right">
-              <div class="text-h4 font-weight-black text-primary">{{ formatCurrency(detailSale.total_amount) }}</div>
+              <div class="text-h5 font-weight-black text-primary">{{ formatCurrency(detailSale.total_amount) }}</div>
             </v-col>
           </v-row>
         </div>
 
         <v-card-actions class="pa-4 mt-2">
-          <v-btn block color="primary" variant="tonal" size="large" class="rounded-lg" @click="detailDialog = false">ປິດໜ້າຈໍ</v-btn>
+          <v-btn block color="primary" variant="tonal" size="default" class="rounded-lg" @click="detailDialog = false">ປິດໜ້າຈໍ</v-btn>
         </v-card-actions>
       </v-card>
     </v-dialog>
@@ -402,6 +403,13 @@ onMounted(loadSales)
 <style scoped>
 .header-icon-container {
   background-color: rgba(76, 175, 80, 0.1);
+}
+
+.container-border {
+  border: 1px solid rgba(var(--v-border-color), var(--v-border-opacity));
+  border-radius: 12px;
+  background-color: rgb(var(--v-theme-surface));
+  margin-top: 8px;
 }
 
 .shadow-soft {

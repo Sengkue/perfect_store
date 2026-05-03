@@ -1,18 +1,18 @@
 <template>
-  <v-container fluid class="pa-6">
-    <v-row class="mb-6">
-      <v-col cols="12" class="d-flex align-center flex-wrap gap-3">
+  <v-container fluid class="pa-2 container-border">
+    <v-row class="mb-2">
+      <v-col cols="12" class="d-flex align-center flex-wrap gap-2">
         <div class="header-icon-container rounded-lg pa-3 me-3">
-          <v-icon color="teal" size="32">mdi-file-percent</v-icon>
+          <v-icon color="teal" size="28">mdi-file-percent</v-icon>
         </div>
         <div>
-          <h1 class="text-h4 font-weight-black mb-1">ລາຍງານພາສີ</h1>
-          <p class="text-subtitle-1 text-medium-emphasis">ສະຫຼຸບຍອດຂາຍ ແລະ ອາກອນມູນຄ່າເພີ່ມ (VAT)</p>
+          <h1 class="text-h5 font-weight-black mb-1">ລາຍງານພາສີ</h1>
+          <p class="text-caption text-medium-emphasis">ສະຫຼຸບຍອດຂາຍ ແລະ ອາກອນມູນຄ່າເພີ່ມ (VAT)</p>
         </div>
         <v-spacer></v-spacer>
 
         <!-- Date Filters -->
-        <v-card elevation="0" border class="rounded-lg px-4 py-2 d-flex align-center gap-3 bg-white shadow-soft">
+        <v-card elevation="0" border class="rounded-lg px-2 py-1 d-flex align-center gap-2 bg-white shadow-soft">
           <!-- Start Date -->
           <v-menu v-model="menuStart" :close-on-content-click="false">
             <template v-slot:activator="{ props }">
@@ -58,26 +58,26 @@
       </v-col>
     </v-row>
 
-    <v-row v-if="taxData">
-      <v-col cols="12" md="4">
-        <v-card border elevation="0" class="rounded-lg pa-6 h-100 shadow-soft">
-          <div class="text-overline text-grey">ຍອດຂາຍສຸດທິ (Net Sales)</div>
-          <div class="text-h4 font-weight-black mt-2 text-teal">{{ formatCurrency(taxData.netSales || 0) }}</div>
-          <div class="text-caption text-grey mt-1">ຍອດຂາຍກ່ອນຄິດໄລ່ພາສີ</div>
+    <v-row v-if="taxData" class="mt-n2">
+      <v-col cols="12" sm="4">
+        <v-card border elevation="0" class="rounded-lg pa-4 h-100 shadow-soft">
+          <div class="text-overline text-grey opacity-80" style="line-height: 1.2">ຍອດຂາຍສຸດທິ (Net Sales)</div>
+          <div class="text-h6 font-weight-black mt-1 text-teal">{{ formatCurrency(taxData.netSales || 0) }}</div>
+          <div class="text-caption text-grey">ຍອດຂາຍກ່ອນຄິດໄລ່ພາສີ</div>
         </v-card>
       </v-col>
-      <v-col cols="12" md="4">
-        <v-card border elevation="0" class="rounded-lg pa-6 h-100 bg-teal-lighten-5 shadow-soft border-teal-lighten-4">
-          <div class="text-overline text-teal">ອາກອນມູນຄ່າເພີ່ມ (Total VAT)</div>
-          <div class="text-h3 font-weight-black text-teal mt-2">{{ formatCurrency(taxData.totalTax || 0) }}</div>
-          <div class="text-caption text-teal mt-1">Total Tax Collected</div>
+      <v-col cols="12" sm="4">
+        <v-card border elevation="0" class="rounded-lg pa-4 h-100 bg-teal-lighten-5 shadow-soft border-teal-lighten-4">
+          <div class="text-overline text-teal opacity-80" style="line-height: 1.2">ອາກອນມູນຄ່າເພີ່ມ (Total VAT)</div>
+          <div class="text-h5 font-weight-black text-teal mt-1">{{ formatCurrency(taxData.totalTax || 0) }}</div>
+          <div class="text-caption text-teal">Total Tax Collected</div>
         </v-card>
       </v-col>
-      <v-col cols="12" md="4">
-        <v-card border elevation="0" class="rounded-lg pa-6 h-100 shadow-soft">
-          <div class="text-overline text-grey">ຍອດຂາຍລວມພາສີ (Gross Sales)</div>
-          <div class="text-h4 font-weight-black mt-2">{{ formatCurrency(taxData.grossSales || 0) }}</div>
-          <div class="text-caption text-grey mt-1">Total Including Tax</div>
+      <v-col cols="12" sm="4">
+        <v-card border elevation="0" class="rounded-lg pa-4 h-100 shadow-soft">
+          <div class="text-overline text-grey opacity-80" style="line-height: 1.2">ຍອດຂາຍລວມພາສີ (Gross Sales)</div>
+          <div class="text-h6 font-weight-black mt-1">{{ formatCurrency(taxData.grossSales || 0) }}</div>
+          <div class="text-caption text-grey">Total Including Tax</div>
         </v-card>
       </v-col>
     </v-row>
@@ -162,6 +162,12 @@ onMounted(fetchData)
 
 <style scoped>
 .header-icon-container { background-color: rgba(0, 150, 136, 0.1); }
+.container-border {
+  border: 1px solid rgba(var(--v-border-color), var(--v-border-opacity));
+  border-radius: 12px;
+  background-color: rgb(var(--v-theme-surface));
+  margin-top: 8px;
+}
 .shadow-soft { box-shadow: 0 4px 20px rgba(0,0,0,0.04) !important; }
 .border-teal-lighten-4 { border-left: 4px solid #4DB6AC !important; }
 </style>

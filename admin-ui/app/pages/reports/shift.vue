@@ -1,17 +1,18 @@
 <template>
-  <v-container fluid class="pa-6">
-    <v-row class="mb-6">
-      <v-col cols="12" class="d-flex align-center flex-wrap gap-3">
-        <div class="header-icon-container rounded-xl pa-3 me-3">
-          <v-icon color="indigo" size="32">mdi-calendar-check</v-icon>
+  <v-container fluid class="pa-2 container-border">
+    <!-- ── Header Section ── -->
+    <v-row class="mb-2">
+      <v-col cols="12" class="d-flex align-center flex-wrap gap-2">
+        <div class="header-icon-container rounded-lg pa-2 me-2 border">
+          <v-icon color="indigo" size="28">mdi-calendar-check</v-icon>
         </div>
         <div>
-          <h1 class="text-h4 font-weight-black mb-1">ສະຫຼຸບຍອດປິດກະ</h1>
-          <p class="text-subtitle-1 text-medium-emphasis">ສະຫຼຸບລາຍຮັບແຍກຕາມຮູບແບບການຊຳລະເງິນປະຈຳວັນ</p>
+          <h1 class="text-h5 font-weight-black mb-1">ສະຫຼຸບຍອດປິດກະ</h1>
+          <p class="text-caption text-medium-emphasis">ສະຫຼຸບລາຍຮັບແຍກຕາມຮູບແບບການຊຳລະເງິນປະຈຳວັນ</p>
         </div>
-        <v-spacer></v-spacer>
+        <v-spacer />
 
-        <v-card elevation="0" border class="rounded-xl px-4 py-2 d-flex align-center gap-3 bg-white">
+        <v-card elevation="0" border class="rounded-lg px-3 py-1 d-flex align-center gap-2 bg-white shadow-soft">
           <v-menu v-model="dateMenu" :close-on-content-click="false">
             <template v-slot:activator="{ props }">
               <v-text-field
@@ -23,78 +24,87 @@
                 hide-details
                 readonly
                 v-bind="props"
-                style="width: 180px"
-              ></v-text-field>
+                style="width: 160px"
+                class="font-weight-bold"
+              />
             </template>
-            <v-date-picker v-model="selectedDateObj" @update:modelValue="onDateChange" color="indigo"></v-date-picker>
+            <v-date-picker v-model="selectedDateObj" @update:modelValue="onDateChange" color="indigo" />
           </v-menu>
-          <v-divider vertical class="mx-2"></v-divider>
-          <v-btn color="indigo" variant="elevated" class="rounded-lg mr-2" @click="fetchData" :loading="loading">
+          <v-divider vertical class="mx-1" />
+          <v-btn color="indigo" variant="elevated" class="rounded-lg" size="small" @click="fetchData" :loading="loading">
             ໂຫຼດຂໍ້ມູນ
           </v-btn>
-          <v-btn color="success" variant="tonal" prepend-icon="mdi-file-excel" @click="exportToExcel">
+          <v-btn color="success" variant="tonal" prepend-icon="mdi-file-excel" size="small" class="rounded-lg" @click="exportToExcel">
             Export
           </v-btn>
         </v-card>
       </v-col>
     </v-row>
 
-    <v-row v-if="reportData">
+    <v-row v-if="reportData" dense>
       <!-- Summary Cards -->
-      <v-col cols="12" md="4">
-        <v-card border elevation="0" class="rounded-xl pa-6 h-100 bg-indigo-lighten-5">
-          <div class="text-overline text-indigo">ລາຍຮັບທັງໝົດ</div>
-          <div class="text-h3 font-weight-black text-indigo mt-2">{{ formatCurrency(reportData.overall?.totalRevenue || 0) }}</div>
-          <div class="text-subtitle-2 mt-2">ຈາກທັງໝົດ {{ reportData.overall?.totalTransactions || 0 }} ລາຍການ</div>
+      <v-col cols="12" sm="4">
+        <v-card border elevation="0" class="rounded-lg pa-4 h-100 bg-indigo-lighten-5">
+          <div class="text-overline text-indigo font-weight-bold" style="line-height: 1.2">ລາຍຮັບທັງໝົດ</div>
+          <div class="text-h5 font-weight-black text-indigo mt-1">{{ formatCurrency(reportData.overall?.totalRevenue || 0) }}</div>
+          <div class="text-caption text-indigo mt-1 opacity-80">ຈາກທັງໝົດ {{ reportData.overall?.totalTransactions || 0 }} ລາຍການ</div>
         </v-card>
       </v-col>
-      <v-col cols="12" md="4">
-        <v-card border elevation="0" class="rounded-xl pa-6 h-100">
-          <div class="text-overline text-grey">ຄ່າສະເລ່ຍຕໍ່ບິນ</div>
-          <div class="text-h4 font-weight-black mt-2">{{ formatCurrency(reportData.overall?.avgTransaction || 0) }}</div>
-          <div class="text-caption text-grey mt-1">Average Revenue Per Bill</div>
+      <v-col cols="12" sm="4">
+        <v-card border elevation="0" class="rounded-lg pa-4 h-100">
+          <div class="text-overline text-grey-darken-1 font-weight-bold" style="line-height: 1.2">ຄ່າສະເລ່ຍຕໍ່ບິນ</div>
+          <div class="text-h6 font-weight-black mt-1">{{ formatCurrency(reportData.overall?.avgTransaction || 0) }}</div>
+          <div class="text-caption text-grey">Average per transaction</div>
         </v-card>
       </v-col>
-      <v-col cols="12" md="4">
-        <v-card border elevation="0" class="rounded-xl pa-6 h-100">
-          <div class="text-overline text-grey">ວັນທີລາຍງານ</div>
-          <div class="text-h4 font-weight-black mt-2 text-uppercase">{{ formatDateLao(selectedDate) }}</div>
-          <div class="text-caption text-grey mt-1">Daily Closure Date</div>
+      <v-col cols="12" sm="4">
+        <v-card border elevation="0" class="rounded-lg pa-4 h-100">
+          <div class="text-overline text-grey-darken-1 font-weight-bold" style="line-height: 1.2">ວັນທີລາຍງານ</div>
+          <div class="text-h6 font-weight-black mt-1 text-uppercase">{{ formatDateLao(selectedDate) }}</div>
+          <div class="text-caption text-grey">Daily closure summary</div>
         </v-card>
       </v-col>
 
       <!-- Payment Breakdown -->
-      <v-col cols="12">
-        <v-card border elevation="0" class="rounded-xl overflow-hidden shadow-soft">
-          <v-card-title class="pa-4 bg-grey-lighten-4 font-weight-bold">
-            ແຍກຕາມຮູບແບບການຊຳລະເງິນ (Payment Methods)
+      <v-col cols="12" class="mt-4">
+        <v-card border elevation="0" class="rounded-lg overflow-hidden shadow-soft">
+          <v-card-title class="pa-4 bg-grey-lighten-4">
+            <div class="d-flex align-center gap-2">
+              <v-icon icon="mdi-bank-transfer" color="indigo" size="20" />
+              <span class="text-subtitle-1 font-weight-bold">ແຍກຕາມຮູບແບບການຊຳລະເງິນ (Payment Methods)</span>
+            </div>
           </v-card-title>
-          <v-divider></v-divider>
-          <v-table>
+          <v-divider />
+          <v-table class="custom-table">
             <thead>
-              <tr class="bg-grey-lighten-5">
+              <tr>
                 <th class="text-left font-weight-bold">ຮູບແບບການຊຳລະ</th>
                 <th class="text-center font-weight-bold">ຈຳນວນບິນ</th>
                 <th class="text-right font-weight-bold">ຍອດລວມ (LAK)</th>
-                <th class="text-right font-weight-bold">ສັດສ່ວນ (%)</th>
+                <th class="text-right font-weight-bold" style="width: 250px">ສັດສ່ວນ (%)</th>
               </tr>
             </thead>
             <tbody>
               <tr v-for="pay in reportData.paymentSummary" :key="pay.payment_method">
                 <td class="text-uppercase font-weight-bold">
-                  <v-icon :icon="getPaymentIcon(pay.payment_method)" size="small" class="me-2" color="primary"></v-icon>
+                  <v-icon :icon="getPaymentIcon(pay.payment_method)" size="18" class="me-2" color="primary" />
                   {{ pay.payment_method }}
                 </td>
-                <td class="text-center">{{ pay.transactions }} ບິນ</td>
+                <td class="text-center">
+                  <v-chip size="x-small" variant="tonal" color="grey-darken-2" class="font-weight-bold">{{ pay.transactions }} ບິນ</v-chip>
+                </td>
                 <td class="text-right font-weight-black">{{ formatCurrency(pay.total) }}</td>
                 <td class="text-right">
-                  <v-progress-linear
-                    :model-value="(pay.total / reportData.overall.totalRevenue) * 100"
-                    color="indigo"
-                    height="8"
-                    rounded
-                  ></v-progress-linear>
-                  <span class="text-caption">{{ ((pay.total / reportData.overall.totalRevenue) * 100).toFixed(1) }}%</span>
+                  <div class="d-flex align-center gap-3">
+                    <v-progress-linear
+                      :model-value="(pay.total / reportData.overall.totalRevenue) * 100"
+                      color="indigo"
+                      height="6"
+                      rounded
+                      class="flex-1"
+                    />
+                    <span class="text-caption font-weight-bold" style="width: 45px">{{ ((pay.total / reportData.overall.totalRevenue) * 100).toFixed(1) }}%</span>
+                  </div>
                 </td>
               </tr>
               <tr v-if="!reportData.paymentSummary?.length">
@@ -183,6 +193,36 @@ onMounted(fetchData)
 </script>
 
 <style scoped>
-.header-icon-container { background-color: rgba(63, 81, 181, 0.1); }
-.shadow-soft { box-shadow: 0 4px 20px rgba(0,0,0,0.04) !important; }
+.header-icon-container {
+  background-color: rgba(63, 81, 181, 0.1);
+  border-color: rgba(63, 81, 181, 0.2) !important;
+}
+
+.container-border {
+  border: 1px solid rgba(var(--v-border-color), var(--v-border-opacity));
+  border-radius: 12px;
+  background-color: rgb(var(--v-theme-surface));
+  margin-top: 8px;
+}
+
+.shadow-soft {
+  box-shadow: 0 4px 20px rgba(0,0,0,0.04) !important;
+}
+
+.border {
+  border: 1px solid rgba(var(--v-border-color), var(--v-border-opacity)) !important;
+}
+
+.custom-table :deep(thead th) {
+  background-color: #f8f9fa !important;
+  text-transform: uppercase;
+  font-size: 0.75rem;
+  letter-spacing: 0.05em;
+  height: 44px !important;
+}
+
+.custom-table :deep(tbody td) {
+  height: 48px !important;
+  font-size: 0.875rem;
+}
 </style>

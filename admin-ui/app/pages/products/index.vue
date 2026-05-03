@@ -1,22 +1,22 @@
 <template>
-  <v-container fluid class="pa-6" v-if="hasPermission('products.view')">
+  <v-container fluid class="pa-2 container-border" v-if="hasPermission('products.view')">
     <!-- ── Header Section ── -->
-    <v-row class="mb-6">
-      <v-col cols="12" class="d-flex align-center flex-wrap gap-3">
-        <div class="header-icon-container rounded-lg pa-3 me-3">
-          <v-icon color="primary" size="32">mdi-package-variant-closed</v-icon>
+    <v-row class="mb-2">
+      <v-col cols="12" class="d-flex align-center flex-wrap gap-2">
+        <div class="header-icon-container rounded-lg pa-2 me-2">
+          <v-icon color="primary" size="28">mdi-package-variant-closed</v-icon>
         </div>
         <div>
-          <h1 class="text-h4 font-weight-black mb-1">ຈັດການສິນຄ້າ & ຄັງສິນຄ້າ</h1>
-          <p class="text-subtitle-1 text-medium-emphasis">ກວດສອບຈຳນວນສິນຄ້າ, ລາຄາ ແລະ ສະຖານະສະຕັອກ</p>
+          <h1 class="text-h5 font-weight-black mb-1">ຈັດການສິນຄ້າ & ຄັງສິນຄ້າ</h1>
+          <p class="text-body-2 text-medium-emphasis">ກວດສອບຈຳນວນສິນຄ້າ, ລາຄາ ແລະ ສະຖານະສະຕັອກ</p>
         </div>
         <v-spacer></v-spacer>
         <v-btn 
           v-if="hasPermission('products.create')" 
           color="primary" 
           variant="elevated" 
-          size="large"
-          class="rounded-lg px-6 font-weight-bold shadow-soft" 
+          size="small"
+          class="rounded-lg px-4 font-weight-bold shadow-soft" 
           prepend-icon="mdi-plus" 
           @click="openAddDialog"
         >
@@ -26,22 +26,22 @@
     </v-row>
 
     <!-- ── Stock Summary Stats ── -->
-    <v-row class="mb-6">
+    <v-row class="mb-2">
       <v-col v-for="s in stockStats" :key="s.label" cols="12" sm="6" md="2" lg="2" class="flex-grow-1">
-        <v-card border elevation="0" class="rounded-lg pa-4 h-100 shadow-soft">
-          <div class="d-flex align-center mb-2">
-            <v-avatar :color="s.color + '-lighten-5'" size="36" rounded="lg" class="me-2">
-              <v-icon :icon="s.icon" :color="s.color" size="20"></v-icon>
+        <v-card border elevation="0" class="rounded-lg pa-2 h-100 shadow-soft">
+          <div class="d-flex align-center mb-1">
+            <v-avatar :color="s.color + '-lighten-5'" size="28" rounded="lg" class="me-2">
+              <v-icon :icon="s.icon" :color="s.color" size="16"></v-icon>
             </v-avatar>
-            <span class="text-caption font-weight-bold text-grey-darken-1 text-uppercase">{{ s.label }}</span>
+            <span class="text-caption font-weight-bold text-grey-darken-1 text-uppercase" style="font-size: 0.65rem !important;">{{ s.label }}</span>
           </div>
-          <div class="text-h4 font-weight-black" :class="'text-' + s.color">{{ s.value }}</div>
+          <div class="text-h6 font-weight-black" :class="'text-' + s.color">{{ s.value }}</div>
         </v-card>
       </v-col>
     </v-row>
 
     <!-- ── Search & Filters Section ── -->
-    <v-card border elevation="0" class="rounded-lg mb-6 shadow-soft pa-4">
+    <v-card border elevation="0" class="rounded-lg mb-2 shadow-soft pa-2">
       <v-row dense align="center">
         <v-col cols="12" md="4">
           <v-text-field
@@ -49,7 +49,7 @@
             placeholder="ຄົ້ນຫາຊື່, ບາໂຄດ, SKU..."
             prepend-inner-icon="mdi-magnify"
             variant="outlined"
-            density="comfortable"
+            density="compact"
             hide-details
             rounded="lg"
             clearable
@@ -64,7 +64,7 @@
             item-value="id"
             label="ໝວດໝູ່"
             variant="outlined"
-            density="comfortable"
+            density="compact"
             hide-details
             rounded="lg"
             clearable
@@ -73,9 +73,9 @@
         </v-col>
         <v-spacer></v-spacer>
         <v-col cols="12" md="auto">
-          <v-btn-toggle v-model="viewMode" density="comfortable" variant="outlined" color="primary" rounded="lg" mandatory>
-            <v-btn value="products" prepend-icon="mdi-view-list">ສິນຄ້າ</v-btn>
-            <v-btn value="stock" prepend-icon="mdi-warehouse">ສະຕັອກ</v-btn>
+          <v-btn-toggle v-model="viewMode" density="compact" variant="outlined" color="primary" rounded="lg" mandatory>
+            <v-btn value="products" prepend-icon="mdi-view-list" size="small">ສິນຄ້າ</v-btn>
+            <v-btn value="stock" prepend-icon="mdi-warehouse" size="small">ສະຕັອກ</v-btn>
           </v-btn-toggle>
         </v-col>
       </v-row>
@@ -94,14 +94,15 @@
         :headers="productHeaders"
         :items="products"
         :loading="loading"
+        density="compact"
         hover
         items-per-page="20"
         class="custom-table"
       >
         <!-- Product name + SKU + Barcode -->
         <template #item.name="{ item }">
-          <div class="py-2">
-            <div class="font-weight-bold text-primary text-subtitle-1">{{ item.name }}</div>
+          <div class="py-1">
+            <div class="font-weight-bold text-primary text-body-2">{{ item.name }}</div>
             <div class="d-flex align-center flex-wrap gap-2 mt-1">
               <v-chip v-if="item.sku" size="x-small" variant="flat" color="blue-lighten-5" class="text-blue-darken-4 font-weight-bold px-2">
                 SKU: {{ item.sku }}
@@ -203,6 +204,7 @@
         :headers="variantHeaders"
         :items="allVariants"
         :loading="loading"
+        density="compact"
         hover
         items-per-page="25"
         class="custom-table"
@@ -298,84 +300,84 @@
 
     <!-- ══════════════ PRODUCT DETAIL DIALOG ══════════════ -->
     <v-dialog v-model="detailDialog" max-width="600" scrollable>
-      <v-card rounded="xl" v-if="selectedProduct" class="border bg-white" max-height="90vh">
+      <v-card rounded="lg" v-if="selectedProduct" class="border bg-white" max-height="90vh">
         <!-- Top Banner / Header Profile -->
         <div class="position-relative pb-4" style="background: linear-gradient(135deg, rgba(var(--v-theme-primary), .08), rgba(var(--v-theme-secondary), .08));">
           <v-btn icon="mdi-close" variant="text" size="small" @click="detailDialog = false" class="position-absolute right-0 top-0 ma-2 text-grey-darken-1" />
           
-          <div class="d-flex flex-column align-center pt-8 px-6 text-center">
-            <v-avatar size="90" color="white" class="elevation-2 mb-4 border-sm" style="border-color: rgba(var(--v-theme-primary), .2) !important;">
-              <v-icon size="45" color="primary">mdi-package-variant</v-icon>
+          <div class="d-flex flex-column align-center pt-4 px-6 text-center">
+            <v-avatar size="64" color="white" class="elevation-2 mb-2 border-sm" style="border-color: rgba(var(--v-theme-primary), .2) !important;">
+              <v-icon size="32" color="primary">mdi-package-variant</v-icon>
             </v-avatar>
-            <div class="text-h5 font-weight-black mb-1 text-grey-darken-3">{{ selectedProduct.name }}</div>
-            <div class="d-flex align-center gap-2 mt-1">
-              <v-chip size="small" color="primary" variant="flat" class="font-weight-medium px-3">
+            <div class="text-h6 font-weight-black mb-1 text-grey-darken-3">{{ selectedProduct.name }}</div>
+            <div class="d-flex align-center gap-2 mt-0">
+              <v-chip size="x-small" color="primary" variant="flat" class="font-weight-medium px-2">
                 {{ selectedProduct.category?.category_name || 'Uncategorized' }}
               </v-chip>
-              <v-chip :color="selectedProduct.is_active ? 'success' : 'error'" size="small" variant="tonal" class="px-3 font-weight-medium">
-                <v-icon start size="14">{{ selectedProduct.is_active ? 'mdi-check-circle' : 'mdi-close-circle' }}</v-icon>
+              <v-chip :color="selectedProduct.is_active ? 'success' : 'error'" size="x-small" variant="tonal" class="px-2 font-weight-medium">
+                <v-icon start size="12">{{ selectedProduct.is_active ? 'mdi-check-circle' : 'mdi-close-circle' }}</v-icon>
                 {{ selectedProduct.is_active ? 'Active' : 'Inactive' }}
               </v-chip>
             </div>
           </div>
         </div>
 
-        <v-card-text class="pa-6 pt-2">
+        <v-card-text class="pa-4 pt-2">
           <!-- Quick Stats Grid -->
           <v-row dense>
             <v-col cols="12" sm="6">
-              <v-card variant="flat" color="blue-lighten-5" rounded="lg" class="pa-4 d-flex align-center h-100 border-sm border-blue-lighten-4">
-                <v-avatar color="blue-lighten-4" size="44" class="me-3">
-                  <v-icon color="primary" size="24">mdi-identifier</v-icon>
+              <v-card variant="flat" color="blue-lighten-5" rounded="lg" class="pa-3 d-flex align-center h-100 border-sm border-blue-lighten-4">
+                <v-avatar color="blue-lighten-4" size="32" class="me-2">
+                  <v-icon color="primary" size="18">mdi-identifier</v-icon>
                 </v-avatar>
                 <div>
-                  <div class="text-caption font-weight-medium text-uppercase text-blue-darken-2" style="letter-spacing: 0.5px;">SKU</div>
-                  <div class="font-weight-bold text-body-1 text-grey-darken-4">{{ selectedProduct.sku || '—' }}</div>
+                  <div class="text-caption font-weight-medium text-uppercase text-blue-darken-2" style="letter-spacing: 0.5px; font-size: 0.7rem !important;">SKU</div>
+                  <div class="font-weight-bold text-body-2 text-grey-darken-4">{{ selectedProduct.sku || '—' }}</div>
                 </div>
               </v-card>
             </v-col>
             <v-col cols="12" sm="6">
-              <v-card variant="flat" color="purple-lighten-5" rounded="lg" class="pa-4 d-flex align-center h-100 border-sm border-purple-lighten-4">
-                <v-avatar color="purple-lighten-4" size="44" class="me-3">
-                  <v-icon color="secondary" size="24">mdi-barcode</v-icon>
+              <v-card variant="flat" color="purple-lighten-5" rounded="lg" class="pa-3 d-flex align-center h-100 border-sm border-purple-lighten-4">
+                <v-avatar color="purple-lighten-4" size="32" class="me-2">
+                  <v-icon color="secondary" size="18">mdi-barcode</v-icon>
                 </v-avatar>
                 <div>
-                  <div class="text-caption font-weight-medium text-uppercase text-purple-darken-2" style="letter-spacing: 0.5px;">Barcode</div>
-                  <div class="font-weight-bold text-body-1 text-grey-darken-4">{{ selectedProduct.barcode || '—' }}</div>
+                  <div class="text-caption font-weight-medium text-uppercase text-purple-darken-2" style="letter-spacing: 0.5px; font-size: 0.7rem !important;">Barcode</div>
+                  <div class="font-weight-bold text-body-2 text-grey-darken-4">{{ selectedProduct.barcode || '—' }}</div>
                 </div>
               </v-card>
             </v-col>
             <v-col cols="12" sm="6">
-              <v-card variant="flat" color="green-lighten-5" rounded="lg" class="pa-4 d-flex align-center h-100 border-sm border-green-lighten-4 mt-2">
-                <v-avatar color="green-lighten-4" size="48" class="me-3">
-                  <v-icon color="success" size="24">mdi-cash-plus</v-icon>
+              <v-card variant="flat" color="green-lighten-5" rounded="lg" class="pa-3 d-flex align-center h-100 border-sm border-green-lighten-4 mt-2">
+                <v-avatar color="green-lighten-4" size="32" class="me-2">
+                  <v-icon color="success" size="18">mdi-cash-plus</v-icon>
                 </v-avatar>
                 <div>
-                  <div class="text-caption font-weight-bold text-uppercase text-green-darken-2" style="letter-spacing: 0.5px;">Selling Price</div>
-                  <div class="font-weight-black text-h6 text-success">{{ formatCurrency(selectedProduct.selling_price) }}</div>
+                  <div class="text-caption font-weight-bold text-uppercase text-green-darken-2" style="letter-spacing: 0.5px; font-size: 0.7rem !important;">Selling Price</div>
+                  <div class="font-weight-black text-subtitle-1 text-success">{{ formatCurrency(selectedProduct.selling_price) }}</div>
                 </div>
               </v-card>
             </v-col>
             <v-col cols="12" sm="6">
-              <v-card variant="flat" color="orange-lighten-5" rounded="lg" class="pa-4 d-flex align-center h-100 border-sm border-orange-lighten-4 mt-2">
-                <v-avatar color="orange-lighten-4" size="48" class="me-3">
-                  <v-icon color="warning" size="24">mdi-cash-minus</v-icon>
+              <v-card variant="flat" color="orange-lighten-5" rounded="lg" class="pa-3 d-flex align-center h-100 border-sm border-orange-lighten-4 mt-2">
+                <v-avatar color="orange-lighten-4" size="32" class="me-2">
+                  <v-icon color="warning" size="18">mdi-cash-minus</v-icon>
                 </v-avatar>
                 <div>
-                  <div class="text-caption font-weight-bold text-uppercase text-orange-darken-2" style="letter-spacing: 0.5px;">Cost Price</div>
-                  <div class="font-weight-bold text-h6 text-warning">{{ formatCurrency(selectedProduct.cost_price) }}</div>
+                  <div class="text-caption font-weight-bold text-uppercase text-orange-darken-2" style="letter-spacing: 0.5px; font-size: 0.7rem !important;">Cost Price</div>
+                  <div class="font-weight-bold text-subtitle-1 text-warning">{{ formatCurrency(selectedProduct.cost_price) }}</div>
                 </div>
               </v-card>
             </v-col>
           </v-row>
 
           <!-- Description Section -->
-          <div v-if="selectedProduct.description" class="mt-6">
-            <div class="text-caption text-uppercase font-weight-bold text-primary mb-2 ps-1" style="letter-spacing: 1px;">
-              <v-icon size="14" class="me-1 pb-1">mdi-text</v-icon> Description
+          <div v-if="selectedProduct.description" class="mt-4">
+            <div class="text-caption text-uppercase font-weight-bold text-primary mb-1 ps-1" style="letter-spacing: 1px;">
+              <v-icon size="12" class="me-1 pb-1">mdi-text</v-icon> Description
             </div>
-            <v-card variant="flat" color="grey-lighten-4" rounded="lg" class="pa-4 border-sm border-grey-lighten-2 shadow-sm">
-              <div class="text-body-2 text-grey-darken-3" style="line-height: 1.7; white-space: pre-wrap;">{{ selectedProduct.description }}</div>
+            <v-card variant="flat" color="grey-lighten-4" rounded="lg" class="pa-3 border-sm border-grey-lighten-2 shadow-sm">
+              <div class="text-caption text-grey-darken-3" style="line-height: 1.6; white-space: pre-wrap;">{{ selectedProduct.description }}</div>
             </v-card>
           </div>
         </v-card-text>
@@ -486,7 +488,7 @@
                   label="Product Name *"
                   prepend-inner-icon="mdi-package-variant"
                   variant="outlined"
-                  density="comfortable"
+                  density="compact"
                   :rules="[v => !!v || 'Name is required']"
                 />
               </v-col>
@@ -496,7 +498,7 @@
                   label="SKU"
                   prepend-inner-icon="mdi-identifier"
                   variant="outlined"
-                  density="comfortable"
+                  density="compact"
                 />
               </v-col>
               <v-col cols="12" sm="6">
@@ -505,7 +507,7 @@
                   label="Barcode"
                   prepend-inner-icon="mdi-barcode"
                   variant="outlined"
-                  density="comfortable"
+                  density="compact"
                 />
               </v-col>
               <v-col cols="12" sm="6">
@@ -517,7 +519,7 @@
                   label="Category"
                   prepend-inner-icon="mdi-format-list-bulleted"
                   variant="outlined"
-                  density="comfortable"
+                  density="compact"
                   clearable
                 />
               </v-col>
@@ -530,7 +532,7 @@
                   label="Supplier"
                   prepend-inner-icon="mdi-truck-supplier"
                   variant="outlined"
-                  density="comfortable"
+                  density="compact"
                   clearable
                 />
               </v-col>
@@ -540,7 +542,7 @@
                   label="Cost Price"
                   prepend-inner-icon="mdi-cash-minus"
                   variant="outlined"
-                  density="comfortable"
+                  density="compact"
                   type="number"
                   prefix="LAK"
                 />
@@ -551,7 +553,7 @@
                   label="Selling Price *"
                   prepend-inner-icon="mdi-cash-plus"
                   variant="outlined"
-                  density="comfortable"
+                  density="compact"
                   type="number"
                   prefix="LAK"
                   :rules="[v => !!v || 'Selling price is required']"
@@ -563,7 +565,7 @@
                   label="Description"
                   prepend-inner-icon="mdi-text"
                   variant="outlined"
-                  density="comfortable"
+                  density="compact"
                   rows="2"
                   auto-grow
                 />
@@ -841,6 +843,13 @@ onMounted(() => {
 <style scoped>
 .header-icon-container {
   background-color: rgba(var(--v-theme-primary), 0.1);
+}
+
+.container-border {
+  border: 1px solid rgba(var(--v-border-color), var(--v-border-opacity));
+  border-radius: 12px;
+  background-color: rgb(var(--v-theme-surface));
+  margin-top: 8px;
 }
 
 .shadow-soft {

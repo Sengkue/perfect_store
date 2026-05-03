@@ -1,46 +1,66 @@
 <template>
-  <v-card rounded="lg" elevation="2">
-    <!-- Header -->
-    <v-card-title class="d-flex align-center py-3 px-4 flex-wrap gap-2">
-      <div class="d-flex align-center">
-        <v-icon icon="mdi-account-details" color="primary" class="me-2" />
-        <span class="text-h6 font-weight-bold">Staff Profiles</span>
-      </div>
-      <v-spacer></v-spacer>
+  <v-container fluid class="pa-2 container-border">
+    <!-- ── Header Section ── -->
+    <v-row class="mb-2" dense>
+      <v-col cols="12" class="d-flex align-center flex-wrap gap-2">
+        <div class="header-icon-container rounded-lg pa-2 me-2">
+          <v-icon color="primary" size="20">mdi-account-details</v-icon>
+        </div>
+        <div>
+          <h1 class="text-h5 font-weight-black mb-0">ຂໍ້ມູນພະນັກງານ</h1>
+          <p class="text-caption text-medium-emphasis mb-0">ຈັດການຂໍ້ມູນສ່ວນຕົວ ແລະ ລາຍລະອຽດການຈ້າງງານ</p>
+        </div>
+        <v-spacer></v-spacer>
+        <v-btn 
+          v-if="hasPermission('users.manage')" 
+          color="primary" 
+          variant="elevated" 
+          class="rounded-lg px-4 font-weight-bold shadow-soft" 
+          size="small"
+          prepend-icon="mdi-account-plus" 
+          @click="openAddDialog"
+        >
+          ເພີ່ມຂໍ້ມູນພະນັກງານ
+        </v-btn>
+      </v-col>
+    </v-row>
 
-      <!-- Search -->
-      <v-text-field
-        v-model="search"
-        prepend-inner-icon="mdi-magnify"
-        label="Search"
-        variant="outlined"
+    <!-- ── Search Section ── -->
+    <v-card border elevation="0" class="rounded-lg mb-2 shadow-soft pa-2">
+      <v-row dense align="center">
+        <v-col cols="12" md="4">
+          <v-text-field
+            v-model="search"
+            placeholder="ຄົ້ນຫາຊື່ພະນັກງານ..."
+            prepend-inner-icon="mdi-magnify"
+            variant="outlined"
+            density="compact"
+            hide-details
+            rounded="lg"
+            clearable
+            @update:model-value="debouncedLoad"
+          />
+        </v-col>
+        <v-spacer></v-spacer>
+        <v-col cols="12" md="auto">
+          <div class="text-caption text-medium-emphasis">
+            <v-icon icon="mdi-information-outline" size="16" class="me-1"></v-icon>
+            ຂໍ້ມູນພະນັກງານຈະຖືກເຊື່ອມໂຍງກັບບັນຊີຜູ້ໃຊ້
+          </div>
+        </v-col>
+      </v-row>
+    </v-card>
+
+    <!-- ── Data Table Section ── -->
+    <v-card border elevation="0" class="rounded-lg overflow-hidden shadow-soft">
+      <v-data-table
+        :headers="headers"
+        :items="profiles"
+        :loading="loading"
         density="compact"
-        hide-details
-        style="max-width: 240px"
-        clearable
-        @update:modelValue="debouncedLoad"
-      ></v-text-field>
-
-      <v-btn v-if="hasPermission('users.manage')" color="primary" prepend-icon="mdi-account-plus" @click="openAddDialog">Add Profile</v-btn>
-    </v-card-title>
-    <v-divider></v-divider>
-
-    <!-- Info banner -->
-    <v-alert
-      type="info"
-      variant="tonal"
-      density="compact"
-      class="ma-3"
-      text="Staff profiles are linked to user accounts. Select a user, then fill in their personal/employment details."
-    />
-
-    <!-- Data Table -->
-    <v-data-table
-      :headers="headers"
-      :items="profiles"
-      :loading="loading"
-      hover
-    >
+        hover
+        class="custom-table"
+      >
       <!-- User avatar + username -->
       <template v-slot:item.user="{ item }">
         <div class="d-flex align-center gap-3 py-1">
@@ -95,13 +115,14 @@
         </div>
       </template>
     </v-data-table>
+    </v-card>
 
     <!-- ── Add / Edit Dialog ── -->
     <v-dialog v-model="formDialog" max-width="600" persistent>
       <v-card rounded="lg">
-        <v-card-title class="d-flex align-center pa-4">
-          <v-icon :icon="isEditing ? 'mdi-account-edit' : 'mdi-account-plus'" class="me-2" color="primary"></v-icon>
-          {{ isEditing ? 'Edit Staff Profile' : 'Create Staff Profile' }}
+        <v-card-title class="d-flex align-center pa-2">
+          <v-icon :icon="isEditing ? 'mdi-account-edit' : 'mdi-account-plus'" class="me-2" color="primary" size="20"></v-icon>
+          <span class="text-body-2 font-weight-bold">{{ isEditing ? 'Edit Staff Profile' : 'Create Staff Profile' }}</span>
         </v-card-title>
         <v-divider></v-divider>
 
@@ -118,7 +139,7 @@
                   label="Link to User Account *"
                   prepend-inner-icon="mdi-account-key-outline"
                   variant="outlined"
-                  density="comfortable"
+                  density="compact"
                   :rules="[v => !!v || 'Please select a user account']"
                   :loading="loadingUsers"
                   hint="Only users without a profile are shown"
@@ -146,7 +167,7 @@
                   label="First Name *"
                   prepend-inner-icon="mdi-account-outline"
                   variant="outlined"
-                  density="comfortable"
+                  density="compact"
                   :rules="[v => !!v || 'First name is required']"
                 ></v-text-field>
               </v-col>
@@ -158,7 +179,7 @@
                   label="Last Name *"
                   prepend-inner-icon="mdi-account-outline"
                   variant="outlined"
-                  density="comfortable"
+                  density="compact"
                   :rules="[v => !!v || 'Last name is required']"
                 ></v-text-field>
               </v-col>
@@ -170,7 +191,7 @@
                   label="Phone"
                   prepend-inner-icon="mdi-phone-outline"
                   variant="outlined"
-                  density="comfortable"
+                  density="compact"
                 ></v-text-field>
               </v-col>
 
@@ -181,7 +202,7 @@
                   label="Email"
                   prepend-inner-icon="mdi-email-outline"
                   variant="outlined"
-                  density="comfortable"
+                  density="compact"
                   type="email"
                   :rules="[v => !v || /.+@.+\..+/.test(v) || 'Invalid email']"
                 ></v-text-field>
@@ -194,7 +215,7 @@
                   label="Hire Date"
                   prepend-inner-icon="mdi-calendar-outline"
                   variant="outlined"
-                  density="comfortable"
+                  density="compact"
                   type="date"
                 ></v-text-field>
               </v-col>
@@ -206,7 +227,7 @@
                   label="Salary"
                   prepend-inner-icon="mdi-cash-outline"
                   variant="outlined"
-                  density="comfortable"
+                  density="compact"
                   type="number"
                   min="0"
                   suffix="LAK"
@@ -220,7 +241,7 @@
                   label="Address"
                   prepend-inner-icon="mdi-map-marker-outline"
                   variant="outlined"
-                  density="comfortable"
+                  density="compact"
                   rows="2"
                   auto-grow
                 ></v-textarea>
@@ -230,10 +251,10 @@
         </v-card-text>
 
         <v-divider></v-divider>
-        <v-card-actions class="pa-4">
+        <v-card-actions class="pa-2">
           <v-spacer></v-spacer>
-          <v-btn variant="text" @click="closeFormDialog" :disabled="saving">Cancel</v-btn>
-          <v-btn color="primary" variant="elevated" :loading="saving" @click="submitForm">
+          <v-btn variant="text" size="small" @click="closeFormDialog" :disabled="saving">Cancel</v-btn>
+          <v-btn color="primary" variant="elevated" size="small" :loading="saving" @click="submitForm">
             {{ isEditing ? 'Save Changes' : 'Create Profile' }}
           </v-btn>
         </v-card-actions>
@@ -243,26 +264,26 @@
     <!-- ── Delete Confirmation Dialog ── -->
     <v-dialog v-model="deleteDialog" max-width="400" persistent>
       <v-card rounded="lg">
-        <v-card-title class="d-flex align-center pa-4">
-          <v-icon icon="mdi-alert-circle-outline" color="error" class="me-2"></v-icon>
-          Confirm Delete
+        <v-card-title class="d-flex align-center pa-3">
+          <v-icon icon="mdi-alert-circle-outline" color="error" class="me-2" size="20"></v-icon>
+          <span class="text-body-2 font-weight-bold">Confirm Delete</span>
         </v-card-title>
         <v-divider></v-divider>
-        <v-card-text class="pa-4">
+        <v-card-text class="pa-3 text-body-2">
           Are you sure you want to delete the profile for
           <strong>{{ selectedProfile?.first_name }} {{ selectedProfile?.last_name }}</strong>?
           The user account will remain but profile info will be removed.
         </v-card-text>
         <v-divider></v-divider>
-        <v-card-actions class="pa-4">
+        <v-card-actions class="pa-2">
           <v-spacer></v-spacer>
-          <v-btn variant="text" @click="deleteDialog = false" :disabled="deleting">Cancel</v-btn>
-          <v-btn color="error" variant="elevated" :loading="deleting" @click="confirmDelete">Delete</v-btn>
+          <v-btn variant="text" size="small" @click="deleteDialog = false" :disabled="deleting">Cancel</v-btn>
+          <v-btn color="error" variant="elevated" size="small" :loading="deleting" @click="confirmDelete">Delete</v-btn>
         </v-card-actions>
       </v-card>
     </v-dialog>
 
-  </v-card>
+  </v-container>
 </template>
 
 <script setup>
@@ -458,3 +479,33 @@ const confirmDelete = async () => {
 // ── Init ───────────────────────────────────────────────
 onMounted(loadProfiles)
 </script>
+<style scoped>
+.container-border {
+  border: 1px solid rgba(var(--v-border-color), var(--v-border-opacity));
+  border-radius: 12px;
+  background-color: rgb(var(--v-theme-surface));
+  margin-top: 8px;
+}
+
+.header-icon-container {
+  background-color: rgba(var(--v-theme-primary), 0.1);
+}
+
+.shadow-soft {
+  box-shadow: 0 4px 20px rgba(0,0,0,0.04) !important;
+}
+
+.custom-table :deep(th) {
+  font-weight: bold !important;
+  color: #555 !important;
+  background-color: #FAFAFA !important;
+  text-transform: uppercase;
+  font-size: 0.7rem !important;
+  letter-spacing: 0.05em;
+  padding: 0 8px !important;
+}
+
+.custom-table :deep(td) {
+  padding: 0 8px !important;
+}
+</style>

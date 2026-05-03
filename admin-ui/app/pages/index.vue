@@ -1,29 +1,29 @@
 <template>
-  <v-container fluid class="pa-6" v-if="hasPermission('dashboard.view')">
+  <v-container fluid class="pa-2 container-border" v-if="hasPermission('dashboard.view')">
     <!-- ── Header Section ── -->
-    <v-row class="mb-6">
-      <v-col cols="12" class="d-flex align-center flex-wrap gap-3">
-        <div class="header-icon-container rounded-lg pa-3 me-3">
-          <v-icon color="primary" size="32">mdi-view-dashboard</v-icon>
+    <v-row class="mb-2" dense>
+      <v-col cols="12" class="d-flex align-center flex-wrap gap-2">
+        <div class="header-icon-container rounded-lg pa-2 me-2">
+          <v-icon color="primary" size="20">mdi-view-dashboard</v-icon>
         </div>
         <div>
-          <h1 class="text-h4 font-weight-black mb-1">ພາບລວມລະບົບ</h1>
-          <p class="text-subtitle-1 text-medium-emphasis">ສະຖິຕິການຂາຍ ແລະ ການເຄື່ອນໄຫວລວມຂອງຮ້ານ</p>
+          <h1 class="text-h5 font-weight-black mb-0">ພາບລວມລະບົບ</h1>
+          <p class="text-caption text-medium-emphasis mb-0">ສະຖິຕິການຂາຍ ແລະ ການເຄື່ອນໄຫວລວມຂອງຮ້ານ</p>
         </div>
       </v-col>
     </v-row>
 
     <!-- Summary Cards -->
-    <v-row class="mb-6">
+    <v-row class="mb-2">
       <v-col cols="12" sm="6" md="3">
-        <v-card border elevation="0" class="rounded-lg pa-4 shadow-soft h-100 border-primary-lighten-4">
-          <div class="d-flex align-center mb-4">
-            <v-avatar color="primary-lighten-5" size="48" rounded="lg">
-              <v-icon color="primary" size="28">mdi-cash-multiple</v-icon>
+        <v-card border elevation="0" class="rounded-lg pa-3 shadow-soft h-100 border-primary-lighten-4">
+          <div class="d-flex align-center mb-2">
+            <v-avatar color="primary-lighten-5" size="40" rounded="lg">
+              <v-icon color="primary" size="24">mdi-cash-multiple</v-icon>
             </v-avatar>
             <div class="ms-3">
               <div class="text-caption font-weight-bold text-grey-darken-1 text-uppercase">ລາຍຮັບທັງໝົດ</div>
-              <div class="text-h5 font-weight-black text-primary">{{ formatCurrency(todayRevenue) }}</div>
+              <div class="text-h6 font-weight-black text-primary">{{ formatCurrency(todayRevenue) }}</div>
             </div>
           </div>
           <div class="text-caption text-medium-emphasis">ລວມຍອດຂາຍທີ່ສຳເລັດແລ້ວ</div>
@@ -31,14 +31,14 @@
       </v-col>
 
       <v-col cols="12" sm="6" md="3">
-        <v-card border elevation="0" class="rounded-lg pa-4 shadow-soft h-100 border-success-lighten-4">
-          <div class="d-flex align-center mb-4">
-            <v-avatar color="success-lighten-5" size="48" rounded="lg">
-              <v-icon color="success" size="28">mdi-receipt</v-icon>
+        <v-card border elevation="0" class="rounded-lg pa-3 shadow-soft h-100 border-success-lighten-4">
+          <div class="d-flex align-center mb-2">
+            <v-avatar color="success-lighten-5" size="40" rounded="lg">
+              <v-icon color="success" size="24">mdi-receipt</v-icon>
             </v-avatar>
             <div class="ms-3">
               <div class="text-caption font-weight-bold text-grey-darken-1 text-uppercase">ຈຳນວນບິນ</div>
-              <div class="text-h5 font-weight-black text-success">{{ totalOrders }}</div>
+              <div class="text-h6 font-weight-black text-success">{{ totalOrders }}</div>
             </div>
           </div>
           <div class="text-caption text-medium-emphasis">ລາຍການທຸລະກຳທີ່ສຳເລັດ</div>
@@ -46,14 +46,14 @@
       </v-col>
 
       <v-col cols="12" sm="6" md="3">
-        <v-card border elevation="0" class="rounded-lg pa-4 shadow-soft h-100 border-warning-lighten-4">
-          <div class="d-flex align-center mb-4">
-            <v-avatar color="warning-lighten-5" size="48" rounded="lg">
-              <v-icon color="warning" size="28">mdi-package-variant-closed</v-icon>
+        <v-card border elevation="0" class="rounded-lg pa-3 shadow-soft h-100 border-warning-lighten-4">
+          <div class="d-flex align-center mb-2">
+            <v-avatar color="warning-lighten-5" size="40" rounded="lg">
+              <v-icon color="warning" size="24">mdi-package-variant-closed</v-icon>
             </v-avatar>
             <div class="ms-3">
               <div class="text-caption font-weight-bold text-grey-darken-1 text-uppercase">ສິນຄ້າທັງໝົດ</div>
-              <div class="text-h5 font-weight-black text-warning">{{ totalProducts }}</div>
+              <div class="text-h6 font-weight-black text-warning">{{ totalProducts }}</div>
             </div>
           </div>
           <div class="text-caption text-medium-emphasis">ລາຍການສິນຄ້າໃນລະບົບ</div>
@@ -61,14 +61,14 @@
       </v-col>
 
       <v-col cols="12" sm="6" md="3">
-        <v-card border elevation="0" class="rounded-lg pa-4 shadow-soft h-100 border-info-lighten-4">
-          <div class="d-flex align-center mb-4">
-            <v-avatar color="info-lighten-5" size="48" rounded="lg">
-              <v-icon color="info" size="28">mdi-account-group</v-icon>
+        <v-card border elevation="0" class="rounded-lg pa-3 shadow-soft h-100 border-info-lighten-4">
+          <div class="d-flex align-center mb-2">
+            <v-avatar color="info-lighten-5" size="40" rounded="lg">
+              <v-icon color="info" size="24">mdi-account-group</v-icon>
             </v-avatar>
             <div class="ms-3">
               <div class="text-caption font-weight-bold text-grey-darken-1 text-uppercase">ລູກຄ້າ</div>
-              <div class="text-h5 font-weight-black text-info">{{ totalCustomers }}</div>
+              <div class="text-h6 font-weight-black text-info">{{ totalCustomers }}</div>
             </div>
           </div>
           <div class="text-caption text-medium-emphasis">ຈຳນວນລູກຄ້າທີ່ລົງທະບຽນ</div>
@@ -77,24 +77,24 @@
     </v-row>
 
     <!-- Quick Actions -->
-    <v-row class="mb-6">
+    <v-row class="mb-2">
       <v-col cols="12">
-        <v-card border elevation="0" class="rounded-lg shadow-soft pa-4">
-          <div class="text-subtitle-1 font-weight-black mb-4 d-flex align-center">
-            <v-icon icon="mdi-lightning-bolt" color="amber-darken-2" class="me-2" />
+        <v-card border elevation="0" class="rounded-lg shadow-soft pa-3">
+          <div class="text-body-2 font-weight-black mb-2 d-flex align-center">
+            <v-icon icon="mdi-lightning-bolt" color="amber-darken-2" class="me-2" size="20" />
             ເມນູລັດ (Quick Actions)
           </div>
-          <div class="d-flex flex-wrap gap-3">
-            <v-btn v-if="hasPermission('sales.create')" color="primary" variant="elevated" rounded="lg" size="large" class="px-6 font-weight-bold shadow-soft" prepend-icon="mdi-cash-register" to="/pos">
+          <div class="d-flex flex-wrap gap-2">
+            <v-btn v-if="hasPermission('sales.create')" color="primary" variant="elevated" rounded="lg" size="small" class="px-4 font-weight-bold shadow-soft" prepend-icon="mdi-cash-register" to="/pos">
               ເປີດໜ້າ POS
             </v-btn>
-            <v-btn v-if="hasPermission('imports.create')" color="success" variant="tonal" rounded="lg" size="large" class="px-6 font-weight-bold" prepend-icon="mdi-package-down" to="/imports">
+            <v-btn v-if="hasPermission('imports.create')" color="success" variant="tonal" rounded="lg" size="small" class="px-4 font-weight-bold" prepend-icon="mdi-package-down" to="/imports">
               ນໍາສິນຄ້າເຂົ້າ
             </v-btn>
-            <v-btn v-if="hasPermission('purchases.view')" color="warning" variant="tonal" rounded="lg" size="large" class="px-6 font-weight-bold" prepend-icon="mdi-truck-delivery-outline" to="/purchase-orders">
+            <v-btn v-if="hasPermission('purchases.view')" color="warning" variant="tonal" rounded="lg" size="small" class="px-4 font-weight-bold" prepend-icon="mdi-truck-delivery-outline" to="/purchase-orders">
               ໃບສັ່ງຊື້ (PO)
             </v-btn>
-            <v-btn v-if="hasPermission('customers.view')" color="info" variant="tonal" rounded="lg" size="large" class="px-6 font-weight-bold" prepend-icon="mdi-account-plus" to="/customers">
+            <v-btn v-if="hasPermission('customers.view')" color="info" variant="tonal" rounded="lg" size="small" class="px-4 font-weight-bold" prepend-icon="mdi-account-plus" to="/customers">
               ລູກຄ້າ
             </v-btn>
           </div>
@@ -103,16 +103,16 @@
     </v-row>
 
     <!-- Bottom Stats Row -->
-    <v-row>
+    <v-row class="mb-2">
       <!-- Revenue by Type -->
       <v-col cols="12" md="6">
-        <v-card rounded="xl" border elevation="0" class="shadow-soft h-100">
-          <v-card-title class="text-subtitle-1 font-weight-black pa-4">
-            <v-icon icon="mdi-chart-pie" class="me-2" color="primary" />
+        <v-card rounded="lg" border elevation="0" class="shadow-soft h-100">
+          <v-card-title class="text-body-2 font-weight-black pa-2 px-3">
+            <v-icon icon="mdi-chart-pie" class="me-2" color="primary" size="18" />
             Revenue by Sale Type
           </v-card-title>
           <v-divider />
-          <v-list v-if="salesSummary.length" density="compact" class="pa-2">
+          <v-list v-if="salesSummary.length" density="compact" class="pa-1">
             <v-list-item
               v-for="s in salesSummary"
               :key="s.sale_type"
@@ -120,13 +120,13 @@
               class="rounded-lg mb-1"
             >
               <template #title>
-                <span class="text-capitalize font-weight-medium">{{ s.sale_type?.replace('_', ' ') || '—' }}</span>
+                <span class="text-capitalize font-weight-medium text-body-2">{{ s.sale_type?.replace('_', ' ') || '—' }}</span>
               </template>
               <template #subtitle>
-                {{ s.total_transactions }} transactions
+                <span class="text-caption">{{ s.total_transactions }} transactions</span>
               </template>
               <template #append>
-                <span class="font-weight-black text-success">{{ formatCurrency(s.total_revenue) }}</span>
+                <span class="font-weight-black text-success text-body-2">{{ formatCurrency(s.total_revenue) }}</span>
               </template>
             </v-list-item>
           </v-list>
@@ -139,24 +139,28 @@
 
       <!-- Extra stats -->
       <v-col cols="12" md="6">
-        <v-card rounded="xl" border elevation="0" class="shadow-soft h-100">
-          <v-card-title class="text-subtitle-1 font-weight-black pa-4">
-            <v-icon icon="mdi-information-outline" class="me-2" color="primary" />
+        <v-card rounded="lg" border elevation="0" class="shadow-soft h-100">
+          <v-card-title class="text-body-2 font-weight-black pa-2 px-3">
+            <v-icon icon="mdi-information-outline" class="me-2" color="primary" size="18" />
             Store Overview
           </v-card-title>
           <v-divider />
-          <v-list density="compact" class="pa-2">
-            <v-list-item prepend-icon="mdi-package-variant-closed" title="Total Products" class="rounded-lg mb-1">
-              <template #append><v-chip size="small" color="warning" variant="flat" class="font-weight-bold">{{ totalProducts }}</v-chip></template>
+          <v-list density="compact" class="pa-1">
+            <v-list-item prepend-icon="mdi-package-variant-closed" title="Total Products" class="rounded-lg mb-0">
+              <template #title><span class="text-body-2">Total Products</span></template>
+              <template #append><v-chip size="x-small" color="warning" variant="flat" class="font-weight-bold">{{ totalProducts }}</v-chip></template>
             </v-list-item>
-            <v-list-item prepend-icon="mdi-account-group" title="Total Customers" class="rounded-lg mb-1">
-              <template #append><v-chip size="small" color="info" variant="flat" class="font-weight-bold">{{ totalCustomers }}</v-chip></template>
+            <v-list-item prepend-icon="mdi-account-group" title="Total Customers" class="rounded-lg mb-0">
+              <template #title><span class="text-body-2">Total Customers</span></template>
+              <template #append><v-chip size="x-small" color="info" variant="flat" class="font-weight-bold">{{ totalCustomers }}</v-chip></template>
             </v-list-item>
-            <v-list-item prepend-icon="mdi-receipt" title="Completed Sales" class="rounded-lg mb-1">
-              <template #append><v-chip size="small" color="success" variant="flat" class="font-weight-bold">{{ totalOrders }}</v-chip></template>
+            <v-list-item prepend-icon="mdi-receipt" title="Completed Sales" class="rounded-lg mb-0">
+              <template #title><span class="text-body-2">Completed Sales</span></template>
+              <template #append><v-chip size="x-small" color="success" variant="flat" class="font-weight-bold">{{ totalOrders }}</v-chip></template>
             </v-list-item>
             <v-list-item prepend-icon="mdi-truck-supplier" title="Suppliers" class="rounded-lg">
-              <template #append><v-chip size="small" color="primary" variant="flat" class="font-weight-bold">{{ totalSuppliers }}</v-chip></template>
+              <template #title><span class="text-body-2">Suppliers</span></template>
+              <template #append><v-chip size="x-small" color="primary" variant="flat" class="font-weight-bold">{{ totalSuppliers }}</v-chip></template>
             </v-list-item>
           </v-list>
         </v-card>
@@ -233,6 +237,13 @@ onMounted(async () => {
 <style scoped>
 .header-icon-container {
   background-color: rgba(var(--v-theme-primary), 0.1);
+}
+
+.container-border {
+  border: 1px solid rgba(var(--v-border-color), var(--v-border-opacity));
+  border-radius: 12px;
+  background-color: rgb(var(--v-theme-surface));
+  margin-top: 8px;
 }
 
 .shadow-soft {

@@ -65,29 +65,36 @@
         @checkout="executeCheckout"
     />
 
-    <!-- Quick Add Customer Dialog inside POS -->
     <v-dialog v-model="showAddCustomer" max-width="400" v-if="hasPermission('customers.create')">
-      <v-card>
-        <v-card-title>ເພີ່ມລູກຄ້າໃໝ່</v-card-title>
-        <v-card-text class="pt-4">
-          <v-text-field v-model="newCustomer.first_name" label="ຊື່" variant="outlined" density="compact" class="mb-2"></v-text-field>
-          <v-text-field v-model="newCustomer.last_name" label="ນາມສະກຸນ" variant="outlined" density="compact" class="mb-2"></v-text-field>
-          <v-text-field v-model="newCustomer.phone" label="ເບີໂທລະສັບ" variant="outlined" density="compact" class="mb-2"></v-text-field>
+      <v-card rounded="lg">
+        <v-card-title class="d-flex align-center pa-4">
+          <v-icon icon="mdi-account-plus" color="primary" class="me-2" />
+          ເພີ່ມລູກຄ້າໃໝ່
+        </v-card-title>
+        <v-divider />
+        <v-card-text class="pa-4">
+          <v-text-field v-model="newCustomer.first_name" label="ຊື່" variant="outlined" density="compact" class="mb-3" hide-details="auto"></v-text-field>
+          <v-text-field v-model="newCustomer.last_name" label="ນາມສະກຸນ" variant="outlined" density="compact" class="mb-3" hide-details="auto"></v-text-field>
+          <v-text-field v-model="newCustomer.phone" label="ເບີໂທລະສັບ" variant="outlined" density="compact" hide-details="auto"></v-text-field>
         </v-card-text>
-        <v-card-actions>
+        <v-card-actions class="pa-4 pt-0">
           <v-spacer></v-spacer>
-          <v-btn @click="showAddCustomer = false">ຍົກເລີກ</v-btn>
-          <v-btn color="primary" @click="saveNewCustomer">ບັນທຶກ</v-btn>
+          <v-btn variant="text" @click="showAddCustomer = false">ຍົກເລີກ</v-btn>
+          <v-btn color="primary" variant="flat" class="rounded-lg px-6" @click="saveNewCustomer">ບັນທຶກ</v-btn>
         </v-card-actions>
       </v-card>
     </v-dialog>
 
     <!-- Held Orders Dialog -->
     <v-dialog v-model="showHeldOrders" max-width="500">
-        <v-card>
-            <v-card-title>ລາຍການທີ່ພັກໄວ້</v-card-title>
-            <v-list lines="two">
-                <v-list-item v-for="(order, index) in heldOrders" :key="index" border>
+        <v-card rounded="lg">
+            <v-card-title class="d-flex align-center pa-4">
+              <v-icon icon="mdi-pause-circle-outline" color="warning" class="me-2" />
+              ລາຍການທີ່ພັກໄວ້
+            </v-card-title>
+            <v-divider />
+            <v-list lines="two" density="compact" class="pa-2">
+                <v-list-item v-for="(order, index) in heldOrders" :key="index" border rounded="lg" class="mb-2">
                     <template v-slot:title>
                         <strong class="text-primary">ລາຍການທີ #{{ index + 1 }}</strong> - {{ order.items.length }} ລາຍການ
                     </template>
@@ -95,14 +102,14 @@
                         ພັກໄວ້ເມື່ອ {{ new Date(order.time).toLocaleTimeString() }}
                     </template>
                     <template v-slot:append>
-                        <v-btn icon="mdi-restore" color="success" variant="text" @click="restoreOrder(index)"></v-btn>
-                        <v-btn icon="mdi-delete" color="error" variant="text" @click="deleteHeldOrder(index)"></v-btn>
+                        <v-btn icon="mdi-restore" color="success" variant="text" size="small" @click="restoreOrder(index)"></v-btn>
+                        <v-btn icon="mdi-delete" color="error" variant="text" size="small" @click="deleteHeldOrder(index)"></v-btn>
                     </template>
                 </v-list-item>
             </v-list>
-            <v-card-actions>
+            <v-card-actions class="pa-4 pt-0">
                 <v-spacer></v-spacer>
-                <v-btn @click="showHeldOrders = false">ປິດ</v-btn>
+                <v-btn variant="text" @click="showHeldOrders = false">ປິດ</v-btn>
             </v-card-actions>
         </v-card>
     </v-dialog>

@@ -1,22 +1,22 @@
 <template>
-  <v-container fluid class="pa-6" v-if="hasPermission('users.view')">
+  <v-container fluid class="pa-2 container-border" v-if="hasPermission('users.view')">
     <!-- ── Header Section ── -->
-    <v-row class="mb-6">
-      <v-col cols="12" class="d-flex align-center flex-wrap gap-3">
-        <div class="header-icon-container rounded-lg pa-3 me-3">
-          <v-icon color="primary" size="32">mdi-shield-account</v-icon>
+    <v-row class="mb-2">
+      <v-col cols="12" class="d-flex align-center flex-wrap gap-2">
+        <div class="header-icon-container rounded-lg pa-2 me-2">
+          <v-icon color="primary" size="24">mdi-shield-account</v-icon>
         </div>
         <div>
-          <h1 class="text-h4 font-weight-black mb-1">ຈັດການຜູ້ໃຊ້ງານ</h1>
-          <p class="text-subtitle-1 text-medium-emphasis">ກວດສອບ ແລະ ຕັ້ງຄ່າສິດການເຂົ້າເຖິງຂອງພະນັກງານ</p>
+          <h1 class="text-h5 font-weight-black mb-1">ຈັດການຜູ້ໃຊ້ງານ</h1>
+          <p class="text-caption text-medium-emphasis">ກວດສອບ ແລະ ຕັ້ງຄ່າສິດການເຂົ້າເຖິງຂອງພະນັກງານ</p>
         </div>
         <v-spacer></v-spacer>
         <v-btn 
           v-if="hasPermission('users.create')" 
           color="primary" 
           variant="elevated" 
-          size="large"
-          class="rounded-lg px-6 font-weight-bold shadow-soft" 
+          size="small"
+          class="rounded-lg px-4 font-weight-bold shadow-soft" 
           prepend-icon="mdi-account-plus" 
           @click="openAddDialog"
         >
@@ -26,22 +26,22 @@
     </v-row>
 
     <!-- ── Stats Grid ── -->
-    <v-row class="mb-6">
-      <v-col v-for="s in stats" :key="s.label" cols="12" sm="6" md="2" class="flex-grow-1">
-        <v-card border elevation="0" class="rounded-lg pa-4 h-100 shadow-soft">
-          <div class="d-flex align-center mb-2">
-            <v-avatar :color="s.color + '-lighten-5'" size="36" rounded="lg" class="me-2">
-              <v-icon :icon="s.icon" :color="s.color" size="20"></v-icon>
+    <v-row class="mb-2">
+      <v-col v-for="s in stats" :key="s.label" cols="12" sm="4" md="2" class="flex-grow-1">
+        <v-card border elevation="0" class="rounded-lg pa-2 h-100 shadow-soft">
+          <div class="d-flex align-center mb-1">
+            <v-avatar :color="s.color + '-lighten-5'" size="28" rounded="lg" class="me-2">
+              <v-icon :icon="s.icon" :color="s.color" size="16"></v-icon>
             </v-avatar>
-            <span class="text-caption font-weight-bold text-grey-darken-1 text-uppercase">{{ s.label }}</span>
+            <span class="text-caption font-weight-bold text-grey-darken-1 text-uppercase" style="font-size: 0.65rem !important; letter-spacing: 0.05em;">{{ s.label }}</span>
           </div>
-          <div class="text-h4 font-weight-black" :class="'text-' + s.color">{{ s.value }}</div>
+          <div class="text-h6 font-weight-black" :class="'text-' + s.color" style="line-height: 1.2">{{ s.value }}</div>
         </v-card>
       </v-col>
     </v-row>
 
     <!-- ── Search & Filters Section ── -->
-    <v-card border elevation="0" class="rounded-lg mb-6 shadow-soft pa-4">
+    <v-card border elevation="0" class="rounded-lg mb-2 shadow-soft pa-2">
       <v-row dense align="center">
         <v-col cols="12" md="4">
           <v-text-field
@@ -49,7 +49,7 @@
             placeholder="ຄົ້ນຫາຊື່ຜູ້ໃຊ້..."
             prepend-inner-icon="mdi-magnify"
             variant="outlined"
-            density="comfortable"
+            density="compact"
             hide-details
             rounded="lg"
             clearable
@@ -62,7 +62,7 @@
             :items="roleFilterOptions"
             label="ຕຳແໜ່ງ"
             variant="outlined"
-            density="comfortable"
+            density="compact"
             hide-details
             rounded="lg"
             clearable
@@ -75,7 +75,7 @@
             :items="activeFilterOptions"
             label="ສະຖານະ"
             variant="outlined"
-            density="comfortable"
+            density="compact"
             hide-details
             rounded="lg"
             clearable
@@ -91,6 +91,7 @@
         :headers="headers"
         :items="users"
         :loading="loading"
+        density="compact"
         hover
         items-per-page="15"
         class="custom-table"
@@ -215,7 +216,7 @@
                   label="Username *"
                   prepend-inner-icon="mdi-account-outline"
                   variant="outlined"
-                  density="comfortable"
+                  density="compact"
                   :rules="[v => !!v || 'Username is required', v => v.length >= 3 || 'Min 3 characters']"
                   :disabled="isEditing"
                   hint="Cannot be changed after creation"
@@ -233,7 +234,7 @@
                   label="Role *"
                   prepend-inner-icon="mdi-shield-outline"
                   variant="outlined"
-                  density="comfortable"
+                  density="compact"
                   :rules="[v => !!v || 'Role is required']"
                 />
               </v-col>
@@ -247,7 +248,7 @@
                   :append-inner-icon="showPwd ? 'mdi-eye-off' : 'mdi-eye'"
                   :type="showPwd ? 'text' : 'password'"
                   variant="outlined"
-                  density="comfortable"
+                  density="compact"
                   :rules="[v => !!v || 'Password is required', v => v.length >= 6 || 'Min 6 characters']"
                   @click:append-inner="showPwd = !showPwd"
                 />
@@ -277,7 +278,7 @@
                   label="First Name"
                   prepend-inner-icon="mdi-badge-account-outline"
                   variant="outlined"
-                  density="comfortable"
+                  density="compact"
                 />
               </v-col>
               <v-col cols="12" sm="6">
@@ -286,7 +287,7 @@
                   label="Last Name"
                   prepend-inner-icon="mdi-badge-account-outline"
                   variant="outlined"
-                  density="comfortable"
+                  density="compact"
                 />
               </v-col>
               <v-col cols="12" sm="6">
@@ -295,7 +296,7 @@
                   label="Phone"
                   prepend-inner-icon="mdi-phone-outline"
                   variant="outlined"
-                  density="comfortable"
+                  density="compact"
                 />
               </v-col>
               <v-col cols="12" sm="6">
@@ -304,7 +305,7 @@
                   label="Email"
                   prepend-inner-icon="mdi-email-outline"
                   variant="outlined"
-                  density="comfortable"
+                  density="compact"
                   type="email"
                 />
               </v-col>
@@ -314,7 +315,7 @@
                   label="Hire Date"
                   prepend-inner-icon="mdi-calendar-outline"
                   variant="outlined"
-                  density="comfortable"
+                  density="compact"
                   type="date"
                 />
               </v-col>
@@ -324,7 +325,7 @@
                   label="Salary"
                   prepend-inner-icon="mdi-cash-outline"
                   variant="outlined"
-                  density="comfortable"
+                  density="compact"
                   type="number"
                   suffix="LAK"
                 />
@@ -364,7 +365,7 @@
               :append-inner-icon="showNewPwd ? 'mdi-eye-off' : 'mdi-eye'"
               :type="showNewPwd ? 'text' : 'password'"
               variant="outlined"
-              density="comfortable"
+              density="compact"
               :rules="[v => !!v || 'Required', v => v.length >= 6 || 'Min 6 characters']"
               @click:append-inner="showNewPwd = !showNewPwd"
             />
@@ -374,7 +375,7 @@
               prepend-inner-icon="mdi-lock-check-outline"
               :type="showNewPwd ? 'text' : 'password'"
               variant="outlined"
-              density="comfortable"
+              density="compact"
               :rules="[v => !!v || 'Required', v => v === newPassword || 'Passwords do not match']"
             />
           </v-form>
@@ -736,6 +737,13 @@ onMounted(() => {
 <style scoped>
 .header-icon-container {
   background-color: rgba(var(--v-theme-primary), 0.1);
+}
+
+.container-border {
+  border: 1px solid rgba(var(--v-border-color), var(--v-border-opacity));
+  border-radius: 12px;
+  background-color: rgb(var(--v-theme-surface));
+  margin-top: 8px;
 }
 
 .shadow-soft {

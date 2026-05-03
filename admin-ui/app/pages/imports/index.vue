@@ -1,20 +1,20 @@
 <template>
-  <v-container fluid class="pa-6" v-if="hasPermission('imports.view')">
+  <v-container fluid class="pa-2 container-border" v-if="hasPermission('imports.view')">
     <!-- ── Header Section ── -->
-    <v-row class="mb-6">
+    <v-row class="mb-4">
       <v-col cols="12" class="d-flex align-center flex-wrap gap-3">
-        <div class="header-icon-container rounded-xl pa-3 me-3">
-          <v-icon color="primary" size="32">mdi-file-check-outline</v-icon>
+        <div class="header-icon-container rounded-lg pa-2 me-3">
+          <v-icon color="primary" size="20">mdi-file-check-outline</v-icon>
         </div>
         <div>
-          <h1 class="text-h4 font-weight-black mb-1">ນໍາສິນຄ້າເຂົ້າສາງ</h1>
-          <p class="text-subtitle-1 text-medium-emphasis">ກວດສອບໃບບິນ, ອັບເດດສະຖານະ ແລະ ນໍາສິນຄ້າເຂົ້າຄັງ</p>
+          <h1 class="text-h5 font-weight-bold mb-0">ນໍາສິນຄ້າເຂົ້າສາງ</h1>
+          <div class="text-caption text-medium-emphasis">ກວດສອບໃບບິນ, ອັບເດດສະຖານະ ແລະ ນໍາສິນຄ້າເຂົ້າຄັງ</div>
         </div>
         <v-spacer></v-spacer>
-        <v-btn-toggle v-model="activeTab" density="comfortable" variant="outlined" color="primary" rounded="xl" mandatory class="shadow-soft">
-          <v-btn value="search" prepend-icon="mdi-magnify" class="px-6">ຄົ້ນຫາ</v-btn>
-          <v-btn v-if="hasPermission('imports.create')" value="direct" prepend-icon="mdi-plus" class="px-6" @click="initDirectImport()">ນໍາເຂົ້າໂດຍກົງ</v-btn>
-          <v-btn value="history" prepend-icon="mdi-history" class="px-6" @click="loadImports()">ປະຫວັດ</v-btn>
+        <v-btn-toggle v-model="activeTab" density="compact" variant="outlined" color="primary" rounded="lg" mandatory class="shadow-soft">
+          <v-btn value="search" prepend-icon="mdi-magnify" class="px-4">ຄົ້ນຫາ</v-btn>
+          <v-btn v-if="hasPermission('imports.create')" value="direct" prepend-icon="mdi-plus" class="px-4" @click="initDirectImport()">ນໍາເຂົ້າໂດຍກົງ</v-btn>
+          <v-btn value="history" prepend-icon="mdi-history" class="px-4" @click="loadImports()">ປະຫວັດ</v-btn>
         </v-btn-toggle>
       </v-col>
     </v-row>
@@ -25,24 +25,25 @@
         <v-row>
           <v-col cols="12" md="5">
             <v-card rounded="xl" elevation="3" class="search-card overflow-hidden">
-              <v-toolbar color="primary" flat>
-                <v-toolbar-title class="text-subtitle-1 font-weight-bold">ຄົ້ນຫາໃບບິນ / ເລກທີໃບສັ່ງຊື້</v-toolbar-title>
+              <v-toolbar color="primary" flat density="compact">
+                <v-toolbar-title class="text-subtitle-2 font-weight-bold">ຄົ້ນຫາໃບບິນ / ເລກທີໃບສັ່ງຊື້</v-toolbar-title>
               </v-toolbar>
-              <v-card-text class="pa-6">
+              <v-card-text class="pa-4">
                 <v-text-field
                   v-model="searchQuery"
                   label="ປ້ອນເລກທີໃບບິນ ຫຼື ເລກທີ PO..."
                   placeholder="Ex: PO-1234..."
                   prepend-inner-icon="mdi-magnify"
                   variant="outlined"
-                  rounded="lg"
+                  density="compact"
                   class="mb-4"
+                  hide-details
                   @keyup.enter="performSearch"
                 />
                 <v-btn
                   block
                   color="primary"
-                  size="large"
+                  size="small"
                   rounded="lg"
                   :loading="searching"
                   prepend-icon="mdi-text-search"
@@ -108,15 +109,15 @@
                       <div class="text-body-1 font-weight-semibold">{{ formatDate(selectedImport.receive_date) }}</div>
                     </v-col>
                     <v-col cols="12" class="mt-4">
-                      <v-sheet rounded="lg" color="surface-variant" class="pa-4 d-flex align-center">
+                      <v-sheet rounded="lg" color="surface-variant" class="pa-3 d-flex align-center">
                         <div>
                           <div class="text-caption text-medium-emphasis">ຍອດລວມທັງໝົດ:</div>
-                          <div class="text-h4 font-weight-bold text-success">{{ formatCurrency(selectedImport.total_amount) }}</div>
+                          <div class="text-h5 font-weight-bold text-success">{{ formatCurrency(selectedImport.total_amount) }}</div>
                         </div>
                         <v-spacer />
                         <div class="text-right">
                           <div class="text-caption text-medium-emphasis">ສະຖານະການຊຳລະ:</div>
-                          <v-chip :color="paymentColor(selectedImport.payment_status)" variant="flat">
+                          <v-chip :color="paymentColor(selectedImport.payment_status)" variant="flat" size="small">
                             {{ paymentLabel(selectedImport.payment_status) }}
                           </v-chip>
                         </div>
@@ -156,15 +157,15 @@
                 <v-divider />
 
                 <!-- Process Actions -->
-                <v-card-actions class="pa-6">
-                  <v-btn variant="outlined" rounded="lg" color="grey" @click="selectedImport = null">ປິດ</v-btn>
+                <v-card-actions class="pa-4">
+                  <v-btn variant="outlined" rounded="lg" color="grey" size="small" @click="selectedImport = null">ປິດ</v-btn>
                   <v-spacer />
                   
                   <template v-if="selectedImport.status !== 'completed' && selectedImport.status !== 'cancelled'">
                     <v-btn
                       v-if="hasPermission('imports.complete')"
                       color="success"
-                      size="large"
+                      size="small"
                       rounded="lg"
                       variant="flat"
                       prepend-icon="mdi-check-all"
@@ -291,48 +292,49 @@
                 <v-toolbar-title class="text-subtitle-1 font-weight-bold">ຂໍ້ມູນການນໍາເຂົ້າ (ບໍ່ມີ PO)</v-toolbar-title>
               </v-toolbar>
               <v-card-text class="pa-6">
-                <v-autocomplete
-                  v-model="directImport.supplier_id"
-                  :items="suppliers"
-                  item-title="name"
-                  item-value="id"
-                  label="ຜູ້ສະໜອງ (ເລືອກ ຫຼື ປະຫວ່າງ)"
-                  variant="outlined"
-                  density="comfortable"
-                  clearable
-                  class="mb-4"
-                ></v-autocomplete>
-                
-                <v-text-field
-                  v-model="directImport.invoice_number"
-                  label="ເລກທີໃບບິນ (ອັດຕະໂນມັດ ຖ້າປະຫວ່າງ)"
-                  variant="outlined"
-                  density="comfortable"
-                  class="mb-4"
-                ></v-text-field>
-                
-                <v-text-field
-                  v-model="directImport.receive_date"
-                  type="date"
-                  label="ວັນທີໄດ້ຮັບ"
-                  variant="outlined"
-                  density="comfortable"
-                  class="mb-4"
-                ></v-text-field>
+                  <v-autocomplete
+                    v-model="directImport.supplier_id"
+                    :items="suppliers"
+                    item-title="name"
+                    item-value="id"
+                    label="ຜູ້ສະໜອງ (ເລືອກ ຫຼື ປະຫວ່າງ)"
+                    variant="outlined"
+                    density="compact"
+                    clearable
+                    class="mb-3"
+                  ></v-autocomplete>
+                  
+                  <v-text-field
+                    v-model="directImport.invoice_number"
+                    label="ເລກທີໃບບິນ (ອັດຕະໂນມັດ ຖ້າປະຫວ່າງ)"
+                    variant="outlined"
+                    density="compact"
+                    class="mb-3"
+                  ></v-text-field>
+                  
+                  <v-text-field
+                    v-model="directImport.receive_date"
+                    type="date"
+                    label="ວັນທີໄດ້ຮັບ"
+                    variant="outlined"
+                    density="compact"
+                    class="mb-3"
+                  ></v-text-field>
 
-                <div class="mb-4">
-                  <v-btn
-                    color="primary"
-                    height="48"
-                    rounded="lg"
-                    elevation="2"
-                    block
-                    prepend-icon="mdi-format-list-bulleted"
-                    @click="browseCatalogDialog = true"
-                  >
-                    + ເລືອກສິນຄ້າເພື່ອເພີ່ມລົງໃນຕາຕະລາງ
-                  </v-btn>
-                </div>
+                  <div class="mb-3">
+                    <v-btn
+                      color="primary"
+                      height="36"
+                      rounded="lg"
+                      elevation="2"
+                      block
+                      size="small"
+                      prepend-icon="mdi-format-list-bulleted"
+                      @click="browseCatalogDialog = true"
+                    >
+                      + ເລືອກສິນຄ້າ
+                    </v-btn>
+                  </div>
               </v-card-text>
             </v-card>
           </v-col>
@@ -435,6 +437,7 @@
             :headers="headers"
             :items="imports"
             :loading="loading"
+            density="compact"
             hover
             items-per-page="15"
           >
@@ -482,7 +485,7 @@
             prepend-inner-icon="mdi-magnify"
             variant="outlined"
             color="primary"
-            density="comfortable"
+            density="compact"
             hide-details
             rounded="lg"
             clearable

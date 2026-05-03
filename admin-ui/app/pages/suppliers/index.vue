@@ -1,22 +1,22 @@
 <template>
-  <v-container fluid class="pa-6" v-if="hasPermission('suppliers.view')">
+  <v-container fluid class="pa-2 container-border" v-if="hasPermission('suppliers.view')">
     <!-- ── Header Section ── -->
-    <v-row class="mb-6">
-      <v-col cols="12" class="d-flex align-center flex-wrap gap-3">
-        <div class="header-icon-container rounded-xl pa-3 me-3">
-          <v-icon color="primary" size="32">mdi-handshake</v-icon>
+    <v-row class="mb-2">
+      <v-col cols="12" class="d-flex align-center flex-wrap gap-2">
+        <div class="header-icon-container rounded-lg pa-2 me-2">
+          <v-icon color="primary" size="28">mdi-handshake</v-icon>
         </div>
         <div>
-          <h1 class="text-h4 font-weight-black mb-1">ຈັດການຜູ້ສະໜອງ</h1>
-          <p class="text-subtitle-1 text-medium-emphasis">ລາຍຊື່ ແລະ ຂໍ້ມູນຕິດຕໍ່ຂອງບໍລິສັດຜູ້ສະໜອງສິນຄ້າ</p>
+          <h1 class="text-h5 font-weight-black mb-1">ຈັດການຜູ້ສະໜອງ</h1>
+          <p class="text-body-2 text-medium-emphasis">ລາຍຊື່ ແລະ ຂໍ້ມູນຕິດຕໍ່ຂອງບໍລິສັດຜູ້ສະໜອງສິນຄ້າ</p>
         </div>
         <v-spacer></v-spacer>
         <v-btn 
           v-if="hasPermission('suppliers.create')" 
           color="primary" 
           variant="elevated" 
-          size="large"
-          class="rounded-xl px-6 font-weight-bold shadow-soft" 
+          size="small"
+          class="rounded-lg px-4 font-weight-bold shadow-soft" 
           prepend-icon="mdi-plus" 
           @click="openAddDialog"
         >
@@ -26,7 +26,7 @@
     </v-row>
 
     <!-- ── Search & Stats Section ── -->
-    <v-card border elevation="0" class="rounded-xl mb-6 shadow-soft pa-4">
+    <v-card border elevation="0" class="rounded-lg mb-2 shadow-soft pa-2">
       <v-row dense align="center">
         <v-col cols="12" md="4">
           <v-text-field
@@ -34,7 +34,7 @@
             placeholder="ຄົ້ນຫາຜູ້ສະໜອງ..."
             prepend-inner-icon="mdi-magnify"
             variant="outlined"
-            density="comfortable"
+            density="compact"
             hide-details
             rounded="lg"
             clearable
@@ -43,10 +43,10 @@
         </v-col>
         <v-spacer></v-spacer>
         <v-col cols="12" md="auto">
-          <div class="d-flex align-center gap-2 px-4 py-2 rounded-lg bg-grey-lighten-4">
-            <v-icon icon="mdi-account-group" color="grey-darken-1" size="20"></v-icon>
+          <div class="d-flex align-center gap-2 px-3 py-1 rounded-lg bg-grey-lighten-4">
+            <v-icon icon="mdi-account-group" color="grey-darken-1" size="18"></v-icon>
             <span class="text-caption font-weight-bold text-grey-darken-2">ຜູ້ສະໜອງທັງໝົດ:</span>
-            <v-chip color="primary" size="small" variant="flat" class="font-weight-black">
+            <v-chip color="primary" size="x-small" variant="flat" class="font-weight-black">
               {{ pagination.total || suppliers.length }}
             </v-chip>
           </div>
@@ -55,11 +55,12 @@
     </v-card>
 
     <!-- ── Data Table Section ── -->
-    <v-card border elevation="0" class="rounded-xl overflow-hidden shadow-soft">
+    <v-card border elevation="0" class="rounded-lg overflow-hidden shadow-soft">
       <v-data-table
         :headers="headers"
         :items="suppliers"
         :loading="loading"
+        density="compact"
         hover
         items-per-page="15"
         class="custom-table"
@@ -141,7 +142,7 @@
                   label="Company / Supplier Name *"
                   prepend-inner-icon="mdi-domain"
                   variant="outlined"
-                  density="comfortable"
+                  density="compact"
                   :rules="[v => !!v || 'Name is required']"
                 />
               </v-col>
@@ -153,7 +154,7 @@
                   label="Contact Person"
                   prepend-inner-icon="mdi-account-outline"
                   variant="outlined"
-                  density="comfortable"
+                  density="compact"
                 />
               </v-col>
 
@@ -164,7 +165,7 @@
                   label="Phone"
                   prepend-inner-icon="mdi-phone-outline"
                   variant="outlined"
-                  density="comfortable"
+                  density="compact"
                 />
               </v-col>
 
@@ -175,7 +176,7 @@
                   label="Email"
                   prepend-inner-icon="mdi-email-outline"
                   variant="outlined"
-                  density="comfortable"
+                  density="compact"
                   type="email"
                   :rules="[v => !v || /.+@.+\..+/.test(v) || 'Invalid email']"
                 />
@@ -188,7 +189,7 @@
                   label="Tax / VAT Number"
                   prepend-inner-icon="mdi-file-certificate-outline"
                   variant="outlined"
-                  density="comfortable"
+                  density="compact"
                 />
               </v-col>
 
@@ -199,7 +200,7 @@
                   label="Address"
                   prepend-inner-icon="mdi-map-marker-outline"
                   variant="outlined"
-                  density="comfortable"
+                  density="compact"
                   rows="2"
                   auto-grow
                 />
@@ -212,7 +213,7 @@
                   label="Notes"
                   prepend-inner-icon="mdi-note-text-outline"
                   variant="outlined"
-                  density="comfortable"
+                  density="compact"
                   rows="2"
                   auto-grow
                 />
@@ -420,6 +421,13 @@ onMounted(loadSuppliers)
 <style scoped>
 .header-icon-container {
   background-color: rgba(var(--v-theme-primary), 0.1);
+}
+
+.container-border {
+  border: 1px solid rgba(var(--v-border-color), var(--v-border-opacity));
+  border-radius: 12px;
+  background-color: rgb(var(--v-theme-surface));
+  margin-top: 8px;
 }
 
 .shadow-soft {

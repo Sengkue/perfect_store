@@ -1,36 +1,23 @@
 <template>
-  <div class="po-page" v-if="hasPermission('purchase_orders.view')">
+  <v-container fluid class="pa-2 container-border" v-if="hasPermission('purchase_orders.view')">
 
-    <!-- ══ Page Header ══════════════════════════════════════════════ -->
-    <div class="po-header mb-5">
-      <div class="d-flex align-center flex-wrap gap-3">
-        <div class="d-flex align-center gap-3">
-          <div class="header-icon-wrap">
-            <v-icon icon="mdi-truck-delivery-outline" size="28" color="white" />
-          </div>
-          <div>
-            <h1 class="text-h5 font-weight-bold mb-0">ໃບສັ່ງຊື້ຈາກຜູ້ສະໜອງ</h1>
-            <p class="text-caption text-medium-emphasis mb-0">ໃບສັ່ງຊື້ · ສ້າງ ແລະ ຈັດການການສັ່ງຊື້ເຂົ້າສະຕ໋ອກ</p>
-          </div>
+    <!-- ── Header Section ── -->
+    <v-row class="mb-4">
+      <v-col cols="12" class="d-flex align-center flex-wrap gap-3">
+        <div class="header-icon-container rounded-lg pa-2 me-3">
+          <v-icon color="primary" size="20">mdi-truck-delivery-outline</v-icon>
+        </div>
+        <div>
+          <h1 class="text-h5 font-weight-bold mb-0">ໃບສັ່ງຊື້ຈາກຜູ້ສະໜອງ</h1>
+          <div class="text-caption text-medium-emphasis">ສ້າງ ແລະ ຈັດການການສັ່ງຊື້ເຂົ້າສະຕ໋ອກ</div>
         </div>
         <v-spacer />
-        <v-btn-group variant="outlined" density="comfortable" divided rounded="lg">
-          <v-btn
-            v-if="hasPermission('purchase_orders.create')"
-            :color="activeTab === 'create' ? 'primary' : ''"
-            :variant="activeTab === 'create' ? 'flat' : 'outlined'"
-            prepend-icon="mdi-plus-circle-outline"
-            @click="activeTab = 'create'"
-          >ສ້າງໃບສັ່ງຊື້</v-btn>
-          <v-btn
-            :color="activeTab === 'list' ? 'primary' : ''"
-            :variant="activeTab === 'list' ? 'flat' : 'outlined'"
-            prepend-icon="mdi-clipboard-list-outline"
-            @click="activeTab = 'list'; loadPOs()"
-          >ປະຫວັດການສັ່ງຊື້</v-btn>
-        </v-btn-group>
-      </div>
-    </div>
+        <v-btn-toggle v-model="activeTab" density="compact" variant="outlined" color="primary" rounded="lg" mandatory class="shadow-soft">
+          <v-btn v-if="hasPermission('purchase_orders.create')" value="create" prepend-icon="mdi-plus-circle-outline" class="px-4">ສ້າງໃບສັ່ງຊື້</v-btn>
+          <v-btn value="list" prepend-icon="mdi-clipboard-list-outline" class="px-4" @click="loadPOs()">ປະຫວັດການສັ່ງຊື້</v-btn>
+        </v-btn-toggle>
+      </v-col>
+    </v-row>
 
     <!-- ══════════════════════════════════════════════════════════════
          TAB 1 — CREATE PURCHASE ORDER
@@ -40,17 +27,17 @@
 
         <!-- ─── LEFT: Product Picker ─────────────────────────────── -->
         <v-col cols="12" lg="7" xl="8">
-          <v-card rounded="xl" elevation="3" class="h-100">
-            <v-card-title class="d-flex align-center pa-4 pb-3">
-              <v-avatar color="blue-lighten-4" rounded="lg" size="36" class="me-3">
-                <v-icon icon="mdi-package-variant-closed" color="blue-darken-2" size="20" />
+          <v-card border elevation="0" class="rounded-lg shadow-soft h-100">
+            <v-card-title class="d-flex align-center pa-3 pb-2">
+              <v-avatar color="blue-lighten-5" rounded="lg" size="32" class="me-3">
+                <v-icon icon="mdi-package-variant-closed" color="blue-darken-2" size="18" />
               </v-avatar>
               <div>
-                <div class="text-subtitle-1 font-weight-bold">ເລືອກສິນຄ້າ</div>
-                <div class="text-caption text-medium-emphasis">ຄົ້ນຫາ ແລະ ເພີ່ມລາຍການສິນຄ້າ</div>
+                <div class="text-subtitle-2 font-weight-bold">ເລືອກສິນຄ້າ</div>
+                <div class="text-caption text-medium-emphasis" style="font-size: 0.7rem">ຄົ້ນຫາ ແລະ ເພີ່ມລາຍການສິນຄ້າ</div>
               </div>
               <v-spacer />
-              <v-chip color="blue" variant="tonal" size="small" prepend-icon="mdi-package-variant-closed">
+              <v-chip color="blue" variant="tonal" size="small" prepend-icon="mdi-package-variant-closed" class="rounded-lg">
                 {{ products.length }} ລາຍການ
               </v-chip>
             </v-card-title>
@@ -162,12 +149,12 @@
 
             <!-- Supplier & PO Info Card -->
             <v-col cols="12">
-              <v-card rounded="xl" elevation="3">
-                <v-card-title class="d-flex align-center pa-4 pb-2">
-                  <v-avatar color="orange-lighten-4" rounded="lg" size="36" class="me-3">
-                    <v-icon icon="mdi-domain" color="orange-darken-2" size="20" />
+              <v-card border elevation="0" class="rounded-lg shadow-soft">
+                <v-card-title class="d-flex align-center pa-3 pb-1">
+                  <v-avatar color="orange-lighten-5" rounded="lg" size="32" class="me-3">
+                    <v-icon icon="mdi-domain" color="orange-darken-2" size="18" />
                   </v-avatar>
-                  <div class="text-subtitle-1 font-weight-bold">ຂໍ້ມູນໃບສັ່ງຊື້</div>
+                  <div class="text-subtitle-2 font-weight-bold">ຂໍ້ມູນໃບສັ່ງຊື້</div>
                 </v-card-title>
                 <v-card-text class="pa-4 pt-0">
 
@@ -180,7 +167,7 @@
                     label="ຜູ້ສະໜອງ *"
                     prepend-inner-icon="mdi-domain"
                     variant="outlined"
-                    density="comfortable"
+                    density="compact"
                     hide-details="auto"
                     :rules="[v => !!v || 'ກະລຸນາເລືອກຜູ້ສະໜອງ']"
                     return-object
@@ -226,7 +213,7 @@
                         label="ເລກທີໃບສັ່ງຊື້"
                         prepend-inner-icon="mdi-file-document-outline"
                         variant="outlined"
-                        density="comfortable"
+                        density="compact"
                         hide-details
                         placeholder="ອັດຕະໂນມັດ"
                       />
@@ -239,7 +226,7 @@
                         type="date"
                         prepend-inner-icon="mdi-calendar-outline"
                         variant="outlined"
-                        density="comfortable"
+                        density="compact"
                         hide-details
                       />
                     </v-col>
@@ -251,7 +238,7 @@
                         label="ສະຖານະໃບສັ່ງ"
                         prepend-inner-icon="mdi-list-status"
                         variant="outlined"
-                        density="comfortable"
+                        density="compact"
                         hide-details
                       />
                     </v-col>
@@ -261,7 +248,7 @@
                         label="ໝາຍເຫດ"
                         prepend-inner-icon="mdi-note-edit-outline"
                         variant="outlined"
-                        density="comfortable"
+                        density="compact"
                         rows="2"
                         hide-details
                       />
@@ -273,14 +260,14 @@
 
             <!-- Cart Card -->
             <v-col cols="12">
-              <v-card rounded="xl" elevation="3">
-                <v-card-title class="d-flex align-center pa-4 pb-2">
-                  <v-avatar color="green-lighten-4" rounded="lg" size="36" class="me-3">
-                    <v-icon icon="mdi-cart-arrow-down" color="green-darken-2" size="20" />
+              <v-card border elevation="0" class="rounded-lg shadow-soft">
+                <v-card-title class="d-flex align-center pa-3 pb-1">
+                  <v-avatar color="green-lighten-5" rounded="lg" size="32" class="me-3">
+                    <v-icon icon="mdi-cart-arrow-down" color="green-darken-2" size="18" />
                   </v-avatar>
-                  <div class="text-subtitle-1 font-weight-bold">ລາຍການສິນຄ້າ</div>
+                  <div class="text-subtitle-2 font-weight-bold">ລາຍການສິນຄ້າ</div>
                   <v-spacer />
-                  <v-chip v-if="cart.length" color="green" variant="tonal" size="small">
+                  <v-chip v-if="cart.length" color="green" variant="tonal" size="small" class="rounded-lg">
                     {{ totalItems }} ລາຍການ
                   </v-chip>
                   <v-btn
@@ -459,11 +446,11 @@
          TAB 2 — PURCHASE ORDER LIST
     ══════════════════════════════════════════════════════════════ -->
     <div v-else>
-      <v-card rounded="xl" elevation="3">
+      <v-card border elevation="0" class="rounded-lg shadow-soft">
         <!-- Header -->
-        <v-card-title class="d-flex align-center py-3 px-4 flex-wrap gap-2">
-          <v-icon icon="mdi-clipboard-text-outline" color="primary" class="me-2" />
-          <span class="text-subtitle-1 font-weight-bold">ປະຫວັດການສັ່ງຊື້ຈາກຜູ້ສະໜອງ</span>
+        <v-card-title class="d-flex align-center py-2 px-3 flex-wrap gap-2">
+          <v-icon icon="mdi-clipboard-text-outline" color="primary" class="me-2" size="20" />
+          <span class="text-body-2 font-weight-bold">ປະຫວັດການສັ່ງຊື້ຈາກຜູ້ສະໜອງ</span>
           <v-spacer />
 
           <!-- Filters -->
@@ -533,6 +520,7 @@
           :headers="listHeaders"
           :items="purchaseOrders"
           :loading="loadingPOs"
+          density="compact"
           hover
           items-per-page="15"
         >
@@ -617,7 +605,7 @@
 
     <!-- ══ DETAIL DIALOG ════════════════════════════════════════════ -->
     <v-dialog v-model="detailDialog" max-width="780" scrollable>
-      <v-card v-if="detailPO" rounded="xl">
+      <v-card v-if="detailPO" rounded="lg">
         <v-card-title class="d-flex align-center pa-4">
           <v-icon icon="mdi-file-document-multiple-outline" color="primary" class="me-2" />
           ໃບສັ່ງຊື້ #{{ detailPO.po_number }}
@@ -713,7 +701,7 @@
 
     <!-- ══ STATUS CONFIRM DIALOG ════════════════════════════════════ -->
     <v-dialog v-model="statusDialog" max-width="400" persistent>
-      <v-card rounded="xl">
+      <v-card rounded="lg">
         <v-card-title class="d-flex align-center pa-4">
           <v-icon icon="mdi-help-circle-outline" color="primary" class="me-2" />
           ຢືນຢັນການປ່ຽນສະຖານະ
@@ -734,7 +722,7 @@
 
     <!-- ══ DELETE CONFIRM DIALOG ════════════════════════════════════ -->
     <v-dialog v-model="deleteDialog" max-width="400" persistent>
-      <v-card rounded="xl">
+      <v-card rounded="lg">
         <v-card-title class="d-flex align-center pa-4">
           <v-icon icon="mdi-alert-circle-outline" color="error" class="me-2" />
           ຢືນຢັນການລົບ
@@ -755,7 +743,7 @@
 
     <!-- ══ SUCCESS DIALOG ═══════════════════════════════════════════ -->
     <v-dialog v-model="successDialog" max-width="440" persistent>
-      <v-card rounded="xl" class="text-center pa-2">
+      <v-card rounded="lg" class="text-center pa-2">
         <v-card-text class="pa-6">
           <div class="success-anim mb-3">
             <v-icon icon="mdi-check-decagram" color="success" size="84" />
@@ -794,7 +782,7 @@
         </v-card-actions>
       </v-card>
     </v-dialog>
-  </div>
+  </v-container>
 </template>
 
 <script setup>
@@ -1122,13 +1110,6 @@ onMounted(() => {
 </script>
 
 <style scoped>
-.po-page { width: 100%; }
-.header-icon-wrap {
-  width: 48px; height: 48px;
-  background: linear-gradient(135deg, #1976D2, #64B5F6);
-  border-radius: 12px;
-  display: flex; align-items: center; justify-content: center;
-}
 .product-scroll-area { max-height: 520px; overflow-y: auto; }
 .product-card { border: 1px solid rgba(var(--v-border-color), 0.1); transition: all 0.2s ease; }
 .product-card--active { border-color: rgb(var(--v-theme-primary)); background-color: rgba(var(--v-theme-primary), 0.03); }

@@ -1,22 +1,22 @@
 <template>
-  <v-container fluid class="pa-6" v-if="hasPermission('categories.view')">
+  <v-container fluid class="pa-2 container-border" v-if="hasPermission('categories.view')">
     <!-- ── Header Section ── -->
-    <v-row class="mb-6">
-      <v-col cols="12" class="d-flex align-center flex-wrap gap-3">
-        <div class="header-icon-container rounded-lg pa-3 me-3">
-          <v-icon color="primary" size="32">mdi-format-list-bulleted</v-icon>
+    <v-row class="mb-2">
+      <v-col cols="12" class="d-flex align-center flex-wrap gap-2">
+        <div class="header-icon-container rounded-lg pa-2 me-2">
+          <v-icon color="primary" size="28">mdi-format-list-bulleted</v-icon>
         </div>
         <div>
-          <h1 class="text-h4 font-weight-black mb-1">ໝວດໝູ່ສິນຄ້າ</h1>
-          <p class="text-subtitle-1 text-medium-emphasis">ຈັດການ ແລະ ແບ່ງປະເພດສິນຄ້າພາຍໃນຮ້ານ</p>
+          <h1 class="text-h5 font-weight-black mb-1">ໝວດໝູ່ສິນຄ້າ</h1>
+          <p class="text-body-2 text-medium-emphasis">ຈັດການ ແລະ ແບ່ງປະເພດສິນຄ້າພາຍໃນຮ້ານ</p>
         </div>
         <v-spacer></v-spacer>
         <v-btn 
           v-if="hasPermission('categories.create')" 
           color="primary" 
           variant="elevated" 
-          size="large"
-          class="rounded-lg px-6 font-weight-bold shadow-soft" 
+          size="small"
+          class="rounded-lg px-4 font-weight-bold shadow-soft" 
           prepend-icon="mdi-plus" 
           @click="openAddDialog"
         >
@@ -31,6 +31,7 @@
         :headers="headers"
         :items="categories"
         :loading="loading"
+        density="compact"
         hover
         class="custom-table"
       >
@@ -74,9 +75,9 @@
               label="Category Name *"
               prepend-inner-icon="mdi-tag-outline"
               variant="outlined"
-              density="comfortable"
+              density="compact"
               :rules="[v => !!v || 'Name is required']"
-              class="mb-3"
+              class="mb-2"
             ></v-text-field>
 
             <v-text-field
@@ -84,10 +85,10 @@
               label="Slug"
               prepend-inner-icon="mdi-link-variant"
               variant="outlined"
-              density="comfortable"
+              density="compact"
               hint="Auto-generated from name if left blank"
               persistent-hint
-              class="mb-3"
+              class="mb-2"
             ></v-text-field>
 
             <v-select
@@ -98,7 +99,7 @@
               label="Parent Category"
               prepend-inner-icon="mdi-sitemap-outline"
               variant="outlined"
-              density="comfortable"
+              density="compact"
               clearable
               hint="Leave blank for root category"
               persistent-hint
@@ -287,6 +288,13 @@ onMounted(loadCategories)
 <style scoped>
 .header-icon-container {
   background-color: rgba(var(--v-theme-primary), 0.1);
+}
+
+.container-border {
+  border: 1px solid rgba(var(--v-border-color), var(--v-border-opacity));
+  border-radius: 12px;
+  background-color: rgb(var(--v-theme-surface));
+  margin-top: 8px;
 }
 
 .shadow-soft {
